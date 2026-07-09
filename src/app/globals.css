@@ -198,7 +198,12 @@
   }
   @keyframes rays-spin{ to{ transform:rotate(360deg); } }
  
-  .hero-inner{position:relative; z-index:2; max-width:760px;}
+  .hero-inner{
+    position: relative; 
+    z-index: 2; 
+    max-width: 1180px; /* Ubah dari 760px jadi 960px (atau lebih sesuai selera lu) */
+    margin: 0 auto;
+  }
   .hero .eyebrow{color:var(--gold-soft);}
   .hero h1{
     margin-top:22px;
@@ -220,14 +225,16 @@
   }
  
   .search-bar{
-    margin-top:34px;
-    display:flex; align-items:center; gap:10px;
-    background:rgba(250,246,236,0.06);
-    border:1.5px solid var(--line-dark);
-    border-radius:999px;
-    padding:7px 8px 7px 22px;
-    max-width:560px;
-    transition:border-color .25s, background .25s;
+    margin-top: 34px;
+    display: flex; 
+    align-items: center; 
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1.5px solid var(--line-dark);
+    border-radius: 999px;
+    padding: 7px 8px 7px 22px;
+    max-width: 1060px; /* Ubah dari 560px biar kotak pencariannya ikut melebar */
+    transition: border-color .25s, background .25s;
   }
   .search-bar:focus-within{border-color:var(--gold); background:rgba(250,246,236,0.1);}
   .search-bar svg{flex:none; width:19px; height:19px; color:var(--gold-soft);}

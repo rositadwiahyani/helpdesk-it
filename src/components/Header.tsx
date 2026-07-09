@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Header() {
   const [isShrunk, setIsShrunk] = useState(false);
@@ -15,14 +16,18 @@ export default function Header() {
   return (
     <header id="site-header" className={isShrunk ? 'is-shrunk' : ''}>
       <div className="container header-inner">
-        <Link href="/" className="brand" aria-label="Helpdesk Undip, beranda">
-          <svg className="brand-mark" viewBox="0 0 40 40" fill="none">
-            <circle cx="20" cy="20" r="19" stroke="#e7c866" strokeWidth="1.2" opacity="0.5"/>
-            <path d="M20 6 C22 12 22 12 28 14 C22 16 22 16 20 22 C18 16 18 16 12 14 C18 12 18 12 20 6Z" fill="#e7c866"/>
-            <path d="M20 18 C21.5 21.5 21.5 21.5 25 23 C21.5 24.5 21.5 24.5 20 28 C18.5 24.5 18.5 24.5 15 23 C18.5 21.5 18.5 21.5 20 18Z" fill="#c9a227"/>
-          </svg>
-          <span className="brand-text"><b>Helpdesk Undip</b><span>Layanan TI Terpadu</span></span>
-        </Link>
+<Link href="/" className="brand" aria-label="Helpdesk Undip, beranda">
+  <div className="relative h-12 w-auto overflow-hidden">
+    <Image 
+      src="/universitas-diponegoro-helpit1.png" 
+      alt="Logo HelpIT Undip" 
+      width={400} 
+      height={100}
+      priority
+      className="h-full w-auto object-contain"
+    />
+  </div>
+</Link>
 
         <nav className="main-nav" aria-label="Navigasi utama">
           <Link href="#" className="active">Beranda</Link>

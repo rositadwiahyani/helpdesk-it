@@ -20,32 +20,14 @@ export default function Home() {
           <div className="hero-glow" aria-hidden="true"></div>
           <div className="hero-rays" aria-hidden="true"></div>
           <div className="container hero-inner">
-            <span className="eyebrow">Layanan Teknologi Informasi · Universitas Diponegoro</span>
-            <h1>Ada kendala teknis?<br/>Biar kami <em>terangi</em> jalan keluarnya.</h1>
-            <p className="lead">Satu pintu untuk semua kendala akun, email, e-learning, dan sistem akademik Undip. Cari jawabannya sendiri lebih dulu, atau laporkan langsung ke tim kami.</p>
+            <h1>Selamat Datang di Pusat Bantuan IT Universitas Diponegoro</h1>
+            <p className="lead">Cari jawabannya sendiri lebih dulu, atau laporkan langsung ke tim kami.</p>
             
             <form className="search-bar" onSubmit={(e) => e.preventDefault()}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
               <input type="text" placeholder="Ketik kata kunci, misalnya 'lupa kata sandi SSO'…" aria-label="Cari panduan atau pertanyaan" />
               <button type="submit">Cari</button>
             </form>
-
-            <div className="hero-ctas">
-              <button className="btn btn-gold">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-                Buka tiket baru
-              </button>
-              <button className="btn btn-outline-dark" onClick={() => setIsModalOpen(true)}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
-                Lacak status tiket
-              </button>
-            </div>
-
-            <div className="hero-meta">
-              <div><b>1×24 jam</b><span>Estimasi respons awal</span></div>
-              <div><b>140+</b><span>Panduan di basis pengetahuan</span></div>
-              <div><b>6</b><span>Kanal bantuan tersedia</span></div>
-            </div>
           </div>
         </section>
 
@@ -86,7 +68,7 @@ export default function Home() {
               <div>
                 <span className="eyebrow" style={{color: 'var(--gold-dim)'}}>Sebelum membuka tiket</span>
                 <h2 style={{marginTop: '12px'}}>Yang paling sering ditanyakan</h2>
-                <p>Coba cek dulu di sini — kemungkinan besar jawabannya sudah tersedia.</p>
+                <p>Coba cek dulu di sini, kemungkinan besar jawabannya sudah tersedia.</p>
               </div>
             </div>
 
