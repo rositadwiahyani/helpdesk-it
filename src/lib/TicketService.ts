@@ -1,11 +1,10 @@
 import { supabase } from './supabase';
-// ==========================================
-// 1. SERVICES UTK DATA MASTER & UTILITY
-// ==========================================
+
+// 1. SERVICES: DATA MASTER & UTILITY
 
 /**
- * Mengambil semua departemen (Subbag) beserta pilihan keluhannya (Help Topics).
- * Digunakan untuk chained dropdown di form pengajuan tiket frontend.
+ * Mengambil semua data departemen (Subbag) beserta pilihan topik keluhannya.
+ * Digunakan untuk menangani chained dropdown pada form pengajuan tiket di frontend.
  */
 export const getDepartmentsAndTopics = async () => {
   const { data, error } = await supabase
@@ -26,21 +25,49 @@ export const getDepartmentsAndTopics = async () => {
   return data;
 };
 
+/**
+ * Mengunggah file bukti/lampiran kendala ke Supabase Storage Bucket.
+ * @param file - Objek file yang dipilih dari input file frontend
+ * @returns String URL publik dari file yang berhasil diunggah
+ */
+export const uploadTicketAttachment = async (file: File) => {
+  try {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
+    const filePath = `${fileName}`;
 
-// ==========================================
-// 2. SERVICES UNTUK MANAJEMEN TIKET (CRUD)
-// ==========================================
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('attachments')
+      .upload(filePath, file);
+
+    if (uploadError) throw uploadError;
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('attachments')
+      .getPublicUrl(filePath);
+
+    return publicUrl;
+  } catch (error: any) {
+    console.error('Gagal upload lampiran:', error.message);
+    throw error;
+  }
+};
+
+
+// 2. SERVICES: MANAJEMEN TIKET (CRUD)
 
 interface CreateTicketInput {
-  clientId: string;      // ID User pembimbing/pelapor (UUID dari auth.users)
-  departmentId: number;  // ID Subbag terpilih
-  helpTopicId: number;   // ID Topik keluhan terpilih
-  subject: string;       // Judul keluhan singkat
+  clientId: string;             // UUID pengguna pelapor (dari tabel auth.users)
+  departmentId: number;         // ID Subbag tujuan keluhan
+  helpTopicId: number;          // ID Topik keluhan spesifik
+  subject: string;              // Judul atau ringkasan keluhan
+  description: string;          // Penjelasan detail mengenai kendala
+  attachmentUrl?: string | null; // URL berkas lampiran pendukung (opsional)
 }
 
 /**
- * Membuat tiket baru di awal.
- * Status otomatis ter-set sebagai 'submit' di database.
+ * Membuat data tiket baru ke dalam database.
+ * Status tiket default secara otomatis akan diatur sebagai 'submit'.
  */
 export const createTicket = async (ticketData: CreateTicketInput) => {
   const { data, error } = await supabase
@@ -51,7 +78,9 @@ export const createTicket = async (ticketData: CreateTicketInput) => {
         department_id: ticketData.departmentId,
         help_topic_id: ticketData.helpTopicId,
         subject: ticketData.subject,
-        status: 'submit' // default awal
+        description: ticketData.description,
+        attachment_url: ticketData.attachmentUrl || null,
+        status: 'submit'
       }
     ])
     .select()
@@ -65,8 +94,8 @@ export const createTicket = async (ticketData: CreateTicketInput) => {
 };
 
 /**
- * Mengambil daftar tiket milik USER tertentu (untuk Dashboard Mahasiswa/Pegawai).
- * Di-filter berdasarkan client_id agar aman.
+ * Mengambil seluruh daftar tiket milik pengguna tertentu (Mahasiswa/Pegawai).
+ * Data difilter berdasarkan client_id untuk keamanan hak akses data.
  */
 export const getUserTickets = async (clientId: string) => {
   const { data, error } = await supabase
@@ -91,7 +120,8 @@ export const getUserTickets = async (clientId: string) => {
 };
 
 /**
- * Mengambil SEMUA tiket yang masuk ke sistem (untuk Dashboard Admin).
+ * Mengambil seluruh data tiket yang masuk ke dalam sistem.
+ * Digunakan khusus untuk kebutuhan halaman utama Dashboard Admin.
  */
 export const getAdminTickets = async () => {
   const { data, error } = await supabase
@@ -100,9 +130,11 @@ export const getAdminTickets = async () => {
       id,
       ticket_number,
       subject,
+      description,
       status,
       created_at,
-      profiles!tickets_client_id_fkey(full_name, nim_nip, unit),
+      attachment_url,
+      profiles(full_name, nim_nip, unit),
       departments(name),
       help_topics(topic_name)
     `)
@@ -116,21 +148,21 @@ export const getAdminTickets = async () => {
 };
 
 /**
- * Mengubah status tiket dan menunjuk admin penanggung jawab.
- * Digunakan ketika admin klik "Accept", "Resolved", atau "Closed".
+ * Memperbarui status penanganan tiket sekaligus mencatat admin penanggung jawabnya.
+ * Dipanggil saat admin melakukan aksi pemrosesan tiket (Accept, Resolve, Close).
  */
 export const updateTicketStatus = async (
   ticketId: string,
   newStatus: 'submit' | 'accepted' | 'in progress' | 'resolved' | 'closed',
-  agentId?: string // Diisi UUID admin saat status berubah jadi 'accepted'
+  adminId?: string
 ) => {
   const updatePayload: any = { 
     status: newStatus,
     updated_at: new Date().toISOString()
   };
-  
-  if (agentId) {
-    updatePayload.agent_id = agentId;
+
+  if (adminId) {
+    updatePayload.admin_id = adminId;
   }
 
   const { data, error } = await supabase
@@ -148,12 +180,11 @@ export const updateTicketStatus = async (
 };
 
 
-// ==========================================
-// 3. SERVICES UNTUK FITUR UTAS / DISCUSSION (MESSAGES)
-// ==========================================
+// 3. SERVICES: FITUR UTAS / DISCUSSION BALASAN (MESSAGES)
 
 /**
- * Mengambil seluruh riwayat chat/tanggapan berdasarkan ID Tiket tertentu.
+ * Mengambil seluruh riwayat obrolan atau tanggapan berdasarkan ID Tiket tertentu.
+ * Diurutkan secara kronologis dari pesan terlama hingga pesan paling baru.
  */
 export const getTicketMessages = async (ticketId: string) => {
   const { data, error } = await supabase
@@ -166,7 +197,7 @@ export const getTicketMessages = async (ticketId: string) => {
       profiles(full_name, role_id(role_name))
     `)
     .eq('ticket_id', ticketId)
-    .order('created_at', { ascending: true }); // Diurutkan dari yang paling lama ke baru
+    .order('created_at', { ascending: true });
 
   if (error) {
     console.error('Gagal mengambil riwayat pesan:', error.message);
@@ -176,8 +207,7 @@ export const getTicketMessages = async (ticketId: string) => {
 };
 
 /**
- * Mengirim pesan baru ke dalam utas tiket.
- * Bisa berupa deskripsi kendala awal dari user atau balasan dari admin.
+ * Mengirim dan menyimpan pesan tanggapan baru ke dalam utas diskusi tiket.
  */
 export const sendTicketMessage = async (
   ticketId: string,
