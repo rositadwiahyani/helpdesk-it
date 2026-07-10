@@ -5,8 +5,8 @@ interface RegisterInput {
   password: string;
   fullName: string;
   phoneNumber: string;
-  nimNip?: string;
-  unit?: string;
+  nimNip: string;
+  unit: string;
 }
 
 // 1. SERVICES: AUTHENTICATION (REGISTER, LOGIN, LOGOUT)
