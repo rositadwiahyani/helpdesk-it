@@ -203,6 +203,11 @@
     z-index: 2; 
     max-width: 1180px; /* Ubah dari 760px jadi 960px (atau lebih sesuai selera lu) */
     margin: 0 auto;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
   }
   .hero .eyebrow{color:var(--gold-soft);}
   .hero h1{
@@ -233,7 +238,8 @@
     border: 1.5px solid var(--line-dark);
     border-radius: 999px;
     padding: 7px 8px 7px 22px;
-    max-width: 1060px; /* Ubah dari 560px biar kotak pencariannya ikut melebar */
+    width: 100%;
+    max-width: 1060px;
     transition: border-color .25s, background .25s;
   }
   .search-bar:focus-within{border-color:var(--gold); background:rgba(250,246,236,0.1);}
@@ -248,7 +254,7 @@
     background:var(--gold); color:#1c1608; font-weight:700; font-size:13.5px;
   }
  
-  .hero-ctas{margin-top:28px; display:flex; flex-wrap:wrap; gap:14px;}
+  .hero-ctas{margin-top:28px; display:flex; flex-wrap:wrap; gap:14px; justify-content:center;}
  
   .hero-meta{
     margin-top:56px; display:flex; gap:38px; flex-wrap:wrap;

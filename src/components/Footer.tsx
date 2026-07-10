@@ -8,15 +8,15 @@ export default function Footer() {
         <div className="footer-grid">
           <div className="footer-brand">
             <div className="brand">
-              <div className="relative h-10 w-10 overflow-hidden rounded-full">
-     <Image 
-       src="/universitas-diponegoro-helpit1.png" 
-       alt="Logo Undip" 
-       fill
-       className="object-cover"
-     />
-  </div>
-              <span className="brand-text"><b style={{color: 'var(--paper)'}}>Helpdesk Undip</b></span>
+              <div className="relative h-12 w-auto flex items-center">
+                <Image 
+                  src="/universitas-diponegoro-helpit1.png" 
+                  alt="Logo HelpIT Undip" 
+                  width={200} 
+                  height={40}
+                  className="h-full w-auto object-contain"
+                />
+              </div>
             </div>
             <p>Layanan Teknologi Informasi Universitas Diponegoro — membantu urusan akun, sistem akademik, dan perangkat digital kampus.</p>
           </div>
