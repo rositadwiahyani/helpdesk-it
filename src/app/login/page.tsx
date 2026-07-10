@@ -6,7 +6,7 @@ export default function LoginPage() {
   return (
     <AuthCard 
       title="Masuk ke Helpdesk" 
-      description="Gunakan akun SSO Undip untuk masuk."
+      description="Gunakan akun email aktif untuk masuk."
       footer={<>Belum punya akun? <Link href="/register" className="text-[var(--gold)] font-bold">Daftar sekarang</Link></>}
     >
       <form className="space-y-4">
