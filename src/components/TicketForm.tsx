@@ -1,77 +1,116 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function TicketForm() {
-  const [subject, setSubject] = useState('');
-  const [description, setDescription] = useState('');
-  const [departments, setDepartments] = useState<any[]>([]);
-  const [selectedDept, setSelectedDept] = useState('');
-  const [file, setFile] = useState<File | null>(null);
+  const router = useRouter();
+  // State user sekarang mencakup nimNip dan unit
+  const [user, setUser] = useState({ 
+    name: '', 
+    email: '', 
+    phone: '', 
+    nimNip: '', 
+    unit: '' 
+  });
 
-  // Load daftar departemen
   useEffect(() => {
-    async function getDepartments() {
-      const { data } = await supabase.from('departments').select('*');
-      if (data) setDepartments(data);
-    }
-    getDepartments();
+    // Ambil data dari localStorage
+    const savedUser = JSON.parse(localStorage.getItem('userData') || '{}');
+    
+    // Mapping data dari RegisterPage ke state TicketForm
+    setUser({
+      name: savedUser.fullName || '-',
+      email: savedUser.email || '-',
+      phone: savedUser.phoneNumber || '-',
+      nimNip: savedUser.nimNip || '-',
+      unit: savedUser.unit || '-'
+    });
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    let filePath = null;
-
-    // 1. Upload File (kalau ada)
-    if (file) {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const { data, error } = await supabase.storage
-        .from('ticket-attachments')
-        .upload(fileName, file);
-        
-      if (error) { alert('Gagal upload file: ' + error.message); return; }
-      filePath = data.path;
-    }
-
-    // 2. Simpan Tiket ke Database
-    const { error } = await supabase.from('tickets').insert([
-      { 
-        subject, 
-        description, 
-        department_id: selectedDept,
-        ticket_number: 'TKT-' + Math.floor(Math.random() * 10000), // Generate ID simpel
-        // client_id: '...', // Nanti diisi setelah Auth beres
-      }
-    ]);
-
-    if (error) {
-      alert('Gagal buat tiket: ' + error.message);
-    } else {
-      alert('Tiket berhasil dikirim!');
-      setSubject('');
-      setDescription('');
-    }
+    alert("Tiket aduan Anda berhasil dibuat!");
+    router.push('/ticket/status');
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-6 bg-white rounded shadow-md space-y-4">
-      <h2 className="text-xl font-bold">Buat Tiket Baru</h2>
-      <input type="text" placeholder="Subject" className="w-full p-2 border" 
-        onChange={(e) => setSubject(e.target.value)} required />
-      
-      <textarea placeholder="Deskripsi Masalah" className="w-full p-2 border" 
-        onChange={(e) => setDescription(e.target.value)} required />
+    <div className="bg-white p-6 md:p-10 rounded-2xl shadow-[0_4px_25px_-5px_rgba(0,0,0,0.05)] border border-gray-100">
+      <form onSubmit={handleSubmit} className="space-y-8">
+        
+        {/* SECTION: DATA PELAPOR */}
+        <div>
+          <div className="flex items-center gap-2 mb-4 border-b border-gray-100 pb-2">
+            <div className="w-1 h-5 bg-[var(--gold)] rounded-full"></div>
+            <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Data Pelapor (Otomatis)</h3>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {/* Baris 1 */}
+            <div className="field">
+              <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Nama Lengkap</label>
+              <input type="text" value={user.name} disabled className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-400 font-medium cursor-not-allowed outline-none" />
+            </div>
+            <div className="field">
+              <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">NIM / NIP</label>
+              <input type="text" value={user.nimNip} disabled className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-400 font-medium cursor-not-allowed outline-none" />
+            </div>
 
-      <select className="w-full p-2 border" onChange={(e) => setSelectedDept(e.target.value)} required>
-        <option value="">Pilih Departemen</option>
-        {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-      </select>
+            {/* Baris 2 */}
+            <div className="field">
+              <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Email Civitas</label>
+              <input type="email" value={user.email} disabled className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-400 font-medium cursor-not-allowed outline-none" />
+            </div>
+            <div className="field">
+              <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Unit / Fakultas</label>
+              <input type="text" value={user.unit} disabled className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-400 font-medium cursor-not-allowed outline-none" />
+            </div>
 
-      <input type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+            {/* Baris 3 (Full Width) */}
+            <div className="md:col-span-2">
+              <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Nomor Kontak / WA</label>
+              <input type="tel" value={user.phone} disabled className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-400 font-medium cursor-not-allowed outline-none" />
+            </div>
+          </div>
+        </div>
 
-      <button type="submit" className="w-full bg-blue-600 text-white p-2 rounded">Kirim Tiket</button>
-    </form>
+        {/* SECTION: DETAIL MASALAH */}
+        <div>
+          <div className="flex items-center gap-2 mb-4 border-b border-gray-100 pb-2">
+            <div className="w-1 h-5 bg-[var(--gold)] rounded-full"></div>
+            <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Detail Aduan</h3>
+          </div>
+          
+          <div className="space-y-5">
+            <div className="field">
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Topik Bantuan (Help Topic) <span className="text-red-500">*</span></label>
+              <select required className="w-full p-3 border border-gray-200 rounded-xl bg-white text-gray-800 focus:ring-2 focus:ring-[var(--gold)]/20 focus:border-[var(--gold)] outline-none transition-all shadow-sm">
+                <option value="">-- Pilih Kategori Kendala --</option>
+                <option value="sso">Masalah Akun SSO & Kata Sandi</option>
+                <option value="wifi">Gangguan WiFi Kampus / Eduroam</option>
+                <option value="siap">Aplikasi SIAP / Registrasi KRS</option>
+                <option value="email">Layanan Email Undip Mail</option>
+                <option value="hardware">Kerusakan Perangkat Keras / Laboratorium</option>
+              </select>
+            </div>
+
+            <div className="field">
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Penjelasan Detail Kendala <span className="text-red-500">*</span></label>
+              <textarea rows={5} placeholder="Tuliskan kronologi masalah Anda secara rinci..." required className="w-full p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[var(--gold)]/20 focus:border-[var(--gold)] outline-none transition-all resize-none shadow-sm"></textarea>
+            </div>
+          </div>
+        </div>
+
+        {/* TOMBOL AKSI */}
+        <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-100">
+          <button type="submit" className="flex-1 py-3.5 bg-[var(--ink)] hover:bg-[var(--ink)]/90 text-white font-bold rounded-xl transition-all shadow-md">
+            Kirim Laporan
+          </button>
+          <button type="button" onClick={() => router.push('/ticket/status')} className="sm:w-1/3 py-3.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-semibold rounded-xl transition-all text-center">
+            Cek Status Tiket
+          </button>
+        </div>
+
+      </form>
+    </div>
   );
 }
