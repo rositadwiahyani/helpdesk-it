@@ -1,10 +1,29 @@
 'use client';
 import { useState } from 'react';
+import { usePathname } from 'next/navigation';
 import AdminSidebar from './AdminSidebar';
 import AdminTopbar from './AdminTopbar';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const pathname = usePathname();
+
+  // Helper to determine page title from pathname
+  const getPageTitle = () => {
+    if (!pathname) return 'Dashboard';
+    if (pathname.includes('/users')) return 'Users';
+    if (pathname.includes('/tickets')) return 'Tickets';
+    if (pathname.includes('/departments')) return 'Departments';
+    if (pathname.includes('/help-topics')) return 'Help Topics';
+    if (pathname.includes('/roles')) return 'Roles';
+    if (pathname.includes('/knowledgebase')) return 'Knowledgebase';
+    if (pathname.includes('/settings')) return 'Settings';
+    if (pathname.includes('/emails')) return 'Emails';
+    if (pathname.includes('/agents') || pathname.includes('/dashboard/agent-directory')) return 'Agents';
+    if (pathname.includes('/manage')) return 'Manage';
+    if (pathname.includes('/dashboard/profile')) return 'My Profile';
+    return 'Dashboard';
+  };
 
   return (
     <div className="min-h-screen bg-[var(--paper)] flex">
@@ -15,7 +34,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="flex-1 flex flex-col min-w-0 transition-all duration-300 lg:pl-64">
         
         {/* Topbar (Atas) */}
-        <AdminTopbar onMenuClick={() => setIsSidebarOpen(true)} />
+        <AdminTopbar 
+          onMenuClick={() => setIsSidebarOpen(true)} 
+          pageTitle={getPageTitle()}
+        />
 
         {/* Placeholder Breadcrumb & Main Content */}
         <main className="flex-1 p-4 lg:p-8 overflow-y-auto">

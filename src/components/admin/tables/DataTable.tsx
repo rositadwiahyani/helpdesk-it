@@ -15,6 +15,7 @@ export interface ColumnDef<T> {
 export interface DataTableProps<T> {
   columns: ColumnDef<T>[];
   data: T[];
+  isLoading?: boolean;
   emptyMessage?: string;
   searchPlaceholder?: string;
   hidePagination?: boolean;
