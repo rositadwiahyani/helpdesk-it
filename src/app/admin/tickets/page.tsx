@@ -132,6 +132,16 @@ export default function TicketsPage() {
     return getTicketStats(ticketsList.filter(t => !t.isDeleted));
   }, [ticketsList]);
 
+  const handleStatsClick = (category: 'Open' | 'In Progress' | 'Resolved' | 'Closed') => {
+    if (category === 'Open') {
+      setActiveTab('Open');
+      setStatusFilter('All');
+    } else {
+      setActiveTab('All');
+      setStatusFilter(category);
+    }
+  };
+
   return (
     <AdminLayout>
       <div className="flex flex-col gap-6">
@@ -160,6 +170,7 @@ export default function TicketsPage() {
                 title="Open Tickets" 
                 value={stats.open} 
                 description="Needs action" 
+                onClick={() => handleStatsClick('Open')}
                 icon={
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <circle cx="12" cy="12" r="10" /><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3" />
@@ -170,6 +181,7 @@ export default function TicketsPage() {
                 title="In Progress" 
                 value={stats.inProgress} 
                 description="Currently active" 
+                onClick={() => handleStatsClick('In Progress')}
                 icon={
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -180,6 +192,7 @@ export default function TicketsPage() {
                 title="Resolved" 
                 value={stats.resolved} 
                 description="Awaiting confirmation" 
+                onClick={() => handleStatsClick('Resolved')}
                 icon={
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -190,6 +203,7 @@ export default function TicketsPage() {
                 title="Closed" 
                 value={stats.closed} 
                 description="Completed tickets" 
+                onClick={() => handleStatsClick('Closed')}
                 icon={
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />

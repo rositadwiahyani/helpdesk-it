@@ -546,7 +546,7 @@ export const DUMMY_TICKETS: Ticket[] = [
 export const getTicketStats = (tickets: Ticket[]) => {
   const stats = {
     total: tickets.length,
-    open: tickets.filter(t => t.status === 'Open').length,
+    open: tickets.filter(t => t.status === 'Open' || t.status === 'Waiting').length,
     inProgress: tickets.filter(t => t.status === 'In Progress').length,
     waiting: tickets.filter(t => t.status === 'Waiting').length,
     resolved: tickets.filter(t => t.status === 'Resolved').length,

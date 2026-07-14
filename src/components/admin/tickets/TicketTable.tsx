@@ -99,6 +99,12 @@ export default function TicketTable({
       className: "w-52"
     },
     {
+      header: 'Status',
+      accessorKey: 'status',
+      cell: (ticket) => <StatusBadge status={ticket.status} />,
+      className: "w-32"
+    },
+    {
       header: 'Priority',
       accessorKey: 'priority',
       cell: (ticket) => <PriorityBadge priority={ticket.priority} />,
