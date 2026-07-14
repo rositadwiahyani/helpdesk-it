@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -8,7 +8,9 @@ export default function Header() {
   const [isShrunk, setIsShrunk] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  
   const router = useRouter();
+  const pathname = usePathname(); 
 
   useEffect(() => {
     const handleScroll = () => setIsShrunk(window.scrollY > 30);
@@ -27,7 +29,6 @@ export default function Header() {
   };
 
   return (
-    // Tambahin class "relative" di header biar menu dropdown-nya ngikut posisinya
     <header id="site-header" className={`relative ${isShrunk ? 'is-shrunk' : ''}`}>
       <div className="container header-inner relative z-50">
         <Link href="/" className="brand">
@@ -36,25 +37,56 @@ export default function Header() {
 
         {/* Navigasi Desktop */}
         <nav className="main-nav hidden md:flex" aria-label="Navigasi utama">
-          <Link href="/">Beranda</Link>
-          <Link href="/knowledgebase">Knowledgebase</Link>
-          <Link href="/ticket">Buka Tiket</Link>
+          <Link href="/" className={pathname === '/' ? 'active' : ''}>Beranda</Link>
+          <Link href="/knowledgebase" className={pathname === '/knowledgebase' ? 'active' : ''}>Knowledgebase</Link>
+          <Link href="/ticket" className={pathname === '/ticket' ? 'active' : ''}>Buka Tiket</Link>
         </nav>
 
         <div className="header-actions flex items-center gap-4">
-          {/* Tombol Desktop */}
-          <div className="hidden md:flex items-center gap-2">
+          
+          {/* =========================================
+              TOMBOL DESKTOP (PURE ICON TANPA FRAME)
+              ========================================= */}
+          <div className="hidden md:flex items-center gap-4">
             {isLoggedIn ? (
               <>
-                <Link href="/profile" className="btn btn-sm btn-outline-dark text-white">Profil</Link>
-                <button onClick={handleLogout} className="btn btn-sm btn-gold">Keluar</button>
+                {/* Ikon Profil (One Line / Outline Putih) */}
+                <Link 
+                  href="/profile" 
+                  title="Profil Saya"
+                  className="hover:opacity-80 transition-opacity flex items-center justify-center"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                  </svg>
+                </Link>
+                
+                {/* Ikon Keluar (Putih polos outline, jadi merah kalau di-hover) */}
+                <button 
+                  onClick={handleLogout} 
+                  title="Keluar"
+                  className="text-white hover:text-red-400 transition-colors flex items-center justify-center ml-1"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+                  </svg>
+                </button>
               </>
             ) : (
-              <Link href="/login" className="btn btn-outline-dark btn-sm text-white">Masuk</Link>
+              // Ikon Masuk (Putih polos outline)
+              <Link 
+                href="/login" 
+                title="Masuk Akun"
+                className="hover:opacity-80 transition-opacity flex items-center justify-center"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>
+                </svg>
+              </Link>
             )}
           </div>
 
-          {/* Tombol Hamburger */}
+          {/* Tombol Hamburger Mobile */}
           <button 
             className="hamburger block md:hidden text-white focus:outline-none p-2" 
             onClick={() => setIsMobileOpen(!isMobileOpen)}
@@ -71,11 +103,7 @@ export default function Header() {
         </div>
       </div>
       
-      {/* =========================================
-          DESAIN MOBILE MENU BARU (FLOATING CARD)
-          ========================================= */}
-      
-      {/* 1. Overlay Gelap (Biar fokus ke menu & bisa diklik buat nutup) */}
+      {/* Overlay Gelap Mobile */}
       <div 
         className={`md:hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-opacity duration-300 ${
           isMobileOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
@@ -83,30 +111,29 @@ export default function Header() {
         onClick={() => setIsMobileOpen(false)}
       />
 
-      {/* 2. Menu Card */}
+      {/* Menu Card Mobile */}
       <nav 
         className={`md:hidden absolute top-[calc(100%+0.5rem)] left-4 right-4 bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-gray-100 z-50 overflow-hidden transition-all duration-300 origin-top transform ${
           isMobileOpen ? 'scale-y-100 opacity-100 translate-y-0' : 'scale-y-95 opacity-0 -translate-y-4 pointer-events-none'
         }`}
       >
         <div className="flex flex-col p-3">
-          <Link href="/" onClick={() => setIsMobileOpen(false)} className="px-5 py-4 text-gray-700 font-semibold rounded-2xl hover:bg-gray-50 hover:text-[var(--gold)] active:bg-gray-100 transition-colors">
+          <Link href="/" onClick={() => setIsMobileOpen(false)} className={`px-5 py-4 font-semibold rounded-2xl transition-colors ${pathname === '/' ? 'text-[var(--gold)] bg-[var(--gold)]/10' : 'text-gray-700 hover:bg-gray-50 hover:text-[var(--gold)] active:bg-gray-100'}`}>
             Beranda
           </Link>
-          <Link href="/knowledgebase" onClick={() => setIsMobileOpen(false)} className="px-5 py-4 text-gray-700 font-semibold rounded-2xl hover:bg-gray-50 hover:text-[var(--gold)] active:bg-gray-100 transition-colors">
+          <Link href="/knowledgebase" onClick={() => setIsMobileOpen(false)} className={`px-5 py-4 font-semibold rounded-2xl transition-colors ${pathname === '/knowledgebase' ? 'text-[var(--gold)] bg-[var(--gold)]/10' : 'text-gray-700 hover:bg-gray-50 hover:text-[var(--gold)] active:bg-gray-100'}`}>
             Knowledgebase
           </Link>
-          <Link href="/ticket" onClick={() => setIsMobileOpen(false)} className="px-5 py-4 text-gray-700 font-semibold rounded-2xl hover:bg-gray-50 hover:text-[var(--gold)] active:bg-gray-100 transition-colors">
+          <Link href="/ticket" onClick={() => setIsMobileOpen(false)} className={`px-5 py-4 font-semibold rounded-2xl transition-colors ${pathname === '/ticket' ? 'text-[var(--gold)] bg-[var(--gold)]/10' : 'text-gray-700 hover:bg-gray-50 hover:text-[var(--gold)] active:bg-gray-100'}`}>
             Buka Tiket
           </Link>
           
           {isLoggedIn ? (
             <>
-              <Link href="/profile" onClick={() => setIsMobileOpen(false)} className="px-5 py-4 text-gray-700 font-semibold rounded-2xl hover:bg-gray-50 hover:text-[var(--gold)] active:bg-gray-100 transition-colors">
+              <Link href="/profile" onClick={() => setIsMobileOpen(false)} className={`px-5 py-4 font-semibold rounded-2xl transition-colors ${pathname === '/profile' ? 'text-[var(--gold)] bg-[var(--gold)]/10' : 'text-gray-700 hover:bg-gray-50 hover:text-[var(--gold)] active:bg-gray-100'}`}>
                 Profil Saya
               </Link>
               
-              {/* Tombol Logout Estetik */}
               <div className="mt-2 pt-2 border-t border-gray-100">
                 <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 py-3.5 bg-red-50 text-red-600 font-bold rounded-xl hover:bg-red-100 transition-colors">
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
