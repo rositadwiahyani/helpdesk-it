@@ -37,7 +37,7 @@ export const registerUser = async (data: RegisterInput) => {
             email: data.email,
             nim_nip: data.nimNip || null,
             unit: data.unit || null,
-            role_id: 2, // Default level akses: 2 untuk Client/User umum
+            role_id: 1, // user akses
           }
         ]);
 
