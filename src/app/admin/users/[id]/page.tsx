@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, use } from 'react';
 import Link from 'next/link';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
 import RoleBadge from '@/components/admin/common/RoleBadge';
@@ -16,9 +16,11 @@ const DUMMY_USER_DETAIL = {
   updated: '07/14/2026 08:46:30 AM',
 };
 
-export default function UserDetailPage({ params }: { params: { id: string } }) {
+export default function UserDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const unwrappedParams = use(params);
+  const userId = unwrappedParams.id;
   const [activeTab, setActiveTab] = useState<'tickets' | 'notes'>('tickets');
-  const user = DUMMY_USER_DETAIL; // Replace with actual fetch based on params.id later
+  const user = DUMMY_USER_DETAIL; // Replace with actual fetch based on userId later
 
   return (
     <AdminLayout>

@@ -506,68 +506,16 @@ footer{background:var(--ink); color:rgba(250,246,236,0.62); padding:64px 0 28px;
   height:16px; color:var(--gold-soft); flex:none;}
 
 @media (prefers-reduced-motion: reduce){
+  *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important;
+  scroll-behavior:auto !important;}
 }
 
-.faq-layout{
-  display:grid;
-  grid-template-columns:2fr 340px;
-  gap:36px;
-  align-items:start;
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
-
-.contact-sidebar{
-  position:sticky;
-  top:100px;
-
-  display:flex;
-  flex-direction:column;
-  gap:18px;
-}
-
-.contact-sidebar h3{
-  font-size:28px;
-  font-weight:700;
-}
-
-.contact-desc{
-  color:var(--text-dim);
-  margin-bottom:8px;
-}
-
-.contact-mini-card{
-  background:#fff;
-  border:1px solid var(--line);
-  border-radius:16px;
-  padding:20px;
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-  box-shadow:var(--shadow-soft);
-}
-
-.contact-mini-card h4{
-  font-size:17px;
-  margin:0;
-}
-
-.contact-mini-card span{
-  color:var(--text-dim);
-  font-size:14px;
-}
-
-.contact-sidebar .btn{
-  margin-top:10px;
-}
-
-@media(max-width:960px){
-
-  .faq-layout{
-      grid-template-columns:1fr;
-  }
-
-  .contact-sidebar{
-      position:static;
-      margin-top:30px;
-  }
-
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
 }

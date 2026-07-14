@@ -7,11 +7,19 @@ export interface StatCardProps {
   description?: string;
   trend?: string;
   trendUp?: boolean;
+  onClick?: () => void;
 }
 
-export default function StatCard({ title, value, icon, description, trend, trendUp }: StatCardProps) {
+export default function StatCard({ title, value, icon, description, trend, trendUp, onClick }: StatCardProps) {
+  const clickableClass = onClick ? 'cursor-pointer hover:border-[var(--gold-soft)] bg-white hover:bg-[var(--paper-2)]' : '';
+
   return (
-    <div className="bg-white p-5 rounded-2xl border border-[var(--line)] shadow-sm flex flex-col gap-3 group hover:border-[var(--gold-soft)] transition-colors">
+    <button
+      type="button"
+      onClick={onClick}
+      className={`text-left bg-white p-5 rounded-2xl border border-[var(--line)] shadow-sm flex flex-col gap-3 group transition-colors ${clickableClass}`}
+      aria-label={onClick ? `Filter by ${title}` : undefined}
+    >
       <div className="flex items-center justify-between">
         <span className="text-[13.5px] font-bold text-[var(--text-dim)] uppercase tracking-wide">{title}</span>
         <div className="w-10 h-10 rounded-xl bg-[var(--paper-2)] text-[var(--gold-soft)] flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -31,6 +39,6 @@ export default function StatCard({ title, value, icon, description, trend, trend
           <p className="text-[12.5px] text-[var(--text-dim)]">{description}</p>
         )}
       </div>
-    </div>
+    </button>
   );
 }
