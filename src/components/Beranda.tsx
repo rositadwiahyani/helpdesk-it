@@ -14,9 +14,8 @@ export default function Beranda() {
     setIsLoggedIn(localStorage.getItem('isLoggedIn') === 'true');
   }, []);
 
-  // Fungsi sakti buat jaga pintu (Protected Action)
   const handleProtectedAction = (e: React.MouseEvent, path: string) => {
-    e.preventDefault(); // Mencegah reload kalau pakai tag <a>
+    e.preventDefault();
     if (isLoggedIn) {
       router.push(path);
     } else {
@@ -85,7 +84,6 @@ export default function Beranda() {
           <div className="container">
             <div className="section-head reveal is-visible">
               <div>
-                <span className="eyebrow" style={{color: 'var(--gold-dim)'}}>Sebelum membuka tiket</span>
                 <h2 style={{marginTop: '12px'}}>Yang paling sering ditanyakan</h2>
                 <p>Coba cek dulu di sini, kemungkinan besar jawabannya sudah tersedia.</p>
               </div>
@@ -118,7 +116,6 @@ export default function Beranda() {
           <div className="container">
             <div className="section-head reveal is-visible">
               <div>
-                <span className="eyebrow" style={{color: 'var(--gold-dim)'}}>Basis pengetahuan</span>
                 <h2 style={{marginTop: '12px'}}>Jelajahi panduan berdasarkan topik</h2>
                 <p>Semua artikel ditulis singkat dan langsung ke langkah penyelesaiannya.</p>
               </div>
@@ -133,32 +130,32 @@ export default function Beranda() {
 
             <div className="kb-grid reveal is-visible" id="kb-grid">
               <div className="kb-card cursor-pointer" onClick={(e) => handleProtectedAction(e, '/knowledgebase/sso')}>
-                <div className="kb-top"><div className="kb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div><span className="kb-count">24 artikel</span></div>
+                <div className="kb-top"><div className="kb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div></div>
                 <h3>Akun &amp; Kata Sandi (SSO)</h3>
                 <p>Aktivasi akun, atur ulang kata sandi, dan verifikasi identitas.</p>
               </div>
               <div className="kb-card cursor-pointer" onClick={(e) => handleProtectedAction(e, '/knowledgebase/email')}>
-                <div className="kb-top"><div className="kb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></div><span className="kb-count">18 artikel</span></div>
+                <div className="kb-top"><div className="kb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></div></div>
                 <h3>Email Undip</h3>
                 <p>Konfigurasi email, kuota penyimpanan, dan pemulihan akses.</p>
               </div>
               <div className="kb-card cursor-pointer" onClick={(e) => handleProtectedAction(e, '/knowledgebase/siap')}>
-                <div className="kb-top"><div className="kb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></div><span className="kb-count">31 artikel</span></div>
+                <div className="kb-top"><div className="kb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></div></div>
                 <h3>Sistem Akademik (SIAP/SIA)</h3>
                 <p>Kendala KRS, transkrip nilai, dan input rencana studi.</p>
               </div>
               <div className="kb-card cursor-pointer" onClick={(e) => handleProtectedAction(e, '/knowledgebase/elearning')}>
-                <div className="kb-top"><div className="kb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19V6a2 2 0 0 1 2-2h9l5 5v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M9 14l2 2 4-4"/></svg></div><span className="kb-count">27 artikel</span></div>
+                <div className="kb-top"><div className="kb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19V6a2 2 0 0 1 2-2h9l5 5v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M9 14l2 2 4-4"/></svg></div></div>
                 <h3>E-Learning (Kuliah Online)</h3>
                 <p>Unggah tugas, akses materi, dan kendala ujian daring.</p>
               </div>
               <div className="kb-card cursor-pointer" onClick={(e) => handleProtectedAction(e, '/knowledgebase/jaringan')}>
-                <div className="kb-top"><div className="kb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M2 8.5a17 17 0 0 1 20 0M5.5 12a12 12 0 0 1 13 0M9 15.5a7 7 0 0 1 6 0"/><circle cx="12" cy="19" r="1.2" fill="currentColor" stroke="none"/></svg></div><span className="kb-count">15 artikel</span></div>
+                <div className="kb-top"><div className="kb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M2 8.5a17 17 0 0 1 20 0M5.5 12a12 12 0 0 1 13 0M9 15.5a7 7 0 0 1 6 0"/><circle cx="12" cy="19" r="1.2" fill="currentColor" stroke="none"/></svg></div></div>
                 <h3>Jaringan &amp; WiFi Kampus</h3>
                 <p>Koneksi eduroam, VPN, dan pemetaan area jangkauan.</p>
               </div>
               <div className="kb-card cursor-pointer" onClick={(e) => handleProtectedAction(e, '/knowledgebase/software')}>
-                <div className="kb-top"><div className="kb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></div><span className="kb-count">12 artikel</span></div>
+                <div className="kb-top"><div className="kb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></div></div>
                 <h3>Perangkat &amp; Perangkat Lunak</h3>
                 <p>Instalasi aplikasi kampus dan pengaturan perangkat kerja.</p>
               </div>
@@ -171,7 +168,6 @@ export default function Beranda() {
           <div className="container">
             <div className="section-head reveal is-visible">
               <div>
-                <span className="eyebrow" style={{color: 'var(--gold-dim)'}}>Kanal langsung</span>
                 <h2 style={{marginTop: '12px'}}>Butuh bantuan langsung?</h2>
                 <p>Kalau basis pengetahuan belum menjawab, tim kami siap dihubungi lewat kanal berikut.</p>
               </div>
