@@ -21,6 +21,7 @@ export interface DataTableProps<T> {
   hidePagination?: boolean;
   hideSearchBar?: boolean;
   footerLeft?: React.ReactNode;
+  tableClassName?: string;
 }
 
 export default function DataTable<T>({ 
@@ -31,7 +32,8 @@ export default function DataTable<T>({
   searchPlaceholder = "Cari data...",
   hidePagination = false,
   hideSearchBar = false,
-  footerLeft
+  footerLeft,
+  tableClassName
 }: DataTableProps<T>) {
   
   // STATES
@@ -111,7 +113,7 @@ export default function DataTable<T>({
 
       {/* BODY: Wrapper Tabel untuk Scrollable X */}
       <div className="overflow-x-auto w-full">
-        <table className="w-full text-left border-collapse">
+        <table className={`w-full text-left border-collapse ${tableClassName || ''}`}>
           <thead>
             <tr className="bg-[var(--paper-2)]/50 border-b border-[var(--line)]">
               {columns.map((col, index) => (
@@ -170,7 +172,7 @@ export default function DataTable<T>({
             {!isLoading && paginatedData.length > 0 && paginatedData.map((item, rowIndex) => (
               <tr key={rowIndex} className="hover:bg-[var(--paper)]/50 transition-colors">
                 {columns.map((col, colIndex) => (
-                  <td key={colIndex} className="px-6 py-4 text-[14px] text-[var(--ink)]">
+                  <td key={colIndex} className={`px-6 py-4 text-[14px] text-[var(--ink)] ${col.className || ''}`}>
                     {/* Render kustom (cell) jika ada, jika tidak render nilai properti langsung (accessorKey) */}
                     {col.cell 
                       ? col.cell(item) 
