@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
@@ -148,8 +149,14 @@ export default function Beranda() {
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-white">WhatsApp Helpdesk</p>
-                      <p className="text-xs text-slate-400 mb-1">Untuk respons tercepat pada jam kerja.</p>
-                      <a href="#" className="text-sm font-bold text-blue-300 hover:underline">+62 812-xxxx-xxxx</a>
+                      <p className="text-xs text-slate-400 mb-3">Untuk respons tercepat pada jam kerja.</p>
+                      <Image 
+                        src="/HelpDesk IT Undip - Contoh.png" 
+                        alt="WhatsApp QR Code" 
+                        width={120} 
+                        height={120} 
+                        className="rounded-lg object-cover"
+                      />
                     </div>
                   </div>
 
