@@ -132,13 +132,20 @@ export default function TicketsPage() {
     return getTicketStats(ticketsList.filter(t => !t.isDeleted));
   }, [ticketsList]);
 
+  // Table sort control (allow StatCard clicks to set default table sorting)
+  const [tableSort, setTableSort] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+
   const handleStatsClick = (category: 'Open' | 'In Progress' | 'Resolved' | 'Closed') => {
     if (category === 'Open') {
       setActiveTab('Open');
       setStatusFilter('All');
+      // show most recently updated first for Open view
+      setTableSort({ key: 'updatedDate', direction: 'desc' });
     } else {
       setActiveTab('All');
       setStatusFilter(category);
+      // default: newest first
+      setTableSort({ key: 'updatedDate', direction: 'desc' });
     }
   };
 
@@ -264,6 +271,7 @@ export default function TicketsPage() {
               selectedIds={selectedIds}
               setSelectedIds={setSelectedIds}
               isLoading={isLoading}
+              initialSort={tableSort}
             />
           </div>
         )}

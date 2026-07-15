@@ -1,6 +1,5 @@
-'use client';
-import React, { useState, useMemo } from 'react';
-
+ 'use client';
+import React, { useState, useMemo, useEffect } from 'react';
 // ==========================================
 // TIPE DATA & PROPS
 // ==========================================
@@ -22,6 +21,7 @@ export interface DataTableProps<T> {
   hideSearchBar?: boolean;
   footerLeft?: React.ReactNode;
   tableClassName?: string;
+  initialSort?: { key: string; direction: 'asc' | 'desc' } | null;
 }
 
 export default function DataTable<T>({ 
@@ -33,7 +33,8 @@ export default function DataTable<T>({
   hidePagination = false,
   hideSearchBar = false,
   footerLeft,
-  tableClassName
+  tableClassName,
+  initialSort
 }: DataTableProps<T>) {
   
   // STATES
@@ -85,6 +86,13 @@ export default function DataTable<T>({
     }
     setSortConfig({ key, direction });
   };
+
+  // Sync external initial sort requests (e.g., when clicking a StatCard)
+  useEffect(() => {
+    if (initialSort) {
+      setSortConfig(initialSort);
+    }
+  }, [initialSort]);
   
   return (
     <div className="flex flex-col w-full bg-white rounded-2xl border border-[var(--line)] shadow-sm overflow-hidden">

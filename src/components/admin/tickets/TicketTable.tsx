@@ -12,6 +12,7 @@ interface TicketTableProps {
   selectedIds: string[];
   setSelectedIds: React.Dispatch<React.SetStateAction<string[]>>;
   isLoading?: boolean;
+  initialSort?: { key: string; direction: 'asc' | 'desc' } | null;
 }
 
 export default function TicketTable({
@@ -19,6 +20,7 @@ export default function TicketTable({
   selectedIds,
   setSelectedIds,
   isLoading = false
+  , initialSort = null
 }: TicketTableProps) {
 
   const handleToggleSelectAll = (checked: boolean) => {
@@ -141,6 +143,7 @@ export default function TicketTable({
         columns={columns}
         data={tickets}
         isLoading={isLoading}
+        initialSort={initialSort}
         emptyMessage="No tickets found"
         hideSearchBar={true}
         tableClassName="table-fixed w-full"
