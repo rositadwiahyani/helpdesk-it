@@ -156,20 +156,6 @@ export default function Beranda() {
 
                   <div className="border-t border-slate-700"></div>
 
-                  {/* Email */}
-                  <div className="flex items-start gap-4">
-                    <div className="mt-1 text-blue-400">
-                      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-white">Email Resmi</p>
-                      <p className="text-xs text-slate-400 mb-1">Cocok untuk kendala yang perlu lampiran.</p>
-                      <a href="mailto:helpdesk@undip.ac.id" className="text-sm font-bold text-blue-300 hover:underline">helpdesk@undip.ac.id</a>
-                    </div>
-                  </div>
-
-                  <div className="border-t border-slate-700"></div>
-
                   {/* Jam Operasional */}
                   <div className="flex items-start gap-4">
                     <div className="mt-1 text-blue-400">
