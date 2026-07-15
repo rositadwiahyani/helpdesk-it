@@ -519,3 +519,15 @@ footer{background:var(--ink); color:rgba(250,246,236,0.62); padding:64px 0 28px;
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
+/* Animasi Pop untuk Kartu Quick Actions - Versi Lebih Smooth */
+@keyframes popInCard {
+  0% { opacity: 0; transform: translateY(40px) scale(0.95); }
+  60% { opacity: 1; transform: translateY(-3px) scale(1.01); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.animate-pop-card {
+  /* Durasi diubah jadi 0.9s biar lebih rileks dan mulus */
+  animation: popInCard 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
