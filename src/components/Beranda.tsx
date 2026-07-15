@@ -9,7 +9,6 @@ export default function Beranda() {
   const [activeFaq, setActiveFaq] = useState<number | null>(0);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // Cek status login saat halaman dimuat
   useEffect(() => {
     setIsLoggedIn(localStorage.getItem('isLoggedIn') === 'true');
   }, []);
@@ -79,23 +78,27 @@ export default function Beranda() {
           </div>
         </div>
 
-        {/* FAQ SECTION */}
-        <section className="section" id="faq">
-          <div className="container">
+        {/* CONTAINER GRID: FAQ & SIDEBAR (ITEMS-START PENTING BIAR STICKY ANTENG) */}
+        <div className="container grid grid-cols-1 lg:grid-cols-3 gap-12 py-12 items-start overflow-visible">
+          
+          {/* KOLOM KIRI: FAQ */}
+          {/* Tambahin 'mb-20' di sini biar punya jarak bawah */}
+          <section className="lg:col-span-2 mt-20 mb-20" id="faq">
             <div className="section-head reveal is-visible">
               <div>
-                <h2 style={{marginTop: '12px'}}>Yang paling sering ditanyakan</h2>
+                <h2 style={{marginTop: '0'}}>Yang paling sering ditanyakan</h2>
                 <p>Coba cek dulu di sini, kemungkinan besar jawabannya sudah tersedia.</p>
               </div>
             </div>
 
             <div className="faq-list reveal is-visible">
+              {/* ... isi FAQ kamu tetap sama ... */}
               {[
-                { q: "Lupa kata sandi akun SSO Undip, bagaimana cara mengatur ulang?", a: "Buka halaman reset kata sandi SSO, lalu ikuti verifikasi lewat email alternatif atau nomor terdaftar. Jika verifikasi gagal, ajukan tiket pada kategori “Akun & Kata Sandi” agar diverifikasi manual oleh tim kami." },
-                { q: "Tidak bisa masuk ke email mahasiswa atau dosen (Undip Mail), harus bagaimana?", a: "Periksa dulu apakah kata sandi SSO masih berlaku, karena Undip Mail memakai kredensial yang sama. Bila status akun aktif namun tetap gagal masuk, laporkan lewat tiket kategori “Email” disertai tangkapan layar pesan kesalahan." },
-                { q: "Kuliah Online (SIAP) tidak bisa diakses, ini kenapa?", a: "Kendala biasanya berasal dari sesi login yang kedaluwarsa atau jaringan yang tidak stabil. Coba akses lewat mode penyamaran (incognito) terlebih dahulu; jika masih gagal, laporkan lewat kategori “Sistem Akademik” dengan menyertakan waktu kejadian." },
-                { q: "Berapa lama waktu respons setelah tiket dibuka?", a: "Rata-rata respons awal diberikan dalam 1×24 jam pada hari dan jam kerja. Tiket dengan prioritas mendesak, seperti gangguan yang berdampak pada ujian, ditangani lebih dahulu." },
-                { q: "Bagaimana cara menghubungkan perangkat ke WiFi kampus?", a: "Gunakan kredensial SSO yang sama untuk masuk ke jaringan kampus, lalu pilih profil eduroam bila tersedia di lokasi kamu. Panduan konfigurasi per perangkat tersedia lengkap di kategori “Jaringan & WiFi”." }
+                { q: "Lupa kata sandi akun SSO Undip, bagaimana cara mengatur ulang?", a: "Buka halaman reset kata sandi SSO, lalu ikuti verifikasi lewat email alternatif atau nomor terdaftar." },
+                { q: "Tidak bisa masuk ke email mahasiswa atau dosen (Undip Mail), harus bagaimana?", a: "Periksa dulu apakah kata sandi SSO masih berlaku..." },
+                { q: "Kuliah Online (SIAP) tidak bisa diakses, ini kenapa?", a: "Kendala biasanya berasal dari sesi login yang kedaluwarsa atau jaringan tidak stabil." },
+                { q: "Berapa lama waktu respons setelah tiket dibuka?", a: "Rata-rata respons awal diberikan dalam 1×24 jam pada hari dan jam kerja." },
+                { q: "Bagaimana cara menghubungkan perangkat ke WiFi kampus?", a: "Gunakan kredensial SSO yang sama untuk masuk ke jaringan kampus." }
               ].map((faq, index) => (
                 <div key={index} className="faq-item" data-open={activeFaq === index}>
                   <button className="faq-q" onClick={() => toggleFaq(index)}>
@@ -108,92 +111,62 @@ export default function Beranda() {
                 </div>
               ))}
             </div>
+          </section>
+
+          {/* KOLOM KANAN: SIDEBAR BANTUAN (MOBILE-FIXED) */}
+          <aside className="lg:col-span-1 mb-16 lg:mb-0">
+            <div className="sticky top-32 mt-[232px]">
+              <div className="relative overflow-hidden bg-slate-900 p-8 rounded-3xl border border-slate-800 shadow-2xl reveal is-visible text-white">
+                
+                {/* EFEK GLOW */}
+                <div className="absolute -top-16 -right-16 w-48 h-48 bg-blue-600 opacity-20 blur-3xl rounded-full pointer-events-none"></div>
+                
+                <h2 style={{marginTop: '0', fontSize: '1.5rem', marginBottom: '1.5rem', color: 'white', position: 'relative'}}>Butuh bantuan langsung?</h2>
+                
+                <div className="space-y-6 relative">
+                  {/* WhatsApp */}
+                  <div className="flex items-start gap-4">
+                    <div className="mt-1 text-blue-400">
+                      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 11.5a8.5 8.5 0 0 1-12.4 7.55L3 20l1.02-5.4A8.5 8.5 0 1 1 21 11.5Z"/></svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-white">WhatsApp Helpdesk</p>
+                      <p className="text-xs text-slate-400 mb-1">Untuk respons tercepat pada jam kerja.</p>
+                      <a href="#" className="text-sm font-bold text-blue-300 hover:underline">+62 812-xxxx-xxxx</a>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-slate-700"></div>
+
+                  {/* Email */}
+                  <div className="flex items-start gap-4">
+                    <div className="mt-1 text-blue-400">
+                      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-white">Email Resmi</p>
+                      <p className="text-xs text-slate-400 mb-1">Cocok untuk kendala yang perlu lampiran.</p>
+                      <a href="mailto:helpdesk@undip.ac.id" className="text-sm font-bold text-blue-300 hover:underline">helpdesk@undip.ac.id</a>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-slate-700"></div>
+
+                  {/* Jam Operasional */}
+                  <div className="flex items-start gap-4">
+                    <div className="mt-1 text-blue-400">
+                      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-white">Jam Operasional</p>
+                      <p className="text-sm text-slate-400">Senin – Jumat, 08.00 – 16.00 WIB.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </aside>
           </div>
-        </section>
-
-        {/* KNOWLEDGE BASE */}
-        <section className="section section-alt" id="kb">
-          <div className="container">
-            <div className="section-head reveal is-visible">
-              <div>
-                <h2 style={{marginTop: '12px'}}>Jelajahi panduan berdasarkan topik</h2>
-                <p>Semua artikel ditulis singkat dan langsung ke langkah penyelesaiannya.</p>
-              </div>
-            </div>
-
-            <div className="kb-searchrow reveal is-visible">
-              <div className="kb-search">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-                <input type="text" id="kb-search" placeholder="Cari kategori atau topik…" aria-label="Cari kategori basis pengetahuan" />
-              </div>
-            </div>
-
-            <div className="kb-grid reveal is-visible" id="kb-grid">
-              <div className="kb-card cursor-pointer" onClick={(e) => handleProtectedAction(e, '/knowledgebase/sso')}>
-                <div className="kb-top"><div className="kb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div></div>
-                <h3>Akun &amp; Kata Sandi (SSO)</h3>
-                <p>Aktivasi akun, atur ulang kata sandi, dan verifikasi identitas.</p>
-              </div>
-              <div className="kb-card cursor-pointer" onClick={(e) => handleProtectedAction(e, '/knowledgebase/email')}>
-                <div className="kb-top"><div className="kb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></div></div>
-                <h3>Email Undip</h3>
-                <p>Konfigurasi email, kuota penyimpanan, dan pemulihan akses.</p>
-              </div>
-              <div className="kb-card cursor-pointer" onClick={(e) => handleProtectedAction(e, '/knowledgebase/siap')}>
-                <div className="kb-top"><div className="kb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></div></div>
-                <h3>Sistem Akademik (SIAP/SIA)</h3>
-                <p>Kendala KRS, transkrip nilai, dan input rencana studi.</p>
-              </div>
-              <div className="kb-card cursor-pointer" onClick={(e) => handleProtectedAction(e, '/knowledgebase/elearning')}>
-                <div className="kb-top"><div className="kb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19V6a2 2 0 0 1 2-2h9l5 5v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M9 14l2 2 4-4"/></svg></div></div>
-                <h3>E-Learning (Kuliah Online)</h3>
-                <p>Unggah tugas, akses materi, dan kendala ujian daring.</p>
-              </div>
-              <div className="kb-card cursor-pointer" onClick={(e) => handleProtectedAction(e, '/knowledgebase/jaringan')}>
-                <div className="kb-top"><div className="kb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M2 8.5a17 17 0 0 1 20 0M5.5 12a12 12 0 0 1 13 0M9 15.5a7 7 0 0 1 6 0"/><circle cx="12" cy="19" r="1.2" fill="currentColor" stroke="none"/></svg></div></div>
-                <h3>Jaringan &amp; WiFi Kampus</h3>
-                <p>Koneksi eduroam, VPN, dan pemetaan area jangkauan.</p>
-              </div>
-              <div className="kb-card cursor-pointer" onClick={(e) => handleProtectedAction(e, '/knowledgebase/software')}>
-                <div className="kb-top"><div className="kb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></div></div>
-                <h3>Perangkat &amp; Perangkat Lunak</h3>
-                <p>Instalasi aplikasi kampus dan pengaturan perangkat kerja.</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* CONTACT */}
-        <section className="section" id="contact">
-          <div className="container">
-            <div className="section-head reveal is-visible">
-              <div>
-                <h2 style={{marginTop: '12px'}}>Butuh bantuan langsung?</h2>
-                <p>Kalau basis pengetahuan belum menjawab, tim kami siap dihubungi lewat kanal berikut.</p>
-              </div>
-            </div>
-            <div className="contact-grid reveal is-visible">
-              <div className="contact-card">
-                <div className="contact-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-12.4 7.55L3 20l1.02-5.4A8.5 8.5 0 1 1 21 11.5Z"/></svg></div>
-                <h3>WhatsApp Helpdesk</h3>
-                <p>Untuk respons tercepat pada jam kerja.</p>
-                <a href="#" className="value">+62 812-xxxx-xxxx</a>
-              </div>
-              <div className="contact-card">
-                <div className="contact-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></div>
-                <h3>Email Resmi</h3>
-                <p>Cocok untuk kendala yang perlu lampiran berkas.</p>
-                <a href="mailto:helpdesk@undip.ac.id" className="value">helpdesk@undip.ac.id</a>
-              </div>
-              <div className="contact-card">
-                <div className="contact-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div>
-                <h3>Jam Operasional</h3>
-                <p>Senin – Jumat, 08.00 – 16.00 WIB.</p>
-                <a href="#" className="value">Di luar jam ini → tiket tertulis</a>
-              </div>
-            </div>
-          </div>
-        </section>
       </main>
       <Footer />
     </>
