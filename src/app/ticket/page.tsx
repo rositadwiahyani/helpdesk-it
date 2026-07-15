@@ -22,8 +22,8 @@ export default function StatusAduanPage() {
               <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Status Aduan Saya</h1>
               <p className="text-gray-500 mt-2">Daftar laporan aktif dan riwayat masalah IT Anda.</p>
             </div>
-            <Link href="/ticket/new" className="bg-[var(--gold)] text-white px-6 py-3 rounded-xl font-bold hover:bg-[var(--gold-soft)] transition-all shadow-lg shadow-[var(--gold)]/20 text-center">
-              + Buka Tiket Baru
+            <Link href="/ticket/new" className="inline-block bg-[var(--gold)] text-white px-6 py-3 rounded-xl font-bold hover:bg-[var(--gold-dim)] transition-colors shadow-md hover:shadow-lg">
+              <span className="text-white">+ Buka Tiket Baru</span>
             </Link>
           </div>
 
