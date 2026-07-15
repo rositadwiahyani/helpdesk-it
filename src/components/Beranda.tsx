@@ -142,20 +142,14 @@ export default function Beranda() {
                 <h2 style={{marginTop: '0', fontSize: '1.5rem', marginBottom: '1.5rem', color: 'white', position: 'relative'}}>Butuh bantuan langsung?</h2>
                 
                 <div className="space-y-6 relative">
-                  {/* WhatsApp */}
-                  <div className="flex items-start gap-4">
-                    <div className="mt-1 text-blue-400">
-                      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 11.5a8.5 8.5 0 0 1-12.4 7.55L3 20l1.02-5.4A8.5 8.5 0 1 1 21 11.5Z"/></svg>
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-white">WhatsApp Helpdesk</p>
-                      <p className="text-xs text-slate-400 mb-3">Untuk respons tercepat pada jam kerja.</p>
+                  {/* WhatsApp QR */}
+                  <div className="flex justify-center">
+                    <div className="bg-white p-4 rounded-xl">
                       <Image 
                         src="/HelpDesk IT Undip - Contoh.png" 
                         alt="WhatsApp QR Code" 
-                        width={120} 
-                        height={120} 
-                        className="rounded-lg object-cover"
+                        width={150} 
+                        height={150} 
                       />
                     </div>
                   </div>
