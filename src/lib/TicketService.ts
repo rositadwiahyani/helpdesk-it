@@ -156,7 +156,7 @@ export const updateTicketStatus = async (
   newStatus: 'submit' | 'accepted' | 'in progress' | 'resolved' | 'closed',
   adminId?: string
 ) => {
-  const updatePayload: any = { 
+  const updatePayload: any = {
     status: newStatus,
     updated_at: new Date().toISOString()
   };
@@ -231,4 +231,43 @@ export const sendTicketMessage = async (
     throw error;
   }
   return data;
+};
+
+/**
+ * Real-time Listener untuk mendengarkan pesan baru secara instan.
+ * Fungsi ini akan digunakan oleh Frontend di dalam useEffect agar chat langsung muncul tanpa refresh.
+ */
+export const subscribeToTicketMessages = (ticketId: string, onNewMessage: (payload: any) => void) => {
+  return supabase
+    .channel(`ticket-chat-${ticketId}`)
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages',
+        filter: `ticket_id=eq.${ticketId}`
+      },
+      async (payload) => {
+        // Ambil data profil pengirim untuk melengkapi data real-time (Nama & Role)
+        const { data: senderProfile } = await supabase
+          .from('profiles')
+          .select(`
+            full_name, 
+            role_id (
+              role_name
+            )
+          `)
+          .eq('id', payload.new.sender_id)
+          .single();
+
+        const fullPayload = {
+          ...payload.new,
+          profiles: senderProfile
+        };
+
+        onNewMessage(fullPayload);
+      }
+    )
+    .subscribe();
 };
