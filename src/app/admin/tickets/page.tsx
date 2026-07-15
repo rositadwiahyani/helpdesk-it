@@ -138,7 +138,8 @@ export default function TicketsPage() {
   const handleStatsClick = (category: 'Open' | 'In Progress' | 'Resolved' | 'Closed') => {
     if (category === 'Open') {
       setActiveTab('Open');
-      setStatusFilter('Open');
+      // Keep status dropdown as 'All' so activeTab filters include Open, In Progress, Waiting
+      setStatusFilter('All');
       // show most recently updated first for Open view
       setTableSort({ key: 'updatedDate', direction: 'desc' });
     } else {
