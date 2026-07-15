@@ -45,11 +45,16 @@ export default function Beranda() {
             </form>
           </div>
         </section>
-
-        {/* QUICK ACTIONS */}
+{/* QUICK ACTIONS */}
         <div className="container quick-wrap">
-          <div className="quick-grid reveal is-visible">
-            <div className="quick-card cursor-pointer" onClick={(e) => handleProtectedAction(e, '/ticket')}>
+          <div className="quick-grid">
+            
+            {/* KARTU 1 - Delay 0.1s */}
+            <div 
+              className="quick-card cursor-pointer animate-pop-card" 
+              style={{ animationDelay: '0.1s' }}
+              onClick={(e) => handleProtectedAction(e, '/ticket')}
+            >
               <div className="quick-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16v12H8l-4 4V4Z"/><path d="M8 9h8M8 12h5"/></svg>
               </div>
@@ -58,7 +63,12 @@ export default function Beranda() {
               <a href="#" className="quick-link" onClick={(e) => handleProtectedAction(e, '/ticket')}>Buka tiket <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
             </div>
             
-            <div className="quick-card cursor-pointer" onClick={(e) => handleProtectedAction(e, '/ticket/status')}>
+            {/* KARTU 2 - Delay 0.3s (Dikasih jeda lebih lama) */}
+            <div 
+              className="quick-card cursor-pointer animate-pop-card" 
+              style={{ animationDelay: '0.3s' }}
+              onClick={(e) => handleProtectedAction(e, '/ticket/status')}
+            >
               <div className="quick-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
               </div>
@@ -67,7 +77,12 @@ export default function Beranda() {
               <a href="#" className="quick-link" onClick={(e) => handleProtectedAction(e, '/ticket/status')}>Cek status <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
             </div>
             
-            <div className="quick-card cursor-pointer" onClick={(e) => handleProtectedAction(e, '/knowledgebase')}>
+            {/* KARTU 3 - Delay 0.5s (Paling terakhir) */}
+            <div 
+              className="quick-card cursor-pointer animate-pop-card" 
+              style={{ animationDelay: '0.5s' }}
+              onClick={(e) => handleProtectedAction(e, '/knowledgebase')}
+            >
               <div className="quick-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 4h9l3 3v13H6V4Z"/><path d="M9 10h6M9 14h6"/></svg>
               </div>
@@ -75,6 +90,7 @@ export default function Beranda() {
               <p>Ratusan panduan langkah-demi-langkah untuk masalah yang paling sering terjadi.</p>
               <a href="#" className="quick-link" onClick={(e) => handleProtectedAction(e, '/knowledgebase')}>Jelajahi basis pengetahuan <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
             </div>
+
           </div>
         </div>
 
