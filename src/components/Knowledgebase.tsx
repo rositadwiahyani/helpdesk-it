@@ -14,28 +14,30 @@ const CATEGORIES = [
 export default function Knowledgebase() {
   return (
     <div className="w-full pb-12">
-      {/* HERO SECTION - Tetap kita pertahankan tapi dipercantik */}
-      <section className="relative bg-gradient-to-b from-white to-gray-50 rounded-3xl p-8 md:p-16 mb-12 border border-gray-100 text-center">
-        <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6">Pusat Bantuan IT</h1>
-        <p className="text-gray-500 text-lg mb-8 max-w-xl mx-auto">
+      {/* HERO SECTION - Hanya heading dan deskripsi */}
+      <section className="relative text-center mb-12 flex flex-col items-center justify-center">
+        <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6 text-center">Pusat Bantuan IT</h1>
+        <p className="text-gray-500 text-lg mb-8 max-w-xl mx-auto text-center">
           Temukan solusi teknis langsung tanpa menunggu antrean tiket.
         </p>
+      </section>
 
-        {/* Search Bar yang lebih clean */}
-        <div className="relative max-w-xl mx-auto">
+      {/* SEARCH BAR - Terpisah dengan spasi besar ke bawah */}
+      <section className="relative mb-32 flex justify-center">
+        <div className="relative max-w-xl w-full px-4">
           <input 
             type="text" 
             placeholder="Cari artikel..." 
             className="w-full p-4 pl-6 pr-16 bg-white border border-gray-200 rounded-2xl shadow-sm focus:ring-2 focus:ring-[var(--gold)] outline-none"
           />
-          <button className="absolute right-2 top-2 p-2 bg-[var(--ink)] text-white rounded-xl">
+          <button className="absolute right-6 top-2 p-2 bg-[var(--ink)] text-white rounded-xl">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
           </button>
         </div>
       </section>
 
       {/* GRID KATEGORI (Data Driven) */}
-      <section className="max-w-6xl mx-auto">
+      <section className="max-w-6xl mx-auto mt-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {CATEGORIES.map((cat, idx) => (
             <Link href={`/knowledgebase/${cat.slug}`} key={idx} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-[var(--gold)] transition-all group">
@@ -55,10 +57,10 @@ export default function Knowledgebase() {
       </section>
 
       {/* CTA SECTION */}
-      <section className="mt-16 text-center">
-        <p className="text-gray-600 mb-4">Masih tidak menemukan jawaban yang dicari?</p>
-        <Link href="/ticket" className="inline-block px-8 py-3 bg-[var(--gold)] text-white font-bold rounded-xl hover:bg-[var(--gold-dim)] transition-colors">
-          Buka Tiket Aduan Sekarang
+      <section className="mt-24 text-center">
+        <p className="text-gray-600 mb-6">Masih tidak menemukan jawaban yang dicari?</p>
+        <Link href="/ticket" className="inline-block px-8 py-3 bg-[var(--gold)] text-white font-bold rounded-xl hover:bg-[var(--gold-dim)] transition-colors shadow-md hover:shadow-lg">
+          <span className="text-white">Buka Tiket Aduan Sekarang</span>
         </Link>
       </section>
     </div>
