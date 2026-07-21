@@ -39,7 +39,6 @@ export default function Header() {
         <nav className="main-nav hidden md:flex" aria-label="Navigasi utama">
           <Link href="/" className={pathname === '/' ? 'active' : ''}>Beranda</Link>
           <Link href="/knowledgebase" className={pathname === '/knowledgebase' ? 'active' : ''}>Knowledgebase</Link>
-          <Link href="/ticket" className={pathname === '/ticket' ? 'active' : ''}>Buka Tiket</Link>
         </nav>
 
         <div className="header-actions flex items-center gap-4">
@@ -47,44 +46,7 @@ export default function Header() {
           {/* =========================================
               TOMBOL DESKTOP (PURE ICON TANPA FRAME)
               ========================================= */}
-          <div className="hidden md:flex items-center gap-4">
-            {isLoggedIn ? (
-              <>
-                {/* Ikon Profil (One Line / Outline Putih) */}
-                <Link 
-                  href="/profile" 
-                  title="Profil Saya"
-                  className="hover:opacity-80 transition-opacity flex items-center justify-center"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-                  </svg>
-                </Link>
-                
-                {/* Ikon Keluar (Putih polos outline, jadi merah kalau di-hover) */}
-                <button 
-                  onClick={handleLogout} 
-                  title="Keluar"
-                  className="text-white hover:text-red-400 transition-colors flex items-center justify-center ml-1"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
-                  </svg>
-                </button>
-              </>
-            ) : (
-              // Ikon Masuk (Putih polos outline)
-              <Link 
-                href="/login" 
-                title="Masuk Akun"
-                className="hover:opacity-80 transition-opacity flex items-center justify-center"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>
-                </svg>
-              </Link>
-            )}
-          </div>
+          <div className="hidden md:flex items-center gap-4"></div>
 
           {/* Tombol Hamburger Mobile */}
           <button 

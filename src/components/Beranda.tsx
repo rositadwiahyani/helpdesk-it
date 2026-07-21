@@ -7,12 +7,25 @@ import Footer from '@/components/Footer';
 
 export default function Beranda() {
   const router = useRouter();
-  const [activeFaq, setActiveFaq] = useState<number | null>(0);
+  
+  // State untuk FAQ (null agar tertutup semua saat pertama kali muat)
+  const [activeFaq, setActiveFaq] = useState<number | null>(null);
+  
+  // State untuk Search Bar
+  const [searchQuery, setSearchQuery] = useState('');
 
-  // Fungsi baru: Langsung arahkan ke halaman tujuan tanpa cek login
+  // Fungsi: Langsung arahkan ke halaman tujuan tanpa cek login
   const handleNavigation = (e: React.MouseEvent, path: string) => {
     e.preventDefault();
     router.push(path);
+  };
+
+  // Fungsi: Menangani submit pencarian
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim() !== '') {
+      router.push(`/knowledgebase?q=${encodeURIComponent(searchQuery)}`);
+    }
   };
 
   const toggleFaq = (index: number) => {
@@ -31,9 +44,15 @@ export default function Beranda() {
             <h1>Selamat Datang di Pusat Bantuan IT Universitas Diponegoro</h1>
             <p className="lead">Cari jawabannya sendiri lebih dulu, atau laporkan langsung ke tim kami.</p>
             
-            <form className="search-bar" onSubmit={(e) => e.preventDefault()}>
+            <form className="search-bar" onSubmit={handleSearch}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-              <input type="text" placeholder="Ketik kata kunci, misalnya 'lupa kata sandi SSO'…" aria-label="Cari panduan atau pertanyaan" />
+              <input 
+                type="text" 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Ketik kata kunci, misalnya 'lupa kata sandi SSO'…" 
+                aria-label="Cari panduan atau pertanyaan" 
+              />
               <button type="submit">Cari</button>
             </form>
           </div>
