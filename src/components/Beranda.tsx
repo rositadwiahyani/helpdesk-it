@@ -173,42 +173,36 @@ const t = {
             <div 
               className="quick-card cursor-pointer animate-pop-card" 
               style={{ animationDelay: '0.1s' }}
-              onClick={(e) => handleNavigation(e, '/ticket')}
             >
               <div className="quick-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16v12H8l-4 4V4Z"/><path d="M8 9h8M8 12h5"/></svg>
               </div>
               <h3>{t.report}</h3>
               <p>{t.reportDesc}</p>
-              <a href="#" className="quick-link" onClick={(e) => handleNavigation(e, '/ticket')}>{t.openTicket}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
             </div>
             
             {/* KARTU 2 - Delay 0.3s */}
             <div 
               className="quick-card cursor-pointer animate-pop-card" 
               style={{ animationDelay: '0.3s' }}
-              onClick={(e) => handleNavigation(e, '/ticket/status')}
             >
               <div className="quick-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
               </div>
               <h3>{t.track}</h3>
               <p>{t.trackDesc}</p>
-              <a href="#" className="quick-link" onClick={(e) => handleNavigation(e, '/ticket/status')}>{t.checkStatus} <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
             </div>
             
             {/* KARTU 3 - Delay 0.5s */}
             <div 
               className="quick-card cursor-pointer animate-pop-card" 
               style={{ animationDelay: '0.5s' }}
-              onClick={(e) => handleNavigation(e, '/knowledgebase')}
             >
               <div className="quick-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 4h9l3 3v13H6V4Z"/><path d="M9 10h6M9 14h6"/></svg>
               </div>
               <h3>{t.selfHelp}</h3>
               <p>{t.selfHelpDesc}</p>
-              <a href="#" className="quick-link" onClick={(e) => handleNavigation(e, '/knowledgebase')}>{t.kb} <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
             </div>
 
           </div>
