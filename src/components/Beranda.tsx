@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Header from '@/components/Header';
@@ -8,19 +8,11 @@ import Footer from '@/components/Footer';
 export default function Beranda() {
   const router = useRouter();
   const [activeFaq, setActiveFaq] = useState<number | null>(0);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  useEffect(() => {
-    setIsLoggedIn(localStorage.getItem('isLoggedIn') === 'true');
-  }, []);
-
-  const handleProtectedAction = (e: React.MouseEvent, path: string) => {
+  // Fungsi baru: Langsung arahkan ke halaman tujuan tanpa cek login
+  const handleNavigation = (e: React.MouseEvent, path: string) => {
     e.preventDefault();
-    if (isLoggedIn) {
-      router.push(path);
-    } else {
-      router.push('/login');
-    }
+    router.push(path);
   };
 
   const toggleFaq = (index: number) => {
@@ -55,52 +47,51 @@ export default function Beranda() {
             <div 
               className="quick-card cursor-pointer animate-pop-card" 
               style={{ animationDelay: '0.1s' }}
-              onClick={(e) => handleProtectedAction(e, '/ticket')}
+              onClick={(e) => handleNavigation(e, '/ticket')}
             >
               <div className="quick-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16v12H8l-4 4V4Z"/><path d="M8 9h8M8 12h5"/></svg>
               </div>
               <h3>Laporkan kendala</h3>
               <p>Ceritakan masalahmu, lampirkan tangkapan layar bila perlu, tim kami akan menindaklanjutinya.</p>
-              <a href="#" className="quick-link" onClick={(e) => handleProtectedAction(e, '/ticket')}>Buka tiket <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+              <a href="#" className="quick-link" onClick={(e) => handleNavigation(e, '/ticket')}>Buka tiket <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
             </div>
             
-            {/* KARTU 2 - Delay 0.3s (Dikasih jeda lebih lama) */}
+            {/* KARTU 2 - Delay 0.3s */}
             <div 
               className="quick-card cursor-pointer animate-pop-card" 
               style={{ animationDelay: '0.3s' }}
-              onClick={(e) => handleProtectedAction(e, '/ticket/status')}
+              onClick={(e) => handleNavigation(e, '/ticket/status')}
             >
               <div className="quick-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
               </div>
               <h3>Lacak tiket kamu</h3>
               <p>Lihat status serta balasan terbaru dari teknisi tanpa perlu mengingat nomor tiket.</p>
-              <a href="#" className="quick-link" onClick={(e) => handleProtectedAction(e, '/ticket/status')}>Cek status <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+              <a href="#" className="quick-link" onClick={(e) => handleNavigation(e, '/ticket/status')}>Cek status <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
             </div>
             
-            {/* KARTU 3 - Delay 0.5s (Paling terakhir) */}
+            {/* KARTU 3 - Delay 0.5s */}
             <div 
               className="quick-card cursor-pointer animate-pop-card" 
               style={{ animationDelay: '0.5s' }}
-              onClick={(e) => handleProtectedAction(e, '/knowledgebase')}
+              onClick={(e) => handleNavigation(e, '/knowledgebase')}
             >
               <div className="quick-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 4h9l3 3v13H6V4Z"/><path d="M9 10h6M9 14h6"/></svg>
               </div>
               <h3>Cari jawaban sendiri</h3>
               <p>Ratusan panduan langkah-demi-langkah untuk masalah yang paling sering terjadi.</p>
-              <a href="#" className="quick-link" onClick={(e) => handleProtectedAction(e, '/knowledgebase')}>Jelajahi basis pengetahuan <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+              <a href="#" className="quick-link" onClick={(e) => handleNavigation(e, '/knowledgebase')}>Jelajahi basis pengetahuan <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
             </div>
 
           </div>
         </div>
 
-        {/* CONTAINER GRID: FAQ & SIDEBAR (ITEMS-START PENTING BIAR STICKY ANTENG) */}
+        {/* CONTAINER GRID: FAQ & SIDEBAR */}
         <div className="container grid grid-cols-1 lg:grid-cols-3 gap-12 py-12 items-start overflow-visible">
           
           {/* KOLOM KIRI: FAQ */}
-          {/* Tambahin 'mb-20' di sini biar punya jarak bawah */}
           <section className="lg:col-span-2 mt-20 mb-20" id="faq">
             <div className="section-head reveal is-visible">
               <div>
@@ -110,7 +101,6 @@ export default function Beranda() {
             </div>
 
             <div className="faq-list reveal is-visible">
-              {/* ... isi FAQ kamu tetap sama ... */}
               {[
                 { q: "Lupa kata sandi akun SSO Undip, bagaimana cara mengatur ulang?", a: "Buka halaman reset kata sandi SSO, lalu ikuti verifikasi lewat email alternatif atau nomor terdaftar." },
                 { q: "Tidak bisa masuk ke email mahasiswa atau dosen (Undip Mail), harus bagaimana?", a: "Periksa dulu apakah kata sandi SSO masih berlaku..." },
@@ -131,7 +121,7 @@ export default function Beranda() {
             </div>
           </section>
 
-          {/* KOLOM KANAN: SIDEBAR BANTUAN (MOBILE-FIXED) */}
+          {/* KOLOM KANAN: SIDEBAR BANTUAN */}
           <aside className="lg:col-span-1 mb-16 lg:mb-0">
             <div className="sticky top-32 mt-[232px]">
               <div className="relative overflow-hidden bg-slate-900 p-8 rounded-3xl border border-slate-800 shadow-2xl reveal is-visible text-white">
