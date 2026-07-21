@@ -13,10 +13,13 @@ const CATEGORIES = [
   { slug: 'software', title: 'Software & Lisensi', desc: 'Microsoft 365, instalasi aplikasi kampus.', count: 28, color: 'teal' },
 ];
 
-// Komponen inti yang menangani logika pencarian
+// Komponen inti yang menangani logika pencarian & bahasa
 function KnowledgebaseContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+
+  // State untuk bahasa ('ID' atau 'EN')
+  const [language, setLanguage] = useState<'ID' | 'EN'>('ID');
 
   // Menangkap parameter 'q' dari URL jika diarahkan dari Beranda
   const initialQuery = searchParams.get('q') || '';
@@ -25,18 +28,49 @@ function KnowledgebaseContent() {
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [activeQuery, setActiveQuery] = useState(initialQuery);
 
-  // Jika URL berubah (misal back/forward di browser), sinkronkan state
+  // Sinkronisasi bahasa dan URL parameter saat dimuat
+  useEffect(() => {
+    const savedLang = localStorage.getItem('language') as 'ID' | 'EN';
+    if (savedLang) setLanguage(savedLang);
+
+    // Mendengarkan perubahan bahasa secara real-time dari Header
+    const handleLanguageChange = () => {
+      const currentLang = localStorage.getItem('language') as 'ID' | 'EN';
+      if (currentLang) setLanguage(currentLang);
+    };
+
+    window.addEventListener('languageChange', handleLanguageChange);
+    return () => window.removeEventListener('languageChange', handleLanguageChange);
+  }, []);
+
+  // Jika URL berubah (misal back/forward di browser), sinkronkan state search
   useEffect(() => {
     const q = searchParams.get('q') || '';
     setSearchQuery(q);
     setActiveQuery(q);
   }, [searchParams]);
 
+  // Kamus teks dinamis (Konsisten Basis Pengetahuan / Knowledgebase)
+  const t = {
+    title: language === 'ID' ? 'Basis Pengetahuan IT' : 'IT Knowledgebase',
+    subtitle: language === 'ID' 
+      ? 'Temukan solusi teknis langsung tanpa menunggu antrean tiket.' 
+      : 'Find technical solutions directly without waiting for a ticket queue.',
+    searchPlaceholder: language === 'ID' ? 'Cari artikel atau kategori...' : 'Search articles or categories...',
+    searchResultFor: language === 'ID' ? 'Hasil pencarian untuk:' : 'Search results for:',
+    articlesCount: (count: number) => language === 'ID' ? `${count} Artikel` : `${count} Articles`,
+    viewText: language === 'ID' ? 'Lihat' : 'View',
+    notFoundTitle: language === 'ID' ? 'Kategori tidak ditemukan' : 'Category not found',
+    notFoundDesc: language === 'ID' 
+      ? 'Coba gunakan kata kunci lain atau periksa kembali ejaan pencarian kamu.' 
+      : 'Try using another keyword or check your spelling.',
+    clearSearch: language === 'ID' ? 'Hapus Pencarian' : 'Clear Search'
+  };
+
   // Fungsi saat form disubmit atau tombol enter ditekan
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setActiveQuery(searchQuery);
-    // Update URL agar pencarian bisa di-share atau direfresh tanpa hilang
     router.push(`/knowledgebase?q=${encodeURIComponent(searchQuery)}`, { scroll: false });
   };
 
@@ -50,9 +84,9 @@ function KnowledgebaseContent() {
     <div className="w-full pb-12">
       {/* HERO SECTION */}
       <section className="relative text-center mb-12 flex flex-col items-center justify-center">
-        <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6 text-center">Pusat Bantuan IT</h1>
+        <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6 text-center">{t.title}</h1>
         <p className="text-gray-500 text-lg mb-8 max-w-xl mx-auto text-center">
-          Temukan solusi teknis langsung tanpa menunggu antrean tiket.
+          {t.subtitle}
         </p>
       </section>
 
@@ -64,7 +98,7 @@ function KnowledgebaseContent() {
               type="text" 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari artikel atau kategori..." 
+              placeholder={t.searchPlaceholder} 
               className="w-full p-4 pl-6 pr-16 bg-white border border-gray-200 rounded-2xl shadow-sm focus:ring-2 focus:ring-[var(--gold)] outline-none"
             />
             <button 
@@ -79,11 +113,10 @@ function KnowledgebaseContent() {
 
       {/* GRID KATEGORI / HASIL PENCARIAN */}
       <section className="max-w-6xl mx-auto px-4">
-        {/* Tampilkan indikator hasil pencarian jika sedang mencari */}
         {activeQuery && (
           <div className="mb-8">
             <h2 className="text-xl font-bold text-gray-800">
-              Hasil pencarian untuk: <span className="text-[var(--gold)]">"{activeQuery}"</span>
+              {t.searchResultFor} <span className="text-[var(--gold)]">"{activeQuery}"</span>
             </h2>
           </div>
         )}
@@ -98,26 +131,25 @@ function KnowledgebaseContent() {
                 <h3 className="font-bold text-lg text-gray-900 mb-2">{cat.title}</h3>
                 <p className="text-gray-500 text-sm mb-4">{cat.desc}</p>
                 <div className="flex items-center justify-between text-xs font-bold text-gray-400">
-                  <span>{cat.count} Artikel</span>
-                  <span className="text-[var(--gold)]">Lihat &rarr;</span>
+                  <span>{t.articlesCount(cat.count)}</span>
+                  <span className="text-[var(--gold)]">{t.viewText} &rarr;</span>
                 </div>
               </Link>
             ))}
           </div>
         ) : (
-          /* EMPTY STATE: Muncul ketika pencarian tidak menemukan hasil */
+          /* EMPTY STATE */
           <div className="flex flex-col items-center justify-center py-16 px-4 text-center bg-white rounded-3xl border border-gray-100 shadow-sm">
-            
             <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-6">
               <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
             
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Kategori tidak ditemukan</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">{t.notFoundTitle}</h3>
             
             <p className="text-gray-500 max-w-sm mb-8">
-              Coba gunakan kata kunci lain atau periksa kembali ejaan pencarian kamu.
+              {t.notFoundDesc}
             </p>
             
             <button 
@@ -128,9 +160,8 @@ function KnowledgebaseContent() {
               }}
               className="px-6 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 transition-colors"
             >
-              Hapus Pencarian
+              {t.clearSearch}
             </button>
-            
           </div>
         )}
       </section>
@@ -138,7 +169,7 @@ function KnowledgebaseContent() {
   );
 }
 
-// Ekspor komponen yang dibungkus Suspense agar aman saat di-build Next.js
+// Ekspor komponen dibungkus Suspense agar aman saat build Next.js
 export default function Knowledgebase() {
   return (
     <Suspense fallback={
