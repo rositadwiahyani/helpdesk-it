@@ -55,14 +55,6 @@ export default function Knowledgebase() {
           ))}
         </div>
       </section>
-
-      {/* CTA SECTION */}
-      <section className="mt-24 text-center">
-        <p className="text-gray-600 mb-6">Masih tidak menemukan jawaban yang dicari?</p>
-        <Link href="/ticket" className="inline-block px-8 py-3 bg-[var(--gold)] text-white font-bold rounded-xl hover:bg-[var(--gold-dim)] transition-colors shadow-md hover:shadow-lg">
-          <span className="text-white">Buka Tiket Aduan Sekarang</span>
-        </Link>
-      </section>
     </div>
   );
 }

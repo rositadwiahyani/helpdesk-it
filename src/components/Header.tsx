@@ -124,32 +124,6 @@ export default function Header() {
           <Link href="/knowledgebase" onClick={() => setIsMobileOpen(false)} className={`px-5 py-4 font-semibold rounded-2xl transition-colors ${pathname === '/knowledgebase' ? 'text-[var(--gold)] bg-[var(--gold)]/10' : 'text-gray-700 hover:bg-gray-50 hover:text-[var(--gold)] active:bg-gray-100'}`}>
             Knowledgebase
           </Link>
-          <Link href="/ticket" onClick={() => setIsMobileOpen(false)} className={`px-5 py-4 font-semibold rounded-2xl transition-colors ${pathname === '/ticket' ? 'text-[var(--gold)] bg-[var(--gold)]/10' : 'text-gray-700 hover:bg-gray-50 hover:text-[var(--gold)] active:bg-gray-100'}`}>
-            Buka Tiket
-          </Link>
-          
-          {isLoggedIn ? (
-            <>
-              <Link href="/profile" onClick={() => setIsMobileOpen(false)} className={`px-5 py-4 font-semibold rounded-2xl transition-colors ${pathname === '/profile' ? 'text-[var(--gold)] bg-[var(--gold)]/10' : 'text-gray-700 hover:bg-gray-50 hover:text-[var(--gold)] active:bg-gray-100'}`}>
-                Profil Saya
-              </Link>
-              
-              <div className="mt-2 pt-2 border-t border-gray-100">
-                <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 py-3.5 bg-red-50 text-red-600 font-bold rounded-xl hover:bg-red-100 transition-colors">
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                  </svg>
-                  Keluar Akun
-                </button>
-              </div>
-            </>
-          ) : (
-            <div className="mt-2 pt-2 border-t border-gray-100">
-              <Link href="/login" onClick={() => setIsMobileOpen(false)} className="flex items-center justify-center py-3.5 bg-[var(--gold)] text-white font-bold rounded-xl shadow-md hover:bg-[var(--gold-dim)] transition-colors">
-                Masuk Akun
-              </Link>
-            </div>
-          )}
         </div>
       </nav>
     </header>
