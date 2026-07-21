@@ -14,10 +14,10 @@ export default function AdminTopbar({ onMenuClick, pageTitle = 'Dashboard' }: Ad
         
         {/* Kiri: Hamburger Menu (Mobile), Logo & Judul Halaman */}
         <div className="flex items-center gap-4">
-          {/* Tombol Hamburger Mobile */}
+          {/* Tombol Hamburger (Desktop & Mobile) */}
           <button
             onClick={onMenuClick}
-            className="p-2 -ml-2 rounded-xl text-[var(--text-dim)] hover:bg-[var(--paper-2)] hover:text-[var(--ink)] lg:hidden transition-colors"
+            className="p-2 -ml-2 rounded-xl text-[var(--text-dim)] hover:bg-[var(--paper-2)] hover:text-[var(--ink)] transition-colors"
             aria-label="Toggle Sidebar"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">

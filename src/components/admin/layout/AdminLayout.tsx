@@ -5,12 +5,19 @@ import AdminSidebar from './AdminSidebar';
 import AdminTopbar from './AdminTopbar';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  // Sidebar tertutup by default di mobile, tapi di desktop kita buat true by default
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const pathname = usePathname();
 
   // Helper to determine page title from pathname
   const getPageTitle = () => {
     if (!pathname) return 'Dashboard';
+    if (pathname.includes('/dashboard/operator/tickets-rejected')) return 'Tiket Ditolak';
+    if (pathname.includes('/dashboard/operator/tickets')) return 'Tiket Masuk';
+    if (pathname.includes('/dashboard/operator/profile')) return 'Profil';
+    if (pathname.includes('/dashboard/operator')) return 'Dashboard';
+    
+    // Fallbacks for Admin
     if (pathname.includes('/users')) return 'Users';
     if (pathname.includes('/tickets')) return 'Tickets';
     if (pathname.includes('/departments')) return 'Departments';
@@ -31,11 +38,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <AdminSidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
       {/* Main Content Wrapper (Kanan) */}
-      <div className="flex-1 flex flex-col min-w-0 transition-all duration-300 lg:pl-64">
+      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${isSidebarOpen ? 'lg:pl-64' : 'lg:pl-0'}`}>
         
         {/* Topbar (Atas) */}
         <AdminTopbar 
-          onMenuClick={() => setIsSidebarOpen(true)} 
+          onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} 
           pageTitle={getPageTitle()}
         />
 

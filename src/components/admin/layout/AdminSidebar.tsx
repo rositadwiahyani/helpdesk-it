@@ -11,20 +11,28 @@ interface AdminSidebarProps {
 export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
   const pathname = usePathname();
 
-  // Menu sesuai instruksi (Tahap 7):
-  const MENU_ITEMS = [
+  let MENU_ITEMS = [
     { name: 'Dashboard', path: '/admin/dashboard', icon: DashboardIcon },
     { name: 'Tickets', path: '/admin/tickets', icon: TicketsIcon },
     { name: 'Users', path: '/admin/users', icon: UsersIcon },
-    { name: 'Departments', path: '/admin/departments', icon: UsersIcon }, // Dummy icon fallback
-    { name: 'Help Topics', path: '/admin/help-topics', icon: TicketsIcon }, // Dummy icon fallback
-    { name: 'Roles', path: '/admin/roles', icon: UsersIcon }, // Dummy icon fallback
+    { name: 'Departments', path: '/admin/departments', icon: UsersIcon },
+    { name: 'Help Topics', path: '/admin/help-topics', icon: TicketsIcon },
+    { name: 'Roles', path: '/admin/roles', icon: UsersIcon },
     { name: 'Knowledgebase', path: '/admin/knowledgebase', icon: KnowledgebaseIcon },
     { name: 'Settings', path: '/admin/settings', icon: SettingsIcon },
-    { name: 'Emails', path: '/admin/emails', icon: TicketsIcon }, // Dummy icon fallback
-    { name: 'Agents', path: '/admin/agents', icon: UsersIcon }, // Dummy icon fallback
-    { name: 'Manage', path: '/admin/manage', icon: DashboardIcon }, // Dummy icon fallback
+    { name: 'Emails', path: '/admin/emails', icon: TicketsIcon },
+    { name: 'Agents', path: '/admin/agents', icon: UsersIcon },
+    { name: 'Manage', path: '/admin/manage', icon: DashboardIcon },
   ];
+
+  if (pathname?.startsWith('/dashboard/operator')) {
+    MENU_ITEMS = [
+      { name: 'Dashboard', path: '/dashboard/operator', icon: DashboardIcon },
+      { name: 'Tiket Masuk', path: '/dashboard/operator/tickets', icon: TicketsIcon },
+      { name: 'Tiket Ditolak', path: '/dashboard/operator/tickets-rejected', icon: TicketsIcon },
+      { name: 'Profil', path: '/dashboard/operator/profile', icon: UsersIcon },
+    ];
+  }
 
   return (
     <>
@@ -38,7 +46,7 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
 
       {/* Sidebar Component */}
       <aside 
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-[var(--line)] flex flex-col transition-transform duration-300 ease-[var(--ease)] lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-[var(--line)] flex flex-col transition-transform duration-300 ease-[var(--ease)] ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -51,14 +59,27 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
         <div className="flex-1 overflow-y-auto py-6 px-4 flex flex-col gap-1.5">
           {MENU_ITEMS.map((item) => {
             const Icon = item.icon;
-            // Dummy active state check (kalau url cocok atau ini adalah path '/admin' dan menu = Dashboard)
-            const isActive = pathname?.startsWith(item.path) || (pathname === '/admin' && item.name === 'Dashboard');
+            // Logika active state yang presisi
+            let isActive = false;
+            if (item.path === '/dashboard/operator') {
+              isActive = pathname === '/dashboard/operator';
+            } else if (item.path === '/admin') {
+              isActive = pathname === '/admin';
+            } else if (item.path === '/dashboard/operator/tickets') {
+              isActive = pathname === '/dashboard/operator/tickets' || pathname?.startsWith('/dashboard/operator/tickets/');
+            } else {
+              isActive = pathname?.startsWith(item.path) || false;
+            }
             
             return (
               <Link 
                 key={item.name} 
                 href={item.path}
-                onClick={() => setIsOpen(false)}
+                onClick={() => {
+                  if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+                    setIsOpen(false);
+                  }
+                }}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14.5px] transition-all duration-200 ${
                   isActive 
                     ? 'bg-[var(--gold)]/10 text-[var(--gold)] font-bold shadow-sm' 
@@ -73,7 +94,16 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
         </div>
 
         {/* Footer Area Sidebar (Opsional) */}
-        <div className="p-4 border-t border-[var(--line)]">
+        <div className="p-4 border-t border-[var(--line)] flex flex-col gap-3">
+          {pathname?.startsWith('/dashboard/operator') && (
+            <Link 
+              href="/login"
+              className="flex items-center gap-3 px-3 py-2 rounded-xl text-[14.5px] text-red-600 font-medium hover:bg-red-50 transition-colors"
+            >
+              <SettingsIcon isActive={false} />
+              Logout
+            </Link>
+          )}
           <div className="bg-[var(--paper-2)] p-4 rounded-xl flex flex-col gap-1">
             <span className="text-[11px] font-mono text-[var(--text-dim)] uppercase tracking-wider">HelpIT Admin</span>
             <span className="text-xs text-[var(--text-dim)] font-medium">v1.0.0 &copy; 2026</span>

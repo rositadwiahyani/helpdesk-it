@@ -45,7 +45,7 @@ export async function middleware(request: NextRequest) {
   const url = request.nextUrl.clone();
 
   // 3. LOGIKA PROTEKSI RUTE (GUARD)
-  
+
   // A. Jika user MENCOBA mengakses halaman dashboard tapi BELUM login
   if (url.pathname.startsWith('/dashboard') && !user) {
     url.pathname = '/login';
@@ -64,12 +64,6 @@ export async function middleware(request: NextRequest) {
 // 4. Tentukan halaman mana saja yang akan diawasi oleh Middleware ini
 export const config = {
   matcher: [
-    /*
-     * Batasi hanya untuk rute dashboard, login, dan register.
-     * Abaikan file statis (images, favicon, dll) agar website tidak lambat.
-     */
-    '/dashboard/:path*',
-    '/login',
-    '/register',
+
   ],
 };
