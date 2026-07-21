@@ -1,7 +1,53 @@
+'use client';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
 export default function Footer() {
+  const [language, setLanguage] = useState<'ID' | 'EN'>('ID');
+
+  useEffect(() => {
+    const updateLanguage = () => {
+      const saved = (localStorage.getItem('language') as 'ID' | 'EN') || 'ID';
+      setLanguage(saved);
+    };
+
+    updateLanguage();
+
+    window.addEventListener('languageChange', updateLanguage);
+
+    return () => {
+      window.removeEventListener('languageChange', updateLanguage);
+    };
+  }, []);
+
+  const t = {
+    desc:
+      language === 'ID'
+        ? 'Layanan Teknologi Informasi Universitas Diponegoro — membantu urusan akun, sistem akademik, dan perangkat digital kampus.'
+        : 'Diponegoro University Information Technology Services — assisting with accounts, academic systems, and campus digital devices.',
+    services:
+      language === 'ID'
+        ? 'Layanan'
+        : 'Services',
+    openTicket:
+      language === 'ID'
+        ? 'Buka tiket baru'
+        : 'Open new ticket',
+    checkStatus:
+      language === 'ID'
+        ? 'Cek status tiket'
+        : 'Check ticket status',
+    kb:
+      language === 'ID'
+        ? 'Basis pengetahuan'
+        : 'Knowledge Base',
+    contact:
+      language === 'ID'
+        ? 'Kontak'
+        : 'Contact'
+  };
+
   return (
     <footer>
       <div className="container">
@@ -18,18 +64,18 @@ export default function Footer() {
                 />
               </div>
             </div>
-            <p>Layanan Teknologi Informasi Universitas Diponegoro — membantu urusan akun, sistem akademik, dan perangkat digital kampus.</p>
+            <p>{t.desc}</p>
           </div>
           <div className="footer-col">
-            <h4>Layanan</h4>
+            <h4>{t.services}</h4>
             <ul>
-              <li><Link href="#">Buka tiket baru</Link></li>
-              <li><Link href="#">Cek status tiket</Link></li>
-              <li><Link href="#kb">Basis pengetahuan</Link></li>
+              <li><Link href="/ticket">{t.openTicket}</Link></li>
+              <li><Link href="/ticket/status">{t.checkStatus}</Link></li>
+              <li><Link href="/knowledgebase">{t.kb}</Link></li>
             </ul>
           </div>
           <div className="footer-col">
-            <h4>Kontak</h4>
+            <h4>{t.contact}</h4>
             <ul>
               <li><Link href="#">Jl. Prof. Soedarto, SH, Tembalang</Link></li>
               <li><Link href="mailto:helpdesk@undip.ac.id">helpdesk@undip.ac.id</Link></li>
@@ -40,3 +86,12 @@ export default function Footer() {
     </footer>
   );
 }
+
+<Image 
+  src="/universitas-diponegoro-helpit1.png" 
+  alt="Logo HelpIT Undip" 
+  width={150} 
+  height={40} 
+  style={{ width: 'auto', height: 'auto' }} /* <-- INI YANG BIKIN ERRORNYA HILANG */
+  className="h-full object-contain"
+/>

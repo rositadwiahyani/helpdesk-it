@@ -31,20 +31,18 @@ export default function Header() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Fungsi Ganti Bahasa
+  // FUNGSI GANTI BAHASA YANG SUDAH DIPERBAIKI (Tidak memicu bentrok render)
   const toggleLanguage = () => {
-    setLanguage((prevLang) => {
-      const newLang = prevLang === 'ID' ? 'EN' : 'ID';
-      localStorage.setItem('language', newLang);
-      window.dispatchEvent(new Event('languageChange'));
-      return newLang;
-    });
+    const newLang = language === 'ID' ? 'EN' : 'ID';
+    setLanguage(newLang); // Update state Header
+    localStorage.setItem('language', newLang); // Simpan ke local storage
+    window.dispatchEvent(new Event('languageChange')); // Beritahu komponen lain (Beranda & Footer)
   };
 
-  /// Teks Dinamis Berdasarkan Bahasa
+  // Teks Dinamis Berdasarkan Bahasa
   const t = {
     home: language === 'ID' ? 'Beranda' : 'Home',
-    kb: language === 'ID' ? 'Basis Pengetahuan' : 'Knowledgebase', // Konsisten di sini
+    kb: language === 'ID' ? 'Basis Pengetahuan' : 'Knowledgebase',
     settings: language === 'ID' ? 'Pengaturan' : 'Settings'
   };
 
@@ -54,7 +52,13 @@ export default function Header() {
         
         {/* BAGIAN KIRI: Logo */}
         <Link href="/" className="brand">
-          <Image src="/universitas-diponegoro-helpit1.png" alt="Logo" width={150} height={40} />
+          <Image 
+            src="/universitas-diponegoro-helpit1.png" 
+            alt="Logo" 
+            width={150} 
+            height={40} 
+            style={{ width: 'auto', height: 'auto' }} /* <-- Perbaikan Warning Image */
+          />
         </Link>
 
         {/* BAGIAN KANAN: Navigasi Desktop & Actions */}
@@ -137,7 +141,6 @@ export default function Header() {
               )}
             </div>
           </div>
-
         </div>
       </nav>
     </header>
