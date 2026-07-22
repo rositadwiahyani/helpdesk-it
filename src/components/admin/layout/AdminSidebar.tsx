@@ -19,7 +19,7 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
   };
 
   let MENU_ITEMS = [
-    { name: 'Beranda', path: '/admin/dashboard', icon: HomeIcon },
+    { name: 'Beranda', path: '/dashboard/administrasi', icon: HomeIcon },
     { name: 'Tickets', path: '/admin/tickets', icon: TicketsIcon },
     { name: 'Manajemen Pengguna', path: '/admin/users', icon: UsersIcon },
     { name: 'Kategori Laporan', path: '/admin/report-categories', icon: CategoryIcon },

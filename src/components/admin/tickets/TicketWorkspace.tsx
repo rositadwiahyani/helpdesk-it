@@ -1,0 +1,682 @@
+export default function TicketWorkspace() {
+  return (
+    <div className="flex p-8 flex-col items-start gap-6 min-w-screen min-h-screen absolute left-0 top-16">
+      <div className="flex justify-between items-end w-full">
+        <div className="flex flex-col items-start gap-1 w-fit">
+          <div className="flex items-start gap-2 w-full">
+            <div className="flex flex-col items-start w-fit h-full">
+              <p className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">
+                Dashboard
+              </p>
+            </div>
+            <div className="flex flex-col items-start w-fit h-full">
+              <p className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">
+                &#x2F;
+              </p>
+            </div>
+            <div className="flex flex-col items-start w-fit h-full">
+              <p className="text-[#1A1C1E] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">
+                Tickets
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-col items-start w-full">
+            <p className="text-[#001E40] font-iBMPlexSans text-[32px] font-semibold leading-10 w-fit tracking-[-0.02em]">
+              Tickets Monitoring
+            </p>
+          </div>
+        </div>
+        <div className="flex items-start gap-2 w-fit">
+          <div className="flex py-2 px-4 items-center gap-2 rounded border border-[#C3C6D1] bg-[#FFF] w-fit">
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 12 12"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="flex flex-col items-center w-fit "
+            >
+              <path
+                d="M6 9L2.25 5.25L3.3 4.1625L5.25 6.1125V0H6.75V6.1125L8.7 4.1625L9.75 5.25L6 9ZM1.5 12C1.0875 12 0.734375 11.8531 0.440625 11.5594C0.146875 11.2656 0 10.9125 0 10.5V8.25H1.5V10.5H10.5V8.25H12V10.5C12 10.9125 11.8531 11.2656 11.5594 11.5594C11.2656 11.8531 10.9125 12 10.5 12H1.5Z"
+                fill="#43474F"
+              />
+            </svg>
+            <div className="flex flex-col items-center w-fit">
+              <p className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">
+                Export CSV
+              </p>
+            </div>
+          </div>
+          <div className="flex py-2 px-4 items-center gap-2 rounded border border-[#C3C6D1] bg-[#FFF] w-fit">
+            <svg
+              width="14"
+              height="9"
+              viewBox="0 0 14 9"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="flex flex-col items-center w-fit "
+            >
+              <path
+                d="M5.25 9V7.5H8.25V9H5.25ZM2.25 5.25V3.75H11.25V5.25H2.25ZM0 1.5V0H13.5V1.5H0Z"
+                fill="#43474F"
+              />
+            </svg>
+            <div className="flex flex-col items-center w-fit">
+              <p className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">
+                Filters
+              </p>
+            </div>
+          </div>
+          <div className="flex py-[9px] px-4 items-center gap-2 rounded bg-[#0059BB] shadow-[01px2px0rgba(0,0,0,0.05)] w-fit">
+            <svg
+              width="11"
+              height="11"
+              viewBox="0 0 11 11"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="flex flex-col items-center w-fit "
+            >
+              <path
+                d="M4.5 6H0V4.5H4.5V0H6V4.5H10.5V6H6V10.5H4.5V6Z"
+                fill="white"
+              />
+            </svg>
+            <div className="flex flex-col items-center w-fit">
+              <p className="text-[#FFF] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">
+                New Ticket
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="flex items-start gap-6 border-b border-b-[#C3C6D1] w-full overflow-hidden">
+        <button className="cursor-pointer text-nowrap flex pt-0 pr-1 pb-3 pl-1 flex-col justify-center items-center border-b-2 border-b-[#0059BB] w-fit">
+          <p className="text-[#0059BB] font-iBMPlexSans text-sm font-semibold leading-5 w-fit">
+            All Tickets &#40;248&#41;
+          </p>
+        </button>
+        <button className="cursor-pointer text-nowrap flex pt-0 pr-1 pb-3 pl-1 flex-col justify-center items-center border-b-2 border-b-[rgba(0,0,0,0.00)] w-fit">
+          <p className="text-[#43474F] font-iBMPlexSans text-sm leading-5 w-fit">
+            New &#40;12&#41;
+          </p>
+        </button>
+        <button className="cursor-pointer text-nowrap flex pt-0 pr-1 pb-3 pl-1 flex-col justify-center items-center border-b-2 border-b-[rgba(0,0,0,0.00)] w-fit">
+          <p className="text-[#43474F] font-iBMPlexSans text-sm leading-5 w-fit">
+            In Progress &#40;45&#41;
+          </p>
+        </button>
+        <button className="cursor-pointer text-nowrap flex pt-0 pr-1 pb-3 pl-1 flex-col justify-center items-center border-b-2 border-b-[rgba(0,0,0,0.00)] w-fit">
+          <p className="text-[#43474F] font-iBMPlexSans text-sm leading-5 w-fit">
+            Waiting Verification &#40;8&#41;
+          </p>
+        </button>
+        <button className="cursor-pointer text-nowrap flex pt-0 pr-1 pb-3 pl-1 flex-col justify-center items-center border-b-2 border-b-[rgba(0,0,0,0.00)] w-fit">
+          <p className="text-[#43474F] font-iBMPlexSans text-sm leading-5 w-fit">
+            Resolved &#40;156&#41;
+          </p>
+        </button>
+        <button className="cursor-pointer text-nowrap flex pt-0 pr-1 pb-3 pl-1 flex-col justify-center items-center border-b-2 border-b-[rgba(0,0,0,0.00)] w-fit">
+          <p className="text-[#43474F] font-iBMPlexSans text-sm leading-5 w-fit">
+            Closed &#40;27&#41;
+          </p>
+        </button>
+      </div>
+      <div className="flex flex-col items-start rounded-lg border border-[#C3C6D1] bg-[#FFF] shadow-[01px2px0rgba(0,0,0,0.05)] w-full overflow-hidden">
+        <div className="flex flex-col items-start -space-y-px w-full overflow-hidden">
+          <div className="flex justify-center items-start border-b border-b-[#C3C6D1] bg-[#F3F3F6] w-full">
+            <div className="flex py-4 px-6 flex-col items-start w-[85px]">
+              <p className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">
+                NO. TIKET
+              </p>
+            </div>
+            <div className="flex py-4 px-6 flex-col items-start w-[97px]">
+              <p className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">
+                LAST UPDATE
+              </p>
+            </div>
+            <div className="flex pt-6 pr-6 pb-[25px] pl-6 flex-col items-start w-80">
+              <p className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">
+                SUBJECT
+              </p>
+            </div>
+            <div className="flex pt-6 pr-6 pb-[25px] pl-6 flex-col items-start w-[153px]">
+              <p className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">
+                FROM
+              </p>
+            </div>
+            <div className="flex pt-6 pr-6 pb-[25px] pl-6 flex-col items-start w-[117px]">
+              <p className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">
+                PRIORITY
+              </p>
+            </div>
+            <div className="flex pt-6 pr-6 pb-[25px] pl-6 flex-col items-start w-[121px]">
+              <p className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">
+                ASSIGN TO
+              </p>
+            </div>
+            <div className="flex pt-6 pr-6 pb-[25px] pl-6 flex-col items-start w-[142px]">
+              <p className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">
+                STATUS
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-col items-start -space-y-px w-full">
+            <div className="flex pr-6 justify-center items-center border-b border-b-[#C3C6D1] w-full">
+              <div className="flex pt-4 pr-6 pb-[17px] pl-6 flex-col items-start w-[85px]">
+                <p className="text-[#0059BB] font-liberationSerif text-sm font-semibold leading-5 w-fit">
+                  #TIC- 2023- 8942
+                </p>
+              </div>
+              <div className="flex py-[27px] px-6 flex-col items-start w-[97px]">
+                <p className="text-[#43474F] font-iBMPlexSans text-sm leading-5 w-fit">
+                  2 mins ago
+                </p>
+              </div>
+              <div className="flex max-w-[320px] py-[26px] px-6 flex-col items-start gap-0.5 w-80">
+                <div className="flex flex-col items-start w-full overflow-hidden">
+                  <p className="text-[#1A1C1E] font-iBMPlexSans text-sm font-medium leading-5 w-full">
+                    SIAKAD login failure - Database Timeout
+                  </p>
+                </div>
+                <div className="flex flex-col items-start w-full">
+                  <p className="text-[#43474F] font-iBMPlexSans text-[11px] leading-5 w-full">
+                    Category: Applications &#x2F; Academic
+                  </p>
+                </div>
+              </div>
+              <div className="flex pl-6 items-center gap-2 w-[129px]">
+                <button className="cursor-pointer text-nowrap flex pt-0.5 pr-0 pb-[3px] pl-0 justify-center items-center shrink-0 rounded-xl bg-[#D5E3FF] w-[22px] h-6">
+                  <p className="text-[#001B3C] font-iBMPlexSans text-[10px] font-bold leading-5 w-fit">
+                    AS
+                  </p>
+                </button>
+                <div className="flex pr-[26px] flex-col items-start w-fit">
+                  <p className="text-[#1A1C1E] font-iBMPlexSans text-sm leading-5 w-fit">
+                    Andi Saputra
+                  </p>
+                </div>
+              </div>
+              <div className="flex pt-[35px] pr-6 pb-[35px] pl-12 flex-col items-start w-[141px]">
+                <div className="flex py-0.5 px-2 items-center rounded-sm bg-[#FFDAD6] w-fit">
+                  <p className="text-[#93000A] font-iBMPlexSans text-[11px] font-bold leading-5 w-fit tracking-[0.025em]">
+                    CRITICAL
+                  </p>
+                </div>
+              </div>
+              <div className="flex py-[37px] px-6 flex-col items-start w-[121px]">
+                <p className="text-[#43474F] font-iBMPlexSans text-sm leading-5 w-fit">
+                  Unassigned
+                </p>
+              </div>
+              <div className="flex pl-6 flex-col items-start gap-1 w-[118px]">
+                <div className="flex py-0.5 px-2 items-center rounded-sm bg-[#D5E3FF] w-full">
+                  <p className="text-[#001B3C] font-iBMPlexSans text-[11px] font-bold leading-5 w-fit">
+                    NEW
+                  </p>
+                </div>
+                <div className="flex items-center gap-1 w-full">
+                  <svg
+                    width="11"
+                    height="10"
+                    viewBox="0 0 11 10"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="flex flex-col items-start w-fit "
+                  >
+                    <path
+                      d="M0 9.5L5.5 0L11 9.5H0ZM1.725 8.5H9.275L5.5 2L1.725 8.5ZM5.5 8C5.64167 8 5.76042 7.95208 5.85625 7.85625C5.95208 7.76042 6 7.64167 6 7.5C6 7.35833 5.95208 7.23958 5.85625 7.14375C5.76042 7.04792 5.64167 7 5.5 7C5.35833 7 5.23958 7.04792 5.14375 7.14375C5.04792 7.23958 5 7.35833 5 7.5C5 7.64167 5.04792 7.76042 5.14375 7.85625C5.23958 7.95208 5.35833 8 5.5 8ZM5 6.5H6V4H5V6.5Z"
+                      fill="#BA1A1A"
+                    />
+                  </svg>
+                  <p className="text-[#BA1A1A] font-iBMPlexSans text-[10px] font-bold leading-5 w-fit">
+                    OVERDUE
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-center items-center border-b border-b-[#C3C6D1] bg-[#F9F9FC] w-full">
+              <div className="flex pt-4 pr-6 pb-[17px] pl-6 flex-col items-start w-[85px]">
+                <p className="text-[#0059BB] font-liberationSerif text-sm font-semibold leading-5 w-fit">
+                  #TIC- 2023- 8935
+                </p>
+              </div>
+              <div className="flex py-[17px] px-6 flex-col items-start w-[97px]">
+                <p className="text-[#43474F] font-iBMPlexSans text-sm leading-5 w-fit">
+                  15 mins ago
+                </p>
+              </div>
+              <div className="flex max-w-[320px] py-[26px] px-6 flex-col items-start gap-0.5 w-80">
+                <div className="flex flex-col items-start w-full overflow-hidden">
+                  <p className="text-[#1A1C1E] font-iBMPlexSans text-sm font-medium leading-5 w-full">
+                    WiFi access issue in Faculty of Law
+                  </p>
+                </div>
+                <div className="flex flex-col items-start w-full">
+                  <p className="text-[#43474F] font-iBMPlexSans text-[11px] leading-5 w-full">
+                    Category: Infrastructure &#x2F; Networking
+                  </p>
+                </div>
+              </div>
+              <div className="flex pl-6 items-center gap-2 w-[129px]">
+                <button className="cursor-pointer text-nowrap flex pt-0.5 pr-0 pb-[3px] pl-0 justify-center items-center shrink-0 rounded-xl bg-[#D8E2FF] w-[19px] h-6">
+                  <p className="text-[#001A41] font-iBMPlexSans text-[10px] font-bold leading-5 w-fit">
+                    RM
+                  </p>
+                </button>
+                <div className="flex pr-2.5 flex-col items-start w-fit">
+                  <p className="text-[#1A1C1E] font-iBMPlexSans text-sm leading-5 w-fit">
+                    Rina Maheswari
+                  </p>
+                </div>
+              </div>
+              <div className="flex pt-[35px] pr-6 pb-[35px] pl-12 flex-col items-start w-[141px]">
+                <div className="flex py-0.5 px-2 items-center rounded-sm bg-[#FEF1D8] w-fit">
+                  <p className="text-[#7D5100] font-iBMPlexSans text-[11px] font-bold leading-5 w-fit tracking-[0.025em]">
+                    HIGH
+                  </p>
+                </div>
+              </div>
+              <div className="flex pl-6 justify-end items-center gap-2 w-[97px] h-10">
+                <img
+                  src="/DeniPratama.png"
+                  className="rounded-xl border border-[#C3C6D1] w-6 h-6 overflow-hidden max-w-none"
+                  alt="Deni Pratama"
+                />
+                <div className="flex flex-col items-start w-fit">
+                  <p className="text-[#1A1C1E] font-iBMPlexSans text-sm leading-5 w-fit">
+                    Deni Pratama
+                  </p>
+                </div>
+              </div>
+              <div className="flex pt-[35px] pr-6 pb-[35px] pl-12 flex-col items-start w-[166px]">
+                <div className="flex py-0.5 px-2 items-center rounded-sm bg-[#D8E2FF] w-fit">
+                  <p className="text-[#001A41] font-iBMPlexSans text-[11px] font-bold leading-5 w-fit">
+                    IN PROGRESS
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-center items-center border-b border-b-[#C3C6D1] w-full">
+              <div className="flex pt-4 pr-6 pb-[17px] pl-6 flex-col items-start w-[85px]">
+                <p className="text-[#0059BB] font-liberationSerif text-sm font-semibold leading-5 w-fit">
+                  #TIC- 2023- 8921
+                </p>
+              </div>
+              <div className="flex py-[27px] px-6 flex-col items-start w-[97px]">
+                <p className="text-[#43474F] font-iBMPlexSans text-sm leading-5 w-fit">
+                  1 hour ago
+                </p>
+              </div>
+              <div className="flex max-w-[320px] py-[26px] px-6 flex-col items-start gap-0.5 w-80">
+                <div className="flex flex-col items-start w-full overflow-hidden">
+                  <p className="text-[#1A1C1E] font-iBMPlexSans text-sm font-medium leading-5 w-full">
+                    Request for Adobe Creative Cloud License
+                  </p>
+                </div>
+                <div className="flex flex-col items-start w-full">
+                  <p className="text-[#43474F] font-iBMPlexSans text-[11px] leading-5 w-full">
+                    Category: Software &#x2F; License
+                  </p>
+                </div>
+              </div>
+              <div className="flex pl-6 items-center gap-2 w-[129px]">
+                <button className="cursor-pointer text-nowrap flex pt-0.5 pr-0 pb-[3px] pl-0 justify-center items-center shrink-0 rounded-xl bg-[#E2E2E5] w-[19px] h-6">
+                  <p className="text-[#43474F] font-iBMPlexSans text-[10px] font-bold leading-5 w-fit">
+                    TP
+                  </p>
+                </button>
+                <div className="flex pr-[5px] flex-col items-start w-fit">
+                  <p className="text-[#1A1C1E] font-iBMPlexSans text-sm leading-5 w-fit">
+                    Tio Pamungkas
+                  </p>
+                </div>
+              </div>
+              <div className="flex pt-[35px] pr-6 pb-[35px] pl-12 flex-col items-start w-[141px]">
+                <div className="flex py-0.5 px-2 items-center rounded-sm bg-[#E2E2E5] w-fit">
+                  <p className="text-[#43474F] font-iBMPlexSans text-[11px] font-bold leading-5 w-fit tracking-[0.025em]">
+                    MEDIUM
+                  </p>
+                </div>
+              </div>
+              <div className="flex pl-6 justify-end items-center gap-2 w-[97px] h-10">
+                <img
+                  src="/SitiAminah.png"
+                  className="rounded-xl border border-[#C3C6D1] w-6 h-6 overflow-hidden max-w-none"
+                  alt="Siti Aminah"
+                />
+                <div className="flex flex-col items-start w-fit">
+                  <p className="text-[#1A1C1E] font-iBMPlexSans text-sm leading-5 w-fit">
+                    Siti Aminah
+                  </p>
+                </div>
+              </div>
+              <div className="flex pt-[25px] pr-6 pb-[25px] pl-12 flex-col items-start w-[166px]">
+                <div className="flex py-0.5 px-2 items-center rounded-sm bg-[#E0E3E6] w-fit">
+                  <p className="text-[#43474A] font-iBMPlexSans text-[11px] font-bold leading-5 w-fit">
+                    WAITING VERIFICATION
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-center items-center border-b border-b-[#C3C6D1] bg-[#F9F9FC] w-full">
+              <div className="flex pt-4 pr-6 pb-[17px] pl-6 flex-col items-start w-[85px]">
+                <p className="text-[#0059BB] font-liberationSerif text-sm font-semibold leading-5 w-fit">
+                  #TIC- 2023- 8899
+                </p>
+              </div>
+              <div className="flex py-[27px] px-6 flex-col items-start w-[97px]">
+                <p className="text-[#43474F] font-iBMPlexSans text-sm leading-5 w-fit">
+                  3 hours ago
+                </p>
+              </div>
+              <div className="flex max-w-[320px] py-[26px] px-6 flex-col items-start gap-0.5 w-80">
+                <div className="flex flex-col items-start w-full overflow-hidden">
+                  <p className="text-[#1A1C1E] font-iBMPlexSans text-sm font-medium leading-5 w-full">
+                    Printer repair - Rectorate Building 2nd Floor
+                  </p>
+                </div>
+                <div className="flex flex-col items-start w-full">
+                  <p className="text-[#43474F] font-iBMPlexSans text-[11px] leading-5 w-full">
+                    Category: Hardware &#x2F; Peripherals
+                  </p>
+                </div>
+              </div>
+              <div className="flex pl-6 items-center gap-2 w-[129px]">
+                <button className="cursor-pointer text-nowrap flex pt-0.5 pr-0 pb-[3px] pl-0 justify-center items-center shrink-0 rounded-xl bg-[#D5E3FF] w-6 h-6">
+                  <p className="text-[#001B3C] font-iBMPlexSans text-[10px] font-bold leading-5 w-fit">
+                    LW
+                  </p>
+                </button>
+                <div className="flex flex-col items-start w-fit">
+                  <p className="text-[#1A1C1E] font-iBMPlexSans text-sm leading-5 w-fit">
+                    Laras Wati
+                  </p>
+                </div>
+              </div>
+              <div className="flex pt-[35px] pr-6 pb-[35px] pl-12 flex-col items-start w-[141px]">
+                <div className="flex py-0.5 px-2 items-center rounded-sm bg-[#E2E2E5] w-fit">
+                  <p className="text-[#43474F] font-iBMPlexSans text-[11px] font-bold leading-5 w-fit tracking-[0.025em]">
+                    LOW
+                  </p>
+                </div>
+              </div>
+              <div className="flex pl-6 justify-end items-center gap-2 w-[97px] h-10">
+                <img
+                  src="/BambangHeru.png"
+                  className="rounded-xl border border-[#C3C6D1] w-6 h-6 overflow-hidden max-w-none"
+                  alt="Bambang Heru"
+                />
+                <div className="flex flex-col items-start w-fit">
+                  <p className="text-[#1A1C1E] font-iBMPlexSans text-sm leading-5 w-fit">
+                    Bambang Heru
+                  </p>
+                </div>
+              </div>
+              <div className="flex pt-[35px] pr-6 pb-[35px] pl-12 flex-col items-start w-[166px]">
+                <div className="flex py-0.5 px-2 items-center rounded-sm bg-[#DCFCE7] w-fit">
+                  <p className="text-[#166534] font-iBMPlexSans text-[11px] font-bold leading-5 w-fit">
+                    RESOLVED
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="flex py-4 px-6 justify-between items-center border-t border-t-[#C3C6D1] bg-[#FFF] w-full">
+          <div className="flex flex-col items-start w-fit">
+            <p className="text-[#1A1C1E] font-iBMPlexSans text-[13px] leading-[18px] w-fit">
+              Showing 1 - 4 of 248 tickets
+            </p>
+          </div>
+          <div className="flex items-center gap-2 w-fit">
+            <div className="flex justify-center items-center rounded border border-[#C3C6D1] opacity-50 w-8 h-8">
+              <svg
+                width="7"
+                height="10"
+                viewBox="0 0 7 10"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="flex flex-col items-center w-fit "
+              >
+                <path
+                  d="M5 10L0 5L5 0L6.16667 1.16667L2.33333 5L6.16667 8.83333L5 10Z"
+                  fill="black"
+                />
+              </svg>
+            </div>
+            <button className="cursor-pointer text-nowrap flex pt-2 pr-0 pb-[9px] pl-0 justify-center items-center rounded bg-[#0070EA] w-8 h-8">
+              <p className="text-[#FEFCFF] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">
+                1
+              </p>
+            </button>
+            <button className="cursor-pointer text-nowrap flex pt-2 pr-0 pb-[9px] pl-0 justify-center items-center rounded w-8 h-8">
+              <p className="text-[#000] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">
+                2
+              </p>
+            </button>
+            <button className="cursor-pointer text-nowrap flex pt-2 pr-0 pb-[9px] pl-0 justify-center items-center rounded w-8 h-8">
+              <p className="text-[#000] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">
+                3
+              </p>
+            </button>
+            <div className="flex py-0 px-1 flex-col items-start w-fit">
+              <p className="text-[#000] font-iBMPlexSans text-base leading-6 w-fit">
+                ...
+              </p>
+            </div>
+            <button className="cursor-pointer text-nowrap flex pt-2 pr-0 pb-[9px] pl-0 justify-center items-center rounded w-8 h-8">
+              <p className="text-[#000] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">
+                62
+              </p>
+            </button>
+            <div className="flex justify-center items-center rounded border border-[#C3C6D1] w-8 h-8">
+              <svg
+                width="7"
+                height="10"
+                viewBox="0 0 7 10"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="flex flex-col items-center w-fit "
+              >
+                <path
+                  d="M3.83333 5L0 1.16667L1.16667 0L6.16667 5L1.16667 10L0 8.83333L3.83333 5Z"
+                  fill="black"
+                />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="flex justify-center items-start gap-4 w-full">
+        <div className="flex p-4 justify-between items-center rounded-lg border border-[#C3C6D1] bg-[#FFF] w-full">
+          <div className="flex flex-col items-start gap-1 w-fit">
+            <div className="flex flex-col items-start w-full">
+              <p className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">
+                Avg. Response Time
+              </p>
+            </div>
+            <div className="flex flex-col items-start w-full">
+              <p className="text-[#001E40] font-iBMPlexSans text-2xl font-semibold leading-8 w-fit tracking-[-0.01em]">
+                12m 45s
+              </p>
+            </div>
+            <div className="flex items-center gap-1 w-full">
+              <svg
+                width="10"
+                height="10"
+                viewBox="0 0 10 10"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="flex flex-col items-start w-fit "
+              >
+                <path
+                  d="M4.08333 0V7.10208L0.816667 3.83542L0 4.66667L4.66667 9.33333L9.33333 4.66667L8.51667 3.83542L5.25 7.10208V0H4.08333Z"
+                  fill="#16A34A"
+                />
+              </svg>
+              <p className="text-[#16A34A] font-iBMPlexSans text-[11px] font-medium leading-[16.5px] w-fit">
+                2.4% from last week
+              </p>
+            </div>
+          </div>
+          <div className="flex justify-center items-center rounded-xl bg-[#D5E3FF] w-12 h-12">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="flex flex-col items-start w-fit "
+            >
+              <path
+                d="M13.3 14.7L14.7 13.3L11 9.6V5H9V10.4L13.3 14.7ZM10 20C8.61667 20 7.31667 19.7375 6.1 19.2125C4.88333 18.6875 3.825 17.975 2.925 17.075C2.025 16.175 1.3125 15.1167 0.7875 13.9C0.2625 12.6833 0 11.3833 0 10C0 8.61667 0.2625 7.31667 0.7875 6.1C1.3125 4.88333 2.025 3.825 2.925 2.925C3.825 2.025 4.88333 1.3125 6.1 0.7875C7.31667 0.2625 8.61667 0 10 0C11.3833 0 12.6833 0.2625 13.9 0.7875C15.1167 1.3125 16.175 2.025 17.075 2.925C17.975 3.825 18.6875 4.88333 19.2125 6.1C19.7375 7.31667 20 8.61667 20 10C20 11.3833 19.7375 12.6833 19.2125 13.9C18.6875 15.1167 17.975 16.175 17.075 17.075C16.175 17.975 15.1167 18.6875 13.9 19.2125C12.6833 19.7375 11.3833 20 10 20ZM10 18C12.2167 18 14.1042 17.2208 15.6625 15.6625C17.2208 14.1042 18 12.2167 18 10C18 7.78333 17.2208 5.89583 15.6625 4.3375C14.1042 2.77917 12.2167 2 10 2C7.78333 2 5.89583 2.77917 4.3375 4.3375C2.77917 5.89583 2 7.78333 2 10C2 12.2167 2.77917 14.1042 4.3375 15.6625C5.89583 17.2208 7.78333 18 10 18Z"
+                fill="#001B3C"
+              />
+            </svg>
+          </div>
+        </div>
+        <div className="flex p-4 justify-between items-center rounded-lg border border-[#C3C6D1] bg-[#FFF] w-full">
+          <div className="flex flex-col items-start gap-1 w-fit">
+            <div className="flex flex-col items-start w-full">
+              <p className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">
+                CSAT Score
+              </p>
+            </div>
+            <div className="flex flex-col items-start w-full">
+              <p className="text-[#001E40] font-iBMPlexSans text-2xl font-semibold leading-8 w-fit tracking-[-0.01em]">
+                4.8&#x2F;5.0
+              </p>
+            </div>
+            <div className="flex items-center gap-1 w-full">
+              <svg
+                width="10"
+                height="10"
+                viewBox="0 0 10 10"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="flex flex-col items-start w-fit "
+              >
+                <path
+                  d="M4.08333 9.33333V2.23125L0.816667 5.49792L0 4.66667L4.66667 0L9.33333 4.66667L8.51667 5.49792L5.25 2.23125V9.33333H4.08333Z"
+                  fill="#16A34A"
+                />
+              </svg>
+              <p className="text-[#16A34A] font-iBMPlexSans text-[11px] font-medium leading-[16.5px] w-fit">
+                0.2 from last week
+              </p>
+            </div>
+          </div>
+          <div className="flex justify-center items-center rounded-xl bg-[#D8E2FF] w-12 h-12">
+            <svg
+              width="20"
+              height="19"
+              viewBox="0 0 20 19"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="flex flex-col items-start w-fit "
+            >
+              <path
+                d="M6.85 14.825L10 12.925L13.15 14.85L12.325 11.25L15.1 8.85L11.45 8.525L10 5.125L8.55 8.5L4.9 8.825L7.675 11.25L6.85 14.825ZM3.825 19L5.45 11.975L0 7.25L7.2 6.625L10 0L12.8 6.625L20 7.25L14.55 11.975L16.175 19L10 15.275L3.825 19Z"
+                fill="#001A41"
+              />
+            </svg>
+          </div>
+        </div>
+        <div className="flex pt-4 pr-4 pb-4 pl-4 justify-between items-center rounded-lg border border-[#C3C6D1] bg-[#FFF] w-full">
+          <div className="flex flex-col items-start gap-1 w-fit">
+            <div className="flex flex-col items-start w-full">
+              <p className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">
+                SLA Compliance
+              </p>
+            </div>
+            <div className="flex flex-col items-start w-full">
+              <p className="text-[#001E40] font-iBMPlexSans text-2xl font-semibold leading-8 w-fit tracking-[-0.01em]">
+                96.2%
+              </p>
+            </div>
+            <div className="flex items-center gap-1 w-full">
+              <svg
+                width="10"
+                height="10"
+                viewBox="0 0 10 10"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="flex flex-col items-start w-fit "
+              >
+                <path
+                  d="M4.08333 0V7.10208L0.816667 3.83542L0 4.66667L4.66667 9.33333L9.33333 4.66667L8.51667 3.83542L5.25 7.10208V0H4.08333Z"
+                  fill="#BA1A1A"
+                />
+              </svg>
+              <p className="text-[#BA1A1A] font-iBMPlexSans text-[11px] font-medium leading-[16.5px] w-fit">
+                1.5% from last week
+              </p>
+            </div>
+          </div>
+          <div className="flex justify-center items-center rounded-xl bg-[#FFDAD6] w-12 h-12">
+            <svg
+              width="18"
+              height="19"
+              viewBox="0 0 18 19"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="flex flex-col items-start w-fit "
+            >
+              <path
+                d="M0 19V17H12V19H0ZM5.65 14.15L0 8.5L2.1 6.35L7.8 12L5.65 14.15ZM12 7.8L6.35 2.1L8.5 0L14.15 5.65L12 7.8ZM16.6 18L3.55 4.95L4.95 3.55L18 16.6L16.6 18Z"
+                fill="#93000A"
+              />
+            </svg>
+          </div>
+        </div>
+        <div className="flex p-4 justify-between items-center rounded-lg border border-[#C3C6D1] bg-[#FFF] w-full">
+          <div className="flex flex-col items-start gap-1 w-fit">
+            <div className="flex flex-col items-start w-full">
+              <p className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">
+                Knowledge Articles
+              </p>
+            </div>
+            <div className="flex flex-col items-start w-full">
+              <p className="text-[#001E40] font-iBMPlexSans text-2xl font-semibold leading-8 w-fit tracking-[-0.01em]">
+                1,402
+              </p>
+            </div>
+            <div className="flex items-center gap-1 w-full">
+              <svg
+                width="9"
+                height="9"
+                viewBox="0 0 9 9"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="flex flex-col items-start w-fit "
+              >
+                <path
+                  d="M3.5 4.66667H0V3.5H3.5V0H4.66667V3.5H8.16667V4.66667H4.66667V8.16667H3.5V4.66667Z"
+                  fill="#43474F"
+                />
+              </svg>
+              <p className="text-[#43474F] font-iBMPlexSans text-[11px] font-medium leading-[16.5px] w-fit">
+                12 new this month
+              </p>
+            </div>
+          </div>
+          <div className="flex justify-center items-center rounded-xl bg-[#E0E3E6] w-12 h-12">
+            <svg
+              width="22"
+              height="20"
+              viewBox="0 0 22 20"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="flex flex-col items-start w-fit "
+            >
+              <path
+                d="M11 19.5C10.2 18.8667 9.33333 18.375 8.4 18.025C7.46667 17.675 6.5 17.5 5.5 17.5C4.8 17.5 4.1125 17.5917 3.4375 17.775C2.7625 17.9583 2.11667 18.2167 1.5 18.55C1.15 18.7333 0.8125 18.725 0.4875 18.525C0.1625 18.325 0 18.0333 0 17.65V5.6C0 5.41667 0.0458333 5.24167 0.1375 5.075C0.229167 4.90833 0.366667 4.78333 0.55 4.7C1.31667 4.3 2.11667 4 2.95 3.8C3.78333 3.6 4.63333 3.5 5.5 3.5C6.46667 3.5 7.4125 3.625 8.3375 3.875C9.2625 4.125 10.15 4.5 11 5V17.1C11.85 16.5667 12.7417 16.1667 13.675 15.9C14.6083 15.6333 15.55 15.5 16.5 15.5C17.1 15.5 17.6875 15.55 18.2625 15.65C18.8375 15.75 19.4167 15.9 20 16.1V4.1C20.25 4.18333 20.4958 4.27083 20.7375 4.3625C20.9792 4.45417 21.2167 4.56667 21.45 4.7C21.6333 4.78333 21.7708 4.90833 21.8625 5.075C21.9542 5.24167 22 5.41667 22 5.6V17.65C22 18.0333 21.8375 18.325 21.5125 18.525C21.1875 18.725 20.85 18.7333 20.5 18.55C19.8833 18.2167 19.2375 17.9583 18.5625 17.775C17.8875 17.5917 17.2 17.5 16.5 17.5C15.5 17.5 14.5333 17.675 13.6 18.025C12.6667 18.375 11.8 18.8667 11 19.5ZM13 14.5V5L18 0V10L13 14.5ZM9 16.125V6.225C8.45 5.99167 7.87917 5.8125 7.2875 5.6875C6.69583 5.5625 6.1 5.5 5.5 5.5C4.88333 5.5 4.28333 5.55833 3.7 5.675C3.11667 5.79167 2.55 5.96667 2 6.2V16.125C2.58333 15.9083 3.1625 15.75 3.7375 15.65C4.3125 15.55 4.9 15.5 5.5 15.5C6.1 15.5 6.6875 15.55 7.2625 15.65C7.8375 15.75 8.41667 15.9083 9 16.125ZM9 16.125V6.225V16.125Z"
+                fill="#43474A"
+              />
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

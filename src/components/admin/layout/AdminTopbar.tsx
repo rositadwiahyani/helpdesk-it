@@ -27,8 +27,8 @@ export default function AdminTopbar({
           {/* Hamburger hanya tampil di layar kecil, karena di gambar (desktop) sidebar selalu terbuka */}
           <button
             onClick={onMenuClick}
-            className="p-2 -ml-2 rounded-xl text-[var(--text-dim)] hover:bg-[var(--paper-2)] hover:text-[var(--ink)] transition-colors"
-            aria-label="Toggle menu"
+            className="lg:hidden p-2 -ml-2 rounded-xl text-[var(--text-dim)] hover:bg-[var(--paper-2)] hover:text-[var(--ink)] transition-colors"
+            aria-label="Buka menu"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
