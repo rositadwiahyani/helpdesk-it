@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { fetchClient } from '@/lib/apiClient';
 import AdminSidebar from './AdminSidebar';
-import AdminTopbar from './AdminTopbar';
+import Topbar from './AdminTopbar';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -63,17 +63,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <AdminSidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
       {/* Main Content Wrapper (Kanan) */}
-      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${isSidebarOpen ? 'lg:pl-72' : ''}`}>
-
-        {/* Topbar (Atas) — breadcrumb "Menu > Judul Halaman" sudah termasuk di dalamnya */}
-        <AdminTopbar
-          onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          breadcrumbParent={getBreadcrumbParent()}
-          pageTitle={getPageTitle()}
-          userName={userProfile?.name || 'Loading...'}
-          userRole={userProfile?.role || '...'}
-          avatarSrc="/avatar-admin.jpg"
-        />
+      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${isSidebarOpen ? 'lg:pl-64' : 'lg:pl-0'}`}>
 
         {/* Main Content */}
         <main className="flex-1 p-4 lg:p-8 overflow-y-auto">
