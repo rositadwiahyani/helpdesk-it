@@ -1,9 +1,28 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { fetchClient } from '@/lib/apiClient';
 import DashboardSubNav from '@/components/admin/layout/DashboardSubNav';
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState('account');
+  const [profile, setProfile] = useState<any>(null);
+
+  useEffect(() => {
+    fetchClient('/auth/me').then(res => {
+      if (res.success && res.data) {
+        const userData = res.data.user || {};
+        const userMeta = userData.user_metadata || {};
+        const profileData = res.data.profile || {};
+        
+        setProfile({
+          name: profileData.name || userMeta.name || userMeta.full_name || userData.email?.split('@')[0] || 'User',
+          role: profileData.role || userMeta.role || 'operator',
+          email: profileData.email || userData.email || '',
+          ...profileData
+        });
+      }
+    }).catch(err => console.error(err));
+  }, []);
 
   return (
     <div className="flex flex-col gap-6 p-6 md:p-10">
@@ -19,59 +38,33 @@ export default function ProfilePage() {
           <h3 className="font-bold text-[18px] text-[var(--ink)]">My Account Profile</h3>
         </div>
 
-        {/* Inner Tabs (UI Only) */}
-        <div className="flex items-center gap-1 border-b border-[var(--line)] px-5 md:px-6 pt-4 overflow-x-auto scrollbar-hide bg-[var(--paper-2)]/30">
-          {['Account', 'Preferences'].map(tab => {
-            const isTabActive = activeTab === tab.toLowerCase();
-            return (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab.toLowerCase())}
-                className={`px-5 py-2.5 text-[14px] font-bold whitespace-nowrap rounded-t-lg border border-b-0 transition-colors ${isTabActive
-                    ? 'bg-white border-[var(--line)] text-[var(--ink)]'
-                    : 'bg-transparent border-transparent text-[var(--text-dim)] hover:text-[var(--ink)] hover:bg-[var(--line-dark)]'
-                  }`}
-                style={isTabActive ? { marginBottom: '-1px' } : {}}
-              >
-                {/* Ikon untuk Account */}
-                <div className="flex items-center gap-2">
-                  {tab === 'Account' && (
-                    <svg className="w-4 h-4 opacity-75" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                  )}
-                  {tab}
-                </div>
-              </button>
-            );
-          })}
-        </div>
 
         {/* Form Content */}
         <div className="p-5 md:p-8 flex flex-col bg-white min-h-[400px]">
 
           {/* =========================================================================
-                TAB 1: ACCOUNT 
+                ACCOUNT SETTINGS 
                 ========================================================================= */}
-          {activeTab === 'account' && (
-            <div className="flex flex-col gap-8 animate-in fade-in duration-300">
+          <div className="flex flex-col gap-8 animate-in fade-in duration-300">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="md:col-span-1 flex flex-col items-center gap-3 pt-2">
-                  <div className="w-24 h-24 rounded-full bg-[var(--gold)] flex items-center justify-center text-white text-3xl font-bold shadow-sm">
-                    AM
+                  <div className="w-24 h-24 rounded-full bg-[var(--gold)] flex items-center justify-center text-white text-3xl font-bold shadow-sm uppercase">
+                    {profile?.name ? profile.name.substring(0, 2) : '..'}
                   </div>
                   <button className="text-[13px] font-bold text-[var(--gold-soft)] hover:text-[var(--gold-dim)] transition-colors">Avatar</button>
                 </div>
                 <div className="md:col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div className="flex flex-col gap-2">
                     <label className="text-[13px] font-bold text-[var(--ink)]">Name</label>
-                    <input type="text" defaultValue="magang4" className="bg-[var(--paper)] border border-[var(--line-dark)] rounded-xl px-4 py-2.5 text-[14px] focus:outline-none focus:border-[var(--gold-soft)] transition-colors" />
+                    <input type="text" defaultValue={profile?.name || ''} className="bg-[var(--paper)] border border-[var(--line-dark)] rounded-xl px-4 py-2.5 text-[14px] focus:outline-none focus:border-[var(--gold-soft)] transition-colors" />
                   </div>
                   <div className="flex flex-col gap-2">
-                    <label className="text-[13px] font-bold text-[var(--ink)]">Last Name</label>
-                    <input type="text" defaultValue="reka" className="bg-[var(--paper)] border border-[var(--line-dark)] rounded-xl px-4 py-2.5 text-[14px] focus:outline-none focus:border-[var(--gold-soft)] transition-colors" />
+                    <label className="text-[13px] font-bold text-[var(--ink)]">Role</label>
+                    <input type="text" readOnly value={profile?.role || ''} className="bg-[var(--paper-2)] border border-[var(--line-dark)] rounded-xl px-4 py-2.5 text-[14px] outline-none cursor-not-allowed uppercase" />
                   </div>
                   <div className="flex flex-col gap-2 sm:col-span-2">
                     <label className="text-[13px] font-bold text-[var(--ink)]">Email Address</label>
-                    <input type="email" defaultValue="mrekafakhrezi@gmail.com" className="bg-[var(--paper)] border border-[var(--line-dark)] rounded-xl px-4 py-2.5 text-[14px] focus:outline-none focus:border-[var(--gold-soft)] transition-colors" />
+                    <input type="email" defaultValue={profile?.email || ''} className="bg-[var(--paper)] border border-[var(--line-dark)] rounded-xl px-4 py-2.5 text-[14px] focus:outline-none focus:border-[var(--gold-soft)] transition-colors" />
                   </div>
                   <div className="flex flex-col gap-2">
                     <label className="text-[13px] font-bold text-[var(--ink)]">Phone Number</label>
@@ -97,7 +90,7 @@ export default function ProfilePage() {
                   <div className="flex flex-col gap-2 md:col-span-3 sm:col-span-1">
                     <label className="text-[13px] font-bold text-[var(--ink)]">Username <span className="text-red-500">*</span></label>
                     <div className="flex flex-col sm:flex-row gap-3">
-                      <input type="text" defaultValue="reka" className="bg-[var(--paper)] border border-[var(--line-dark)] rounded-xl px-4 py-2.5 text-[14px] focus:outline-none focus:border-[var(--gold-soft)] transition-colors w-full sm:max-w-[280px]" />
+                      <input type="text" defaultValue={profile?.name || ''} className="bg-[var(--paper)] border border-[var(--line-dark)] rounded-xl px-4 py-2.5 text-[14px] focus:outline-none focus:border-[var(--gold-soft)] transition-colors w-full sm:max-w-[280px]" />
                       <button className="bg-[var(--paper-2)] text-[var(--text-dim)] border border-[var(--line)] px-4 py-2.5 rounded-xl text-[13.5px] font-bold hover:bg-[var(--line)] transition-colors flex items-center justify-center gap-2 w-full sm:w-auto">
                         <svg className="w-4 h-4 opacity-75" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                         Change Password
@@ -119,125 +112,7 @@ export default function ProfilePage() {
                   <span className="text-[14px] text-[var(--ink)] font-semibold select-none group-hover:text-[var(--gold-dim)] transition-colors">Vacation Mode</span>
                 </label>
               </div>
-            </div>
-          )}
-
-          {/* =========================================================================
-                TAB 2: PREFERENCES 
-                ========================================================================= */}
-          {activeTab === 'preferences' && (
-            <div className="flex flex-col gap-6 animate-in fade-in duration-300">
-              <div className="flex flex-col gap-1 border-b border-[var(--line-dark)] pb-3">
-                <h4 className="font-bold text-[16px] text-[var(--ink)]">Preferences</h4>
-                <p className="text-[13px] text-[var(--text-dim)]">Profile preferences and settings</p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                <div className="flex flex-col gap-1">
-                  <label className="text-[13px] font-bold text-[var(--ink)]">Maximum Page size:</label>
-                  <div className="flex items-center gap-2">
-                    <select className="bg-[var(--paper)] border border-[var(--line-dark)] rounded-xl px-4 py-2 text-[14px] focus:outline-none focus:border-[var(--gold-soft)] cursor-pointer">
-                      <option>show 25 records</option>
-                      <option>show 50 records</option>
-                    </select>
-                    <span className="text-[13px] text-[var(--ink)] font-medium">per page.</span>
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <label className="text-[13px] font-bold text-[var(--ink)]">Auto Refresh Rate:</label>
-                  <p className="text-[12px] text-[var(--text-dim)] mb-1">Tickets page refresh rate in minutes.</p>
-                  <select className="bg-[var(--paper)] border border-[var(--line-dark)] rounded-xl px-4 py-2 text-[14px] focus:outline-none focus:border-[var(--gold-soft)] w-max cursor-pointer">
-                    <option>— Disabled —</option>
-                    <option>Every 5 minutes</option>
-                  </select>
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <label className="text-[13px] font-bold text-[var(--ink)]">Default From Name:</label>
-                  <p className="text-[12px] text-[var(--text-dim)] mb-1">From name to use when replying to a thread</p>
-                  <select className="bg-[var(--paper)] border border-[var(--line-dark)] rounded-xl px-4 py-2 text-[14px] focus:outline-none focus:border-[var(--gold-soft)] w-full max-w-sm cursor-pointer">
-                    <option>Email Address Name</option>
-                  </select>
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <label className="text-[13px] font-bold text-[var(--ink)]">Default Ticket Queue:</label>
-                  <select className="bg-[var(--paper)] border border-[var(--line-dark)] rounded-xl px-4 py-2 text-[14px] focus:outline-none focus:border-[var(--gold-soft)] w-full max-w-sm cursor-pointer mt-5">
-                    <option>— system default —</option>
-                  </select>
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <label className="text-[13px] font-bold text-[var(--ink)]">Thread View Order:</label>
-                  <p className="text-[12px] text-[var(--text-dim)] mb-1">The order of thread entries</p>
-                  <select className="bg-[var(--paper)] border border-[var(--line-dark)] rounded-xl px-4 py-2 text-[14px] focus:outline-none focus:border-[var(--gold-soft)] w-full max-w-sm cursor-pointer">
-                    <option>— System Default —</option>
-                  </select>
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <label className="text-[13px] font-bold text-[var(--ink)]">Default Signature:</label>
-                  <p className="text-[12px] text-[var(--text-dim)] mb-1">This can be selected when replying to a thread</p>
-                  <select className="bg-[var(--paper)] border border-[var(--line-dark)] rounded-xl px-4 py-2 text-[14px] focus:outline-none focus:border-[var(--gold-soft)] w-full max-w-sm cursor-pointer">
-                    <option>— None —</option>
-                    <option>My Signature</option>
-                  </select>
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <label className="text-[13px] font-bold text-[var(--ink)]">Default Paper Size:</label>
-                  <p className="text-[12px] text-[var(--text-dim)] mb-1">Paper size used when printing tickets to PDF</p>
-                  <select className="bg-[var(--paper)] border border-[var(--line-dark)] rounded-xl px-4 py-2 text-[14px] focus:outline-none focus:border-[var(--gold-soft)] w-full max-w-sm cursor-pointer">
-                    <option>Letter</option>
-                    <option>A4</option>
-                  </select>
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <label className="text-[13px] font-bold text-[var(--ink)]">Reply Redirect:</label>
-                  <p className="text-[12px] text-[var(--text-dim)] mb-1">Redirect URL used after replying to a ticket.</p>
-                  <select className="bg-[var(--paper)] border border-[var(--line-dark)] rounded-xl px-4 py-2 text-[14px] focus:outline-none focus:border-[var(--gold-soft)] w-full max-w-sm cursor-pointer">
-                    <option>Ticket</option>
-                    <option>Queue</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-1 border-b border-[var(--line-dark)] pb-3 mt-4">
-                <h4 className="font-bold text-[16px] text-[var(--ink)]">Localization</h4>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                <div className="flex flex-col gap-1">
-                  <label className="text-[13px] font-bold text-[var(--ink)]">Time Zone:</label>
-                  <div className="flex gap-2 items-center">
-                    <select className="bg-[var(--paper)] border border-[var(--line-dark)] rounded-xl px-4 py-2 text-[14px] focus:outline-none focus:border-[var(--gold-soft)] w-full max-w-sm cursor-pointer text-[var(--text-dim)]">
-                      <option>System Default</option>
-                    </select>
-                    <button className="bg-[var(--paper-2)] border border-[var(--line)] text-[var(--text-dim)] px-4 py-2 rounded-xl text-[13px] font-bold hover:bg-[var(--line)] transition-colors flex items-center gap-1">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                      Auto Detect
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <label className="text-[13px] font-bold text-[var(--ink)]">Time Format:</label>
-                  <select className="bg-[var(--paper)] border border-[var(--line-dark)] rounded-xl px-4 py-2 text-[14px] focus:outline-none focus:border-[var(--gold-soft)] w-full max-w-sm cursor-pointer">
-                    <option>— System Default —</option>
-                  </select>
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <label className="text-[13px] font-bold text-[var(--ink)]">Preferred Language:</label>
-                  <select className="bg-[var(--paper)] border border-[var(--line-dark)] rounded-xl px-4 py-2 text-[14px] focus:outline-none focus:border-[var(--gold-soft)] w-full max-w-sm cursor-pointer">
-                    <option>— Use Browser Preference —</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          )}
+          </div>
         </div>
 
         {/* Action Footer */}

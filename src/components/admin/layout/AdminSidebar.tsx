@@ -1,6 +1,7 @@
 'use client';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 interface AdminSidebarProps {
   isOpen: boolean;
@@ -9,6 +10,13 @@ interface AdminSidebarProps {
 
 export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    document.cookie = 'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
+    localStorage.removeItem('isLoggedIn');
+    router.push('/login');
+  };
 
   let MENU_ITEMS = [
     { name: 'Beranda', path: '/admin/dashboard', icon: HomeIcon },
@@ -41,7 +49,7 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-72 bg-[#0B1B2E] flex flex-col transition-transform duration-300 ease-[var(--ease)] lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-72 bg-[#0B1B2E] flex flex-col transition-transform duration-300 ease-[var(--ease)] ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -86,9 +94,10 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
                 }}
                 className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[14px] transition-all duration-200 ${
                   isActive
-                    ? 'bg-white/10 text-white font-semibold'
-                    : 'text-white/70 font-medium hover:bg-white/5 hover:text-white'
+                    ? 'bg-blue-600 font-bold shadow-md shadow-blue-900/50'
+                    : 'font-medium hover:bg-slate-800'
                 }`}
+                style={{ color: isActive ? '#ffffff' : '#cbd5e1' }}
               >
                 <Icon isActive={isActive} />
                 <span className="truncate">{item.name}</span>
@@ -99,13 +108,13 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
 
         {/* Footer Area Sidebar - Logout */}
         <div className="p-4 border-t border-white/10 flex-none">
-          <Link
-            href="/login"
-            className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[14px] font-semibold text-[#F87171] hover:bg-red-500/10 transition-colors"
+          <button
+            onClick={handleLogout}
+            className="flex items-center w-full gap-3 px-3.5 py-2.5 rounded-xl text-[14px] font-semibold text-[#F87171] hover:bg-red-500/10 transition-colors"
           >
             <LogoutIcon isActive={false} />
             Logout
-          </Link>
+          </button>
         </div>
       </aside>
     </>

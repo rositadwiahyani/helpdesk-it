@@ -2,10 +2,10 @@
 
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
+import { fetchClient } from '@/lib/apiClient';
 
 type Ticket = any; // simplified for this example
-type Category = { id: string | number, name: string };
+type Category = { id: string | number, name: string, parent_id?: string | number | null };
 type Department = { id: string | number, name: string };
 type Technician = { id: string, name: string };
 
@@ -56,18 +56,14 @@ export default function OperatorTicketTable({
         setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, [field]: value } : t));
         
         try {
-            const { error } = await supabase
-                .from('tickets')
-                .update({ [field]: value })
-                .eq('id', ticketId);
-            
-            if (error) {
-                console.error(`Error updating ${field}:`, error);
-                alert(`Gagal memperbarui ${field}`);
-                // Revert state (in a real app you'd fetch or store previous state)
-            }
+            await fetchClient(`/operator/tickets/${ticketId}`, {
+                method: 'PATCH',
+                body: JSON.stringify({ [field]: value })
+            });
         } catch (err) {
             console.error('Update error:', err);
+            alert(`Gagal memperbarui ${field}`);
+            // Revert state (in a real app you'd fetch or store previous state)
         }
     };
 
@@ -285,10 +281,10 @@ export default function OperatorTicketTable({
             )}
 
             <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left table-fixed">
-                    <thead className="text-xs text-slate-500 bg-white border-b border-slate-200">
+                <table className="w-full text-xs text-left">
+                    <thead className="bg-slate-100/80 border-b border-slate-200 text-xs text-slate-500 uppercase tracking-wider text-left">
                         <tr>
-                            <th className="px-4 py-3 font-semibold whitespace-nowrap w-10">
+                            <th className="px-3 py-2 w-10 text-center">
                                 <input 
                                     type="checkbox" 
                                     className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
@@ -296,22 +292,22 @@ export default function OperatorTicketTable({
                                     onChange={handleSelectAll}
                                 />
                             </th>
-                            <th className="px-4 py-3 font-semibold cursor-pointer hover:bg-slate-50 transition-colors whitespace-nowrap w-24" onClick={() => requestSort('ticket_num')}>
+                            <th className="px-3 py-2 font-semibold cursor-pointer hover:bg-slate-50 transition-colors whitespace-nowrap w-20" onClick={() => requestSort('ticket_num')}>
                                 <div className="flex items-center gap-1">Ticket {getSortArrow('ticket_num')}</div>
                             </th>
-                            <th className="px-4 py-3 font-semibold cursor-pointer hover:bg-slate-50 transition-colors whitespace-nowrap w-32" onClick={() => requestSort('created_at')}>
-                                <div className="flex items-center gap-1">Last Updated {getSortArrow('created_at')}</div>
+                            <th className="px-3 py-2 font-semibold cursor-pointer hover:bg-slate-50 transition-colors whitespace-nowrap w-28" onClick={() => requestSort('created_at')}>
+                                <div className="flex items-center gap-1">Updated {getSortArrow('created_at')}</div>
                             </th>
-                            <th className="px-4 py-3 font-semibold cursor-pointer hover:bg-slate-50 transition-colors whitespace-nowrap" onClick={() => requestSort('subject')}>
+                            <th className="px-3 py-2 font-semibold cursor-pointer hover:bg-slate-50 transition-colors" onClick={() => requestSort('subject')}>
                                 <div className="flex items-center gap-1">Subject {getSortArrow('subject')}</div>
                             </th>
-                            <th className="px-4 py-3 font-semibold cursor-pointer hover:bg-slate-50 transition-colors whitespace-nowrap w-32 truncate" onClick={() => requestSort('reporter')}>
+                            <th className="px-3 py-2 font-semibold cursor-pointer hover:bg-slate-50 transition-colors whitespace-nowrap w-28 truncate" onClick={() => requestSort('reporter')}>
                                 <div className="flex items-center gap-1">From {getSortArrow('reporter')}</div>
                             </th>
-                            <th className="px-4 py-3 font-semibold whitespace-nowrap w-40">Category</th>
-                            <th className="px-4 py-3 font-semibold whitespace-nowrap w-28">Priority</th>
-                            <th className="px-4 py-3 font-semibold whitespace-nowrap w-32">Assigned To</th>
-                            <th className="px-4 py-3 font-semibold text-right whitespace-nowrap w-32">Action</th>
+                            <th className="px-3 py-2 font-semibold whitespace-nowrap w-36">Category</th>
+                            <th className="px-3 py-2 font-semibold whitespace-nowrap w-24">Priority</th>
+                            <th className="px-3 py-2 font-semibold whitespace-nowrap w-28">Assigned To</th>
+                            <th className="px-3 py-2 font-semibold text-right whitespace-nowrap w-24">Action</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -328,8 +324,8 @@ export default function OperatorTicketTable({
                                     : String(index + 1).padStart(6, '0');
 
                                 return (
-                                <tr key={ticket.id} className={`transition-colors ${selectedTickets.includes(ticket.id) ? 'bg-blue-50' : 'hover:bg-slate-50'}`}>
-                                    <td className="px-4 py-3 align-middle w-10">
+                                <tr key={ticket.id} className={`transition-colors text-sm ${selectedTickets.includes(ticket.id) ? 'bg-blue-50' : 'hover:bg-slate-50'}`}>
+                                    <td className="px-3 py-2 align-middle w-10 text-center">
                                         <input 
                                             type="checkbox" 
                                             className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
@@ -337,44 +333,48 @@ export default function OperatorTicketTable({
                                             onChange={() => handleSelect(ticket.id)}
                                         />
                                     </td>
-                                    <td className="px-4 py-3 align-middle whitespace-nowrap">
+                                    <td className="px-3 py-2 align-middle whitespace-nowrap">
                                         <Link href={`/dashboard/operator/tickets/${ticket.id}`} className="font-semibold text-blue-600 hover:underline">
                                             {formattedTicketNum}
                                         </Link>
                                     </td>
-                                    <td className="px-4 py-3 align-middle text-slate-500 whitespace-nowrap">
-                                        {ticket.created_at ? new Date(ticket.created_at).toISOString().split('T')[0] : '-'} <span className="text-xs ml-1">{ticket.created_at ? new Date(ticket.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : ''}</span>
+                                    <td className="px-3 py-2 align-middle text-slate-500 whitespace-nowrap text-xs">
+                                        {ticket.created_at ? new Date(ticket.created_at).toISOString().split('T')[0] : '-'} <span className="text-[10px] ml-1">{ticket.created_at ? new Date(ticket.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : ''}</span>
                                     </td>
-                                    <td className="px-4 py-3 align-middle">
-                                        <Link href={`/dashboard/operator/tickets/${ticket.id}`} className="font-semibold text-slate-800 hover:text-blue-600 hover:underline block mb-1 leading-tight line-clamp-2">
+                                    <td className="px-3 py-2 align-middle">
+                                        <Link href={`/dashboard/operator/tickets/${ticket.id}`} className="font-semibold text-slate-800 hover:text-blue-600 hover:underline block mb-1 leading-tight line-clamp-2 text-xs">
                                             {ticket.subject || ticket.category?.name || 'Tanpa Subjek'}
                                         </Link>
                                     </td>
-                                    <td className="px-4 py-3 align-middle whitespace-nowrap">
-                                        <div className="font-semibold text-slate-700 leading-tight">{ticket.reporter_name || 'N/A'}</div>
+                                    <td className="px-3 py-2 align-middle whitespace-nowrap">
+                                        <div className="font-semibold text-slate-700 leading-tight text-xs">{ticket.reporter_name || 'N/A'}</div>
                                     </td>
-                                    <td className="px-4 py-3 align-middle whitespace-nowrap">
+                                    <td className="px-3 py-2 align-middle whitespace-nowrap">
                                         {actionType === 'verify' ? (
                                             <select 
-                                                value={ticket.category_id || ''}
+                                                value={String(ticket.category_id || '')}
                                                 onChange={(e) => handleInlineUpdate(ticket.id, 'category_id', e.target.value)}
-                                                className="bg-white border border-slate-300 rounded px-2 py-1 text-xs focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer max-w-[150px] truncate"
+                                                className="bg-white border border-slate-300 rounded px-1.5 py-1 text-[11px] focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer max-w-[140px] truncate"
                                             >
                                                 <option value="">Pilih Kategori...</option>
-                                                {categories.map(c => (
-                                                    <option key={c.id} value={c.id}>{c.name}</option>
-                                                ))}
+                                                {categories.map(c => {
+                                                    const parent = categories.find(p => p.id === c.parent_id);
+                                                    const displayName = parent ? `${parent.name} / ${c.name}` : c.name;
+                                                    return (
+                                                        <option key={c.id} value={String(c.id)}>{displayName}</option>
+                                                    );
+                                                })}
                                             </select>
                                         ) : (
-                                            <span className="text-slate-600">{ticket.category?.name || 'N/A'}</span>
+                                            <span className="text-slate-600 text-xs">{ticket.category?.name || 'N/A'}</span>
                                         )}
                                     </td>
-                                    <td className="px-4 py-3 align-middle whitespace-nowrap">
+                                    <td className="px-3 py-2 align-middle whitespace-nowrap">
                                         {actionType === 'verify' ? (
                                             <select 
-                                                value={ticket.priority?.toLowerCase() || 'medium'}
+                                                value={String(ticket.priority?.toLowerCase() || 'medium')}
                                                 onChange={(e) => handleInlineUpdate(ticket.id, 'priority', e.target.value)}
-                                                className="bg-white border border-slate-300 rounded px-2 py-1 text-xs focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer"
+                                                className="bg-white border border-slate-300 rounded px-1.5 py-1 text-[11px] focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer"
                                             >
                                                 <option value="low">Low</option>
                                                 <option value="medium">Medium</option>
@@ -382,38 +382,38 @@ export default function OperatorTicketTable({
                                                 <option value="critical">Critical</option>
                                             </select>
                                         ) : (
-                                            <span className="text-slate-600 font-medium capitalize">{ticket.priority || 'N/A'}</span>
+                                            <span className="text-slate-600 font-medium capitalize text-xs">{ticket.priority || 'N/A'}</span>
                                         )}
                                     </td>
-                                    <td className="px-4 py-3 align-middle whitespace-nowrap">
+                                    <td className="px-3 py-2 align-middle whitespace-nowrap">
                                         {actionType === 'verify' ? (
                                             <select 
-                                                value={ticket.tech_id || ''}
-                                                onChange={(e) => handleInlineUpdate(ticket.id, 'tech_id', e.target.value)}
-                                                className="bg-white border border-slate-300 rounded px-2 py-1 text-xs focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer max-w-[120px] truncate"
+                                                value={String(ticket.dept_id || '')}
+                                                onChange={(e) => handleInlineUpdate(ticket.id, 'dept_id', e.target.value)}
+                                                className="bg-white border border-slate-300 rounded px-1.5 py-1 text-[11px] focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer max-w-[120px] truncate"
                                             >
-                                                <option value="">Pilih Unit...</option>
-                                                {technicians?.map(tech => (
-                                                    <option key={tech.id} value={tech.id}>{tech.name}</option>
+                                                <option value="">Pilih Departemen...</option>
+                                                {departments?.map(dept => (
+                                                    <option key={dept.id} value={String(dept.id)}>{dept.name}</option>
                                                 ))}
                                             </select>
                                         ) : (
-                                            <span className="text-slate-500">{ticket.tech?.name || ticket.tech_id || '-'}</span>
+                                            <span className="text-slate-500 text-xs">{ticket.dept?.name || ticket.dept_id || '-'}</span>
                                         )}
                                     </td>
-                                    <td className="px-4 py-3 align-middle text-right whitespace-nowrap">
-                                        <div className="flex justify-end gap-2">
+                                    <td className="px-3 py-2 align-middle text-right whitespace-nowrap">
+                                        <div className="flex justify-end gap-1.5">
                                             {actionType === 'verify' ? (
                                                 <>
-                                                    <button className="py-1 px-3 bg-emerald-50 border border-emerald-200 rounded text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors">
-                                                        Terima
+                                                    <button onClick={() => handleInlineUpdate(ticket.id, 'status', 'Diproses')} title="Terima" className="p-1.5 bg-emerald-50 border border-emerald-200 rounded text-emerald-600 hover:bg-emerald-100 transition-colors">
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
                                                     </button>
-                                                    <button className="py-1 px-3 bg-red-50 border border-red-200 rounded text-xs font-semibold text-red-700 hover:bg-red-100 transition-colors">
-                                                        Tolak
+                                                    <button onClick={() => handleInlineUpdate(ticket.id, 'status', 'Ditolak')} title="Tolak" className="p-1.5 bg-red-50 border border-red-200 rounded text-red-600 hover:bg-red-100 transition-colors">
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                                                     </button>
                                                 </>
                                             ) : (
-                                                <button className="py-1 px-3 bg-orange-50 border border-orange-200 rounded text-xs font-semibold text-orange-700 hover:bg-orange-100 transition-colors">
+                                                <button onClick={() => handleInlineUpdate(ticket.id, 'status', 'Open')} className="py-1 px-2 bg-orange-50 border border-orange-200 rounded text-[11px] font-semibold text-orange-700 hover:bg-orange-100 transition-colors">
                                                     Rollback
                                                 </button>
                                             )}

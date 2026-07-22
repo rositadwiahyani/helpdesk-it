@@ -2,7 +2,7 @@
 import React, { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import AdminLayout from '@/components/admin/layout/AdminLayout';
-import { supabase } from '@/lib/supabase';
+import { fetchClient } from '@/lib/apiClient';
 import StatusBadge from '@/components/admin/tickets/StatusBadge';
 import PriorityBadge from '@/components/admin/tickets/PriorityBadge';
 
@@ -23,50 +23,49 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
   useEffect(() => {
     const fetchTicket = async () => {
       setIsLoading(true);
-      const { data, error } = await supabase
-        .from('tickets')
-        .select('*, category:categories(name), dept:departments(name), tech:staff_profiles!tickets_tech_id_fkey(name)')
-        .eq('id', ticketId)
-        .single();
-
-      if (data && !error) {
-        // get conversations and logs
-        const { data: msgs } = await supabase.from('ticket_messages').select('*').eq('ticket_id', ticketId).order('created_at', { ascending: true });
-        const { data: logs } = await supabase.from('ticket_logs').select('*').eq('ticket_id', ticketId).order('created_at', { ascending: true });
-
-        const formattedTicket = {
-          id: data.id,
-          ticket_num: data.ticket_num,
-          subject: data.subject,
-          status: data.status,
-          priority: data.priority,
-          department: data.dept?.name || '-',
-          createdDate: new Date(data.created_at).toLocaleString('id-ID'),
-          assignedTo: data.tech?.name || '-',
-          sla: 'Belum Ditentukan',
-          dueDate: data.sla_due ? new Date(data.sla_due).toLocaleString('id-ID') : '-',
-          requester: data.reporter_name,
-          email: data.phone, // fallback
-          source: data.reporter_type,
-          helpTopic: data.category?.name || '-',
-          updatedDate: new Date(data.updated_at).toLocaleString('id-ID'),
-          conversations: msgs?.map(m => ({
-            id: m.id,
-            sender: m.sender_type === 'USER' ? data.reporter_name : 'Admin',
-            role: m.sender_type === 'USER' ? 'user' : 'admin',
-            content: m.message,
-            timestamp: new Date(m.created_at).toLocaleString('id-ID'),
-            type: 'reply'
-          })) || [],
-          timeline: logs?.map(l => ({
-            id: l.id,
-            event: l.action + (l.notes ? ` - ${l.notes}` : ''),
-            actor: 'System',
-            timestamp: new Date(l.created_at).toLocaleString('id-ID')
-          })) || []
-        };
-        setTicket(formattedTicket);
-        setTicketStatusSelect(data.status as any);
+      try {
+        const { data } = await fetchClient(`/operator/tickets/${ticketId}`);
+        if (data) {
+          const { ticket: tData, messages: msgs, logs } = data;
+          
+          if (tData) {
+            const formattedTicket = {
+              id: tData.id,
+              ticket_num: tData.ticket_number || tData.ticket_num,
+              subject: tData.subject,
+              status: tData.status,
+              priority: tData.priority,
+              department: tData.category?.name || tData.dept?.name || '-',
+              createdDate: new Date(tData.created_at).toLocaleString('id-ID'),
+              assignedTo: tData.tech?.name || '-',
+              sla: 'Belum Ditentukan',
+              dueDate: tData.sla_due ? new Date(tData.sla_due).toLocaleString('id-ID') : '-',
+              requester: tData.reporter_name,
+              email: tData.phone, // fallback
+              source: tData.reporter_type,
+              helpTopic: tData.category?.name || '-',
+              updatedDate: new Date(tData.updated_at).toLocaleString('id-ID'),
+              conversations: (msgs || []).map((m: any) => ({
+                id: m.id,
+                sender: m.sender_type === 'USER' ? tData.reporter_name : 'Admin',
+                role: m.sender_type === 'USER' ? 'user' : 'admin',
+                content: m.message,
+                timestamp: new Date(m.created_at).toLocaleString('id-ID'),
+                type: 'reply'
+              })),
+              timeline: (logs || []).map((l: any) => ({
+                id: l.id,
+                event: l.action + (l.notes ? ` - ${l.notes}` : ''),
+                actor: 'System',
+                timestamp: new Date(l.created_at).toLocaleString('id-ID')
+              }))
+            };
+            setTicket(formattedTicket);
+            setTicketStatusSelect(tData.status as any);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching ticket detail:", err);
       }
       setIsLoading(false);
     };
@@ -77,17 +76,16 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
     e.preventDefault();
     if (!ticket || !messageText.trim()) return;
 
-    // Insert message
-    await supabase.from('ticket_messages').insert({
-      ticket_id: ticketId,
-      sender_type: 'ADMIN',
-      message: messageText
-    });
-
-    // If status changed
-    if (ticketStatusSelect !== ticket.status) {
-      await supabase.from('tickets').update({ status: ticketStatusSelect, updated_at: new Date().toISOString() }).eq('id', ticketId);
-      await supabase.from('ticket_logs').insert({ ticket_id: ticketId, action: 'CHANGE_STATUS', notes: `Status changed to ${ticketStatusSelect}` });
+    try {
+      await fetchClient(`/operator/tickets/${ticketId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          status: ticketStatusSelect !== ticket.status ? ticketStatusSelect : undefined,
+          message: messageText
+        })
+      });
+    } catch (err) {
+      console.error("Gagal update tiket:", err);
     }
 
     setMessageText('');

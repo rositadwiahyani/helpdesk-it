@@ -1,9 +1,9 @@
-import BlankLayout from '@/components/admin/layout/BlankLayout';
+import TeknisiLayout from '@/components/teknisi/layout/TeknisiLayout';
 
-export default function TeknisiLayout({ children }: { children: React.ReactNode }) {
+export default function TeknisiDashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <BlankLayout>
+    <TeknisiLayout>
       {children}
-    </BlankLayout>
+    </TeknisiLayout>
   );
 }

@@ -1,62 +1,29 @@
 import React from 'react';
 import OperatorStatistics from '@/components/admin/tickets/OperatorStatistics';
-import { supabase } from '@/lib/supabase';
+import { fetchServer } from '@/lib/apiServer';
 
 export const dynamic = 'force-dynamic';
 
 export default async function OperatorDashboard() {
-    // Auth check dilewati sementara
-    
-    // Ambil SEMUA tiket untuk direkap di Client Component
-    // Pada production berskala besar, sebaiknya ini menggunakan RPC atau View di Supabase
-    const { data: tickets } = await supabase
-        .from('tickets')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-    // Ambil log tiket (untuk mengetahui kapan tiket diverifikasi / ditolak)
-    const { data: ticketLogs, error: logError } = await supabase
-        .from('ticket_logs')
-        .select('*')
-        .in('action', ['CHANGE_STATUS', 'REJECT_TICKET']);
-        
-    if (logError) console.error("Error logs:", logError);
-
-    // Ambil kategori & departemen
-    const { data: rawCategories } = await supabase.from('categories').select('*');
-    const { data: departments } = await supabase.from('departments').select('id, name');
-
-    // Build hierarchical names for the categories (Topics)
-    const formattedCategories = (rawCategories || []).map(cat => {
-        const breadcrumb = [];
-        let current = cat;
-        while (current) {
-            breadcrumb.unshift(current.name);
-            current = (rawCategories || []).find(c => c.id === current.parent_id);
-        }
-        return {
-            id: cat.id,
-            name: breadcrumb.join(' / '),
+    // Ambil data dashboard dari Express API
+    let dashboardData;
+    try {
+        const response = await fetchServer('/operator/dashboard');
+        dashboardData = response.data;
+    } catch (error) {
+        console.error("Gagal mengambil data dashboard:", error);
+        // Fallback jika API gagal
+        dashboardData = {
+            tickets: [],
+            ticketLogs: [],
+            categories: [],
+            departments: [],
+            counts: { todayCount: 0, verifiedCount: 0, openCount: 0 }
         };
-    }).sort((a, b) => a.name.localeCompare(b.name));
+    }
 
-    // Summary Cards (Hari Ini)
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const todayStr = today.toISOString();
-
-    const { count: todayCount } = await supabase
-        .from('tickets')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', todayStr);
-
-    const { count: verifiedCount } = await supabase
-        .from('ticket_logs')
-        .select('*', { count: 'exact', head: true })
-        .in('action', ['CHANGE_STATUS', 'REJECT_TICKET'])
-        .gte('created_at', todayStr);
-
-    const openCount = (tickets || []).filter(t => t.status === 'Open').length;
+    const { tickets, ticketLogs, categories: formattedCategories, departments, counts } = dashboardData;
+    const { todayCount, verifiedCount, openCount } = counts;
 
     return (
         <div className="w-full h-full text-slate-800 font-sans p-6 md:p-10">
