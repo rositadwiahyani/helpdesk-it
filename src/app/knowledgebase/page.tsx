@@ -6,7 +6,7 @@ import Footer from '@/components/public/Footer';
 
 // Panggil file komponen yang udah lu bikin
 // (Pastikan nama file di folder components adalah Knowledgebase.tsx)
-import Knowledgebase from '@/components/Knowledgebase'; 
+import Knowledgebase from '@/components/public/Knowledgebase'; 
 
 export default function KnowledgebasePage() {
   const router = useRouter();
