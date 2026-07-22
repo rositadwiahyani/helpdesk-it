@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import AdminSidebar from './AdminSidebar';
-import AdminTopbar from './AdminTopbar';
+import Topbar from './AdminTopbar';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   // Di desktop sidebar selalu terlihat (fixed, tanpa collapse).
@@ -45,15 +45,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Sidebar (Kiri) — fixed, selalu tampil di desktop, drawer di mobile */}
       <AdminSidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-      {/* Main Content Wrapper (Kanan) — padding kiri tetap mengikuti lebar sidebar (w-72) di desktop */}
-      <div className="flex-1 flex flex-col min-w-0 lg:pl-72">
-
-        {/* Topbar (Atas) — breadcrumb "Menu > Judul Halaman" sudah termasuk di dalamnya */}
-        <AdminTopbar
-          onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          breadcrumbParent={getBreadcrumbParent()}
-          pageTitle={getPageTitle()}
-        />
+      {/* Main Content Wrapper (Kanan) */}
+      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${isSidebarOpen ? 'lg:pl-64' : 'lg:pl-0'}`}>
 
         {/* Main Content */}
         <main className="flex-1 p-4 lg:p-8 overflow-y-auto">
