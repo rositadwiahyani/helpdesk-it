@@ -1,18 +1,44 @@
 'use client';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
 
-interface AdminTopbarProps {
+interface TopbarProps {
   onMenuClick: () => void;
   pageTitle?: string;
 }
 
-export default function AdminTopbar({ onMenuClick, pageTitle = 'Dashboard' }: AdminTopbarProps) {
+export default function Topbar({ onMenuClick, pageTitle = 'Dashboard' }: TopbarProps) {
+  const [profile, setProfile] = useState<{name: string, role: string}>({ name: 'Admin Magang', role: 'Administrator' });
+  
+  useEffect(() => {
+    async function fetchProfile() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data } = await supabase.from('staff_profiles').select('name, role').eq('id', user.id).maybeSingle();
+        if (data) {
+          setProfile({ name: data.name || 'User', role: data.role || 'Staff' });
+        }
+      }
+    }
+    fetchProfile();
+  }, []);
+
+  const getInitials = (name: string) => {
+    if (!name) return 'U';
+    const parts = name.split(' ');
+    if (parts.length > 1) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
+
   return (
     <div className="sticky top-0 z-40 h-16 w-full bg-white/80 backdrop-blur-md border-b border-[var(--line)]">
       <div className="flex h-full items-center justify-between px-4 lg:px-8">
         
-        {/* Kiri: Hamburger Menu (Mobile), Logo & Judul Halaman */}
+        {/* Kiri: Hamburger Menu (Mobile) & Judul Halaman */}
         <div className="flex items-center gap-4">
           {/* Tombol Hamburger (Desktop & Mobile) */}
           <button
@@ -24,17 +50,6 @@ export default function AdminTopbar({ onMenuClick, pageTitle = 'Dashboard' }: Ad
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          
-          {/* Logo HelpIT (Desktop & Mobile) */}
-          <Link href="/admin" className="brand lg:flex hidden">
-            <Image src="/universitas-diponegoro-helpit1.png" alt="HelpIT Logo" width={120} height={32} className="opacity-90" />
-          </Link>
-          <Link href="/admin" className="brand flex lg:hidden">
-            <span className="font-['Fraunces'] font-bold text-[18px] text-[var(--gold)]">HelpIT</span>
-          </Link>
-
-          {/* Garis Pemisah (Hanya Desktop) */}
-          <div className="hidden lg:block w-px h-6 bg-[var(--line)] ml-2 mr-2"></div>
 
           {/* Judul Halaman */}
           <h1 className="text-[16px] font-semibold text-[var(--ink)] truncate max-w-[200px] md:max-w-xs">
@@ -59,15 +74,15 @@ export default function AdminTopbar({ onMenuClick, pageTitle = 'Dashboard' }: Ad
           {/* Garis Pemisah */}
           <div className="hidden sm:block w-px h-6 bg-[var(--line)]"></div>
 
-          {/* Profile (Statik, Tanpa Dropdown) */}
+          {/* Profile (Dinamis, Tanpa Dropdown) */}
           <div className="flex items-center gap-3">
             <div className="hidden sm:flex flex-col items-end">
-              <span className="text-[13.5px] font-bold text-[var(--ink)]">Admin Magang</span>
-              <span className="text-[11px] font-mono text-[var(--text-dim)] uppercase tracking-wide">Administrator</span>
+              <span className="text-[13.5px] font-bold text-[var(--ink)]">{profile.name}</span>
+              <span className="text-[11px] font-mono text-[var(--text-dim)] uppercase tracking-wide">{profile.role}</span>
             </div>
             {/* Avatar */}
             <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[var(--gold-dim)] to-[var(--gold-soft)] flex items-center justify-center text-white font-bold text-sm shadow-sm">
-              AM
+              {getInitials(profile.name)}
             </div>
           </div>
 

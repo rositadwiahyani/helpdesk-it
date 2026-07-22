@@ -7,22 +7,21 @@ import { supabase } from '@/lib/supabase';
 type Ticket = any; // simplified for this example
 type Category = { id: string | number, name: string };
 type Department = { id: string | number, name: string };
-type Technician = { id: string, name: string };
 
-export default function OperatorTicketTable({
+export default function TeknisiTicketTable({
     initialTickets,
     categories,
     mainCategories,
     departments,
-    technicians,
-    actionType = 'verify'
+    actionType = 'none',
+    currentUserId,
 }: {
     initialTickets: Ticket[],
     categories: Category[],
     mainCategories: Category[],
     departments: Department[],
-    technicians?: Technician[],
-    actionType?: 'verify' | 'rollback'
+    actionType?: 'assign' | 'resolve' | 'none' | 'reopen',
+    currentUserId?: string,
 }) {
     // Local state for tickets to support optimistic updates
     const [tickets, setTickets] = useState<Ticket[]>(initialTickets);
@@ -39,6 +38,9 @@ export default function OperatorTicketTable({
 
     // States for sorting
     const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
+
+    // Loading states for actions
+    const [actionLoading, setActionLoading] = useState<string | null>(null);
 
     // Reset handler
     const handleReset = () => {
@@ -80,98 +82,69 @@ export default function OperatorTicketTable({
         setSortConfig({ key, direction });
     };
 
-    // Bulk actions
-    const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.checked) {
-            setSelectedTickets(processedTickets.map(t => t.id));
-        } else {
-            setSelectedTickets([]);
-        }
-    };
-
-    const handleSelect = (id: string) => {
-        if (selectedTickets.includes(id)) {
-            setSelectedTickets(selectedTickets.filter(tId => tId !== id));
-        } else {
-            setSelectedTickets([...selectedTickets, id]);
-        }
-    };
-
-    const handleBulkReject = async () => {
-        if (selectedTickets.length === 0) return;
-        if (!confirm(`Apakah Anda yakin ingin MENOLAK ${selectedTickets.length} tiket yang dipilih secara otomatis?`)) return;
-
-        setIsBulkRejecting(true);
-        try {
-            // Placeholder API call
-            const promises = selectedTickets.map(ticketId => 
-                fetch('/api/tickets/operator', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        ticketId, 
-                        actionType: 'reject'
-                    })
-                })
-            );
-
-            await Promise.all(promises);
-            window.location.reload();
-        } catch (error) {
-            console.error('Bulk reject error:', error);
-            alert('Terjadi kesalahan saat memproses bulk reject.');
-        } finally {
-            setIsBulkRejecting(false);
-            setSelectedTickets([]);
-        }
-    };
-
-    const handleAccept = async (ticketId: string, deptId: string) => {
-        if (!deptId) {
-            alert('Silakan pilih unit/departemen terlebih dahulu sebelum menerima tiket.');
+    const handleAssignToMe = async (ticketId: string) => {
+        if (!currentUserId) {
+            alert('Anda belum login.');
             return;
         }
-        
+        setActionLoading(ticketId);
         try {
             const { error } = await supabase
                 .from('tickets')
-                .update({ status: 'Assigned' }) // Mengubah status menjadi Assigned agar hilang dari daftar Open
+                .update({ tech_id: currentUserId, status: 'In Progress' })
                 .eq('id', ticketId);
             
-            if (!error) {
-                setTickets(prev => prev.filter(t => t.id !== ticketId));
-            } else {
-                alert('Gagal menerima tiket');
-            }
-        } catch(e) {
-            console.error(e);
+            if (error) throw error;
+
+            // Optimistic UI update: remove ticket from this view
+            setTickets(prev => prev.filter(t => t.id !== ticketId));
+        } catch (err) {
+            console.error('Failed to assign ticket:', err);
+            alert('Gagal mengambil tiket.');
+        } finally {
+            setActionLoading(null);
         }
     };
 
-    const handleReject = async (ticketId: string) => {
-        const reason = prompt('Masukkan alasan penolakan (opsional):');
-        if (reason === null) return; // User membatalkan prompt
-
+    const handleResolveTicket = async (ticketId: string) => {
+        if (!confirm('Apakah Anda yakin tiket ini sudah selesai?')) return;
+        setActionLoading(ticketId);
         try {
             const { error } = await supabase
                 .from('tickets')
-                .update({ status: 'Ditolak' }) // Mengubah status menjadi Ditolak
+                .update({ status: 'Resolved' })
                 .eq('id', ticketId);
             
-            if (!error) {
-                // Log penolakan (abaikan error log demi simplisitas jika tabel log belum siap)
-                supabase.from('ticket_logs').insert({
-                    ticket_id: ticketId,
-                    action: 'REJECT_TICKET',
-                    notes: reason || 'Ditolak oleh operator'
-                }).then();
+            if (error) throw error;
 
-                setTickets(prev => prev.filter(t => t.id !== ticketId));
-            } else {
-                alert('Gagal menolak tiket');
-            }
-        } catch(e) {
-            console.error(e);
+            // Optimistic UI update: remove ticket from this view
+            setTickets(prev => prev.filter(t => t.id !== ticketId));
+        } catch (err) {
+            console.error('Failed to resolve ticket:', err);
+            alert('Gagal menyelesaikan tiket.');
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    const handleReopenTicket = async (ticketId: string) => {
+        if (!confirm('Apakah Anda yakin ingin membuka kembali tiket ini? Tiket akan kembali ke antrean Open Tickets.')) return;
+        setActionLoading(ticketId);
+        try {
+            const { error } = await supabase
+                .from('tickets')
+                .update({ status: 'Assigned', tech_id: null }) // Kembalikan ke Assigned dan hapus tech_id
+                .eq('id', ticketId);
+            
+            if (error) throw error;
+
+            // Optimistic UI update: remove ticket from this view
+            setTickets(prev => prev.filter(t => t.id !== ticketId));
+        } catch (err) {
+            console.error('Failed to reopen ticket:', err);
+            alert('Gagal membuka kembali tiket.');
+        } finally {
+            setActionLoading(null);
         }
     };
 
@@ -299,15 +272,6 @@ export default function OperatorTicketTable({
                     ↺ Reset
                 </button>
                 <div className="ml-auto flex items-center gap-3">
-                    {selectedTickets.length > 0 && (
-                        <button 
-                            onClick={handleBulkReject}
-                            disabled={isBulkRejecting}
-                            className="py-2 px-4 bg-red-600 border border-red-700 rounded-lg text-sm font-bold text-white hover:bg-red-700 transition-colors shadow-sm disabled:opacity-50"
-                        >
-                            {isBulkRejecting ? 'Memproses...' : `Tolak Terpilih (${selectedTickets.length})`}
-                        </button>
-                    )}
                     <span className="text-sm text-slate-500 font-medium whitespace-nowrap hidden sm:block">
                         Showing {processedTickets.length} tickets
                     </span>
@@ -337,30 +301,24 @@ export default function OperatorTicketTable({
                 <table className="w-full text-sm text-left table-fixed">
                     <thead className="text-xs text-slate-500 bg-white border-b border-slate-200">
                         <tr>
-                            <th className="px-4 py-3 font-semibold whitespace-nowrap w-10">
-                                <input 
-                                    type="checkbox" 
-                                    className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                                    checked={selectedTickets.length === processedTickets.length && processedTickets.length > 0}
-                                    onChange={handleSelectAll}
-                                />
+                            <th className="px-4 py-3 font-semibold whitespace-nowrap">No. Tiket</th>
+                            <th className="px-4 py-3 font-semibold whitespace-nowrap">
+                                <div className="flex items-center gap-1 cursor-pointer hover:text-blue-600 transition-colors" onClick={() => requestSort('created_at')}>
+                                    Waktu Masuk
+                                    {sortConfig?.key === 'created_at' && (
+                                        <span className="text-xs">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                                    )}
+                                </div>
                             </th>
-                            <th className="px-4 py-3 font-semibold cursor-pointer hover:bg-slate-50 transition-colors whitespace-nowrap w-24" onClick={() => requestSort('ticket_num')}>
-                                <div className="flex items-center gap-1">Ticket {getSortArrow('ticket_num')}</div>
-                            </th>
-                            <th className="px-4 py-3 font-semibold cursor-pointer hover:bg-slate-50 transition-colors whitespace-nowrap w-32" onClick={() => requestSort('created_at')}>
-                                <div className="flex items-center gap-1">Last Updated {getSortArrow('created_at')}</div>
-                            </th>
-                            <th className="px-4 py-3 font-semibold cursor-pointer hover:bg-slate-50 transition-colors whitespace-nowrap" onClick={() => requestSort('subject')}>
-                                <div className="flex items-center gap-1">Subject {getSortArrow('subject')}</div>
-                            </th>
-                            <th className="px-4 py-3 font-semibold cursor-pointer hover:bg-slate-50 transition-colors whitespace-nowrap w-32 truncate" onClick={() => requestSort('reporter')}>
-                                <div className="flex items-center gap-1">From {getSortArrow('reporter')}</div>
-                            </th>
+                            <th className="px-4 py-3 font-semibold min-w-[200px]">Subjek</th>
+                            <th className="px-4 py-3 font-semibold whitespace-nowrap w-32">Status</th>
+                            <th className="px-4 py-3 font-semibold whitespace-nowrap">Pelapor</th>
+                            <th className="px-4 py-3 font-semibold whitespace-nowrap">Unit/Fakultas</th>
                             <th className="px-4 py-3 font-semibold whitespace-nowrap w-40">Category</th>
                             <th className="px-4 py-3 font-semibold whitespace-nowrap w-28">Priority</th>
-                            <th className="px-4 py-3 font-semibold whitespace-nowrap w-32">Assigned To</th>
-                            <th className="px-4 py-3 font-semibold text-right whitespace-nowrap w-32">Action</th>
+                            {actionType !== 'none' && (
+                                <th className="px-4 py-3 font-semibold text-right whitespace-nowrap w-32">Action</th>
+                            )}
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -377,17 +335,9 @@ export default function OperatorTicketTable({
                                     : String(index + 1).padStart(6, '0');
 
                                 return (
-                                <tr key={ticket.id} className={`transition-colors ${selectedTickets.includes(ticket.id) ? 'bg-blue-50' : 'hover:bg-slate-50'}`}>
-                                    <td className="px-4 py-3 align-middle w-10">
-                                        <input 
-                                            type="checkbox" 
-                                            className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                                            checked={selectedTickets.includes(ticket.id)}
-                                            onChange={() => handleSelect(ticket.id)}
-                                        />
-                                    </td>
-                                    <td className="px-4 py-3 align-middle whitespace-nowrap">
-                                        <Link href={`/dashboard/operator/tickets/${ticket.id}`} className="font-semibold text-blue-600 hover:underline">
+                                <tr key={ticket.id} className="hover:bg-blue-50/50 transition-colors border-b border-slate-100 last:border-0 group">
+                                    <td className="px-4 py-3 font-medium text-slate-800">
+                                        <Link href={`/dashboard/teknisi/tickets/${ticket.id}`} className="hover:text-blue-600 hover:underline">
                                             {formattedTicketNum}
                                         </Link>
                                     </td>
@@ -395,87 +345,56 @@ export default function OperatorTicketTable({
                                         {ticket.created_at ? new Date(ticket.created_at).toISOString().split('T')[0] : '-'} <span className="text-xs ml-1">{ticket.created_at ? new Date(ticket.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : ''}</span>
                                     </td>
                                     <td className="px-4 py-3 align-middle">
-                                        <Link href={`/dashboard/operator/tickets/${ticket.id}`} className="font-semibold text-slate-800 hover:text-blue-600 hover:underline block mb-1 leading-tight line-clamp-2">
+                                        <Link href={`/dashboard/teknisi/tickets/${ticket.id}`} className="font-semibold text-slate-800 hover:text-blue-600 hover:underline block mb-1 leading-tight line-clamp-2">
                                             {ticket.subject || ticket.category?.name || 'Tanpa Subjek'}
                                         </Link>
+                                    </td>
+                                    <td className="px-4 py-3 align-middle whitespace-nowrap">
+                                        {ticket.status}
                                     </td>
                                     <td className="px-4 py-3 align-middle whitespace-nowrap">
                                         <div className="font-semibold text-slate-700 leading-tight">{ticket.reporter_name || 'N/A'}</div>
                                     </td>
                                     <td className="px-4 py-3 align-middle whitespace-nowrap">
-                                        {actionType === 'verify' ? (
-                                            <select 
-                                                value={ticket.category_id || ''}
-                                                onChange={(e) => handleInlineUpdate(ticket.id, 'category_id', e.target.value)}
-                                                className="bg-white border border-slate-300 rounded px-2 py-1 text-xs focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer max-w-[150px] truncate"
-                                            >
-                                                <option value="">Pilih Kategori...</option>
-                                                {categories.map(c => (
-                                                    <option key={c.id} value={c.id}>{c.name}</option>
-                                                ))}
-                                            </select>
-                                        ) : (
-                                            <span className="text-slate-600">{ticket.category?.name || 'N/A'}</span>
-                                        )}
+                                        {ticket.unit || '-'}
                                     </td>
                                     <td className="px-4 py-3 align-middle whitespace-nowrap">
-                                        {actionType === 'verify' ? (
-                                            <select 
-                                                value={ticket.priority?.toLowerCase() || 'medium'}
-                                                onChange={(e) => handleInlineUpdate(ticket.id, 'priority', e.target.value)}
-                                                className="bg-white border border-slate-300 rounded px-2 py-1 text-xs focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer"
-                                            >
-                                                <option value="low">Low</option>
-                                                <option value="medium">Medium</option>
-                                                <option value="high">High</option>
-                                                <option value="critical">Critical</option>
-                                            </select>
-                                        ) : (
-                                            <span className="text-slate-600 font-medium capitalize">{ticket.priority || 'N/A'}</span>
-                                        )}
+                                        <span className="text-slate-600">{ticket.category?.name || 'N/A'}</span>
                                     </td>
                                     <td className="px-4 py-3 align-middle whitespace-nowrap">
-                                        {actionType === 'verify' ? (
-                                            <select 
-                                                value={ticket.dept_id || ''}
-                                                onChange={(e) => handleInlineUpdate(ticket.id, 'dept_id', e.target.value)}
-                                                className="bg-white border border-slate-300 rounded px-2 py-1 text-xs focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer max-w-[120px] truncate"
-                                            >
-                                                <option value="">Pilih Unit...</option>
-                                                {departments?.map(dept => (
-                                                    <option key={dept.id} value={dept.id}>{dept.name}</option>
-                                                ))}
-                                            </select>
-                                        ) : (
-                                            <span className="text-slate-500">{ticket.department?.name || ticket.dept_id || '-'}</span>
-                                        )}
+                                        <span className="text-slate-600 font-medium capitalize">{ticket.priority || 'N/A'}</span>
                                     </td>
-                                    <td className="px-4 py-3 align-middle text-right whitespace-nowrap">
-                                        <div className="flex justify-end gap-2">
-                                            {actionType === 'verify' ? (
-                                                <>
+                                    {actionType !== 'none' && (
+                                        <td className="px-4 py-3 text-right">
+                                            <div className="flex justify-end gap-2">
+                                                {actionType === 'assign' ? (
                                                     <button 
-                                                        onClick={() => handleAccept(ticket.id, ticket.dept_id)} 
-                                                        title="Terima & Teruskan ke Unit"
-                                                        className="py-1 px-3 bg-emerald-50 border border-emerald-200 rounded text-sm font-extrabold text-emerald-700 hover:bg-emerald-100 transition-colors shadow-sm"
+                                                        onClick={() => handleAssignToMe(ticket.id)}
+                                                        disabled={actionLoading === ticket.id}
+                                                        className="py-1 px-3 bg-blue-50 border border-blue-200 rounded text-xs font-semibold text-blue-700 hover:bg-blue-100 transition-colors disabled:opacity-50"
                                                     >
-                                                        ✓
+                                                        {actionLoading === ticket.id ? 'Mengambil...' : 'Assign to Me'}
                                                     </button>
+                                                ) : actionType === 'resolve' ? (
                                                     <button 
-                                                        onClick={() => handleReject(ticket.id)} 
-                                                        title="Tolak Tiket"
-                                                        className="py-1 px-3 bg-red-50 border border-red-200 rounded text-sm font-extrabold text-red-700 hover:bg-red-100 transition-colors shadow-sm"
+                                                        onClick={() => handleResolveTicket(ticket.id)}
+                                                        disabled={actionLoading === ticket.id}
+                                                        className="py-1 px-3 bg-emerald-50 border border-emerald-200 rounded text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors disabled:opacity-50"
                                                     >
-                                                        ✕
+                                                        {actionLoading === ticket.id ? 'Menyelesaikan...' : 'Mark as Resolved'}
                                                     </button>
-                                                </>
-                                            ) : (
-                                                <button className="py-1 px-3 bg-orange-50 border border-orange-200 rounded text-xs font-semibold text-orange-700 hover:bg-orange-100 transition-colors">
-                                                    Rollback
-                                                </button>
-                                            )}
-                                        </div>
-                                    </td>
+                                                ) : actionType === 'reopen' ? (
+                                                    <button 
+                                                        onClick={() => handleReopenTicket(ticket.id)}
+                                                        disabled={actionLoading === ticket.id}
+                                                        className="py-1 px-3 bg-amber-50 border border-amber-200 rounded text-xs font-semibold text-amber-700 hover:bg-amber-100 transition-colors disabled:opacity-50"
+                                                    >
+                                                        {actionLoading === ticket.id ? 'Memproses...' : 'Reopen'}
+                                                    </button>
+                                                ) : null}
+                                            </div>
+                                        </td>
+                                    )}
                                 </tr>
                                 );
                             })

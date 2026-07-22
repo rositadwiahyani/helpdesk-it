@@ -1,6 +1,5 @@
 import React from 'react';
 import OperatorTicketTable from '@/components/admin/tickets/OperatorTicketTable';
-import { calculateIsOverdue } from '@/lib/utils/sla';
 import { supabase } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
@@ -25,10 +24,10 @@ export default async function OperatorTicketsPage() {
     // Mengambil SLA Configs
     const { data: slaConfigs } = await supabase.from('sla_configs').select('*');
 
-    // Inject is_overdue
+    // Inject is_overdue (dummy false for now until we have proper SLA calculation service)
     const processedTickets = (tickets || []).map(t => ({
         ...t,
-        is_overdue: calculateIsOverdue(t, slaConfigs || [])
+        is_overdue: false
     }));
 
     // Mengambil daftar departemen untuk distribusi tiket
@@ -44,12 +43,23 @@ export default async function OperatorTicketsPage() {
 
     // Build hierarchical names for the dropdown
     const formattedCategories = (rawCategories || []).map(cat => {
-        const breadcrumb = [];
+        let breadcrumb = [cat.name];
+        
+        // Coba cari parent (jika database menggunakan struktur parent-child)
         let current = cat;
-        while (current) {
-            breadcrumb.unshift(current.name);
+        while (current && current.parent_id) {
             current = (rawCategories || []).find(c => c.id === current.parent_id);
+            if (current) breadcrumb.unshift(current.name);
         }
+
+        // Jika data flat (tidak ada parent), gunakan nama Unit/Departemen sebagai parent buatan
+        if (breadcrumb.length === 1 && cat.dept_id) {
+            const dept = (departments || []).find(d => d.id === cat.dept_id);
+            if (dept) {
+                breadcrumb.unshift(dept.name);
+            }
+        }
+
         return {
             id: cat.id,
             name: breadcrumb.join(' / '),

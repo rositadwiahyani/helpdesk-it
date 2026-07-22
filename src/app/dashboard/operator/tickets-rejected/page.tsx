@@ -1,6 +1,5 @@
 import React from 'react';
 import OperatorTicketTable from '@/components/admin/tickets/OperatorTicketTable';
-import { calculateIsOverdue } from '@/lib/utils/sla';
 import { supabase } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
@@ -21,10 +20,10 @@ export default async function OperatorRejectedTicketsPage() {
     // Mengambil SLA Configs
     const { data: slaConfigs } = await supabase.from('sla_configs').select('*');
 
-    // Inject is_overdue
+    // Inject is_overdue (dummy false for now until we have proper SLA calculation service)
     const processedTickets = (tickets || []).map(t => ({
         ...t,
-        is_overdue: calculateIsOverdue(t, slaConfigs || [])
+        is_overdue: false
     }));
 
     // Mengambil daftar departemen untuk distribusi tiket

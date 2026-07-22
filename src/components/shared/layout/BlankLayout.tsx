@@ -1,6 +1,6 @@
 'use client';
 import { usePathname } from 'next/navigation';
-import AdminTopbar from './AdminTopbar';
+import Topbar from '@/components/shared/layout/Topbar';
 
 export default function BlankLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -17,7 +17,7 @@ export default function BlankLayout({ children }: { children: React.ReactNode })
   return (
     <div className="min-h-screen bg-[var(--paper)] flex flex-col">
       {/* Topbar (Atas) */}
-      <AdminTopbar 
+      <Topbar 
         onMenuClick={() => {}} 
         pageTitle={getPageTitle()}
       />

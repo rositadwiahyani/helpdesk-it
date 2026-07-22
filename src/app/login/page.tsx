@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import AuthCard from '@/components/AuthCard';
+import AuthCard from '@/components/auth/AuthCard';
 import { loginUser } from '@/lib/AuthService';
 
 export default function LoginPage() {
@@ -21,8 +21,24 @@ export default function LoginPage() {
       
       if (authData?.user) {
         localStorage.setItem('isLoggedIn', 'true');
-        // Arahkan sementara ke dashboard operator
-        router.push('/dashboard/operator');
+        
+        // Cek role di staff_profiles
+        const { supabase } = await import('@/lib/supabase');
+        const { data: profile } = await supabase
+          .from('staff_profiles')
+          .select('role')
+          .eq('email', email)
+          .maybeSingle();
+
+        let targetPath = '/dashboard/operator'; // Default fallback
+        if (profile) {
+          const role = profile.role?.toLowerCase();
+          if (role === 'teknisi' || role === 'agent') targetPath = '/dashboard/teknisi';
+          else if (role === 'pimpinan') targetPath = '/dashboard/pimpinan';
+          else if (role === 'admin') targetPath = '/dashboard/administrasi';
+        }
+
+        router.push(targetPath);
       }
     } catch (error: any) {
       setErrorMsg(error.message || 'Gagal login. Periksa kembali email dan password Anda.');

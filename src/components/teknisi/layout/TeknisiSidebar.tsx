@@ -1,14 +1,13 @@
 'use client';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useState } from 'react';
 
-interface AdminSidebarProps {
+interface TeknisiSidebarProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
 }
 
-export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
+export default function TeknisiSidebar({ isOpen, setIsOpen }: TeknisiSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -20,18 +19,12 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
     router.refresh();
   };
 
-  let MENU_ITEMS = [
-    { name: 'Dashboard', path: '/admin/dashboard', icon: DashboardIcon },
-    { name: 'Tickets', path: '/admin/tickets', icon: TicketsIcon },
-    { name: 'Users', path: '/admin/users', icon: UsersIcon },
-    { name: 'Departments', path: '/admin/departments', icon: UsersIcon },
-    { name: 'Help Topics', path: '/admin/help-topics', icon: TicketsIcon },
-    { name: 'Roles', path: '/admin/roles', icon: UsersIcon },
-    { name: 'Knowledgebase', path: '/admin/knowledgebase', icon: KnowledgebaseIcon },
-    { name: 'Settings', path: '/admin/settings', icon: SettingsIcon },
-    { name: 'Emails', path: '/admin/emails', icon: TicketsIcon },
-    { name: 'Agents', path: '/admin/agents', icon: UsersIcon },
-    { name: 'Manage', path: '/admin/manage', icon: DashboardIcon },
+  const MENU_ITEMS = [
+    { name: 'Dashboard', path: '/dashboard/teknisi', icon: DashboardIcon },
+    { name: 'Open Tickets', path: '/dashboard/teknisi/open-tickets', icon: TicketsIcon },
+    { name: 'My Tasks', path: '/dashboard/teknisi/my-tasks', icon: TaskIcon },
+    { name: 'Resolved Tickets', path: '/dashboard/teknisi/resolved', icon: CheckCircleIcon },
+    { name: 'Profil', path: '/dashboard/teknisi/profile', icon: UsersIcon },
   ];
 
   return (
@@ -52,17 +45,17 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
       >
         {/* Header / Logo Area Sidebar */}
         <div className="h-16 flex items-center px-6 border-b border-[var(--line-dark)] lg:hidden">
-          <span className="font-['Fraunces'] font-bold text-lg text-[var(--ink)]">Admin Menu</span>
+          <span className="font-['Fraunces'] font-bold text-lg text-[var(--ink)]">Teknisi Menu</span>
         </div>
 
         {/* Menu Navigation */}
         <div className="flex-1 overflow-y-auto py-6 px-4 flex flex-col gap-1.5">
           {MENU_ITEMS.map((item) => {
             const Icon = item.icon;
-            // Logika active state yang presisi
+            // Logika active state
             let isActive = false;
-            if (item.path === '/admin') {
-              isActive = pathname === '/admin';
+            if (item.path === '/dashboard/teknisi') {
+              isActive = pathname === '/dashboard/teknisi';
             } else {
               isActive = pathname?.startsWith(item.path) || false;
             }
@@ -89,11 +82,17 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
           })}
         </div>
 
-        {/* Footer Area Sidebar (Opsional) */}
+        {/* Footer Area Sidebar */}
         <div className="p-4 border-t border-[var(--line)] flex flex-col gap-3">
-
+          <button 
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-3 py-2 rounded-xl text-[14.5px] text-red-600 font-medium hover:bg-red-50 transition-colors w-full text-left"
+          >
+            <LogoutIcon isActive={false} />
+            Logout
+          </button>
           <div className="bg-[var(--paper-2)] p-4 rounded-xl flex flex-col gap-1">
-            <span className="text-[11px] font-mono text-[var(--text-dim)] uppercase tracking-wider">HelpIT Admin</span>
+            <span className="text-[11px] font-mono text-[var(--text-dim)] uppercase tracking-wider">HelpIT Teknisi</span>
             <span className="text-xs text-[var(--text-dim)] font-medium">v1.0.0 &copy; 2026</span>
           </div>
         </div>
@@ -103,7 +102,7 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
 }
 
 // ==========================================
-// KUMPULAN ICON SVG (Stroke modern style)
+// KUMPULAN ICON SVG
 // ==========================================
 
 function DashboardIcon({ isActive }: { isActive: boolean }) {
@@ -138,20 +137,29 @@ function TicketsIcon({ isActive }: { isActive: boolean }) {
   );
 }
 
-function KnowledgebaseIcon({ isActive }: { isActive: boolean }) {
+function TaskIcon({ isActive }: { isActive: boolean }) {
   return (
     <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? "2.2" : "1.8"} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
     </svg>
   );
 }
 
-function SettingsIcon({ isActive }: { isActive: boolean }) {
+function CheckCircleIcon({ isActive }: { isActive: boolean }) {
   return (
     <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? "2.2" : "1.8"} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+      <polyline points="22 4 12 14.01 9 11.01" />
+    </svg>
+  );
+}
+
+function BookIcon({ isActive }: { isActive: boolean }) {
+  return (
+    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? "2.2" : "1.8"} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
     </svg>
   );
 }

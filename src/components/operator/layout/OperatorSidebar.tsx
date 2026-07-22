@@ -3,12 +3,12 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-interface AdminSidebarProps {
+interface OperatorSidebarProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
 }
 
-export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
+export default function OperatorSidebar({ isOpen, setIsOpen }: OperatorSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -20,18 +20,11 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
     router.refresh();
   };
 
-  let MENU_ITEMS = [
-    { name: 'Dashboard', path: '/admin/dashboard', icon: DashboardIcon },
-    { name: 'Tickets', path: '/admin/tickets', icon: TicketsIcon },
-    { name: 'Users', path: '/admin/users', icon: UsersIcon },
-    { name: 'Departments', path: '/admin/departments', icon: UsersIcon },
-    { name: 'Help Topics', path: '/admin/help-topics', icon: TicketsIcon },
-    { name: 'Roles', path: '/admin/roles', icon: UsersIcon },
-    { name: 'Knowledgebase', path: '/admin/knowledgebase', icon: KnowledgebaseIcon },
-    { name: 'Settings', path: '/admin/settings', icon: SettingsIcon },
-    { name: 'Emails', path: '/admin/emails', icon: TicketsIcon },
-    { name: 'Agents', path: '/admin/agents', icon: UsersIcon },
-    { name: 'Manage', path: '/admin/manage', icon: DashboardIcon },
+  const MENU_ITEMS = [
+    { name: 'Dashboard', path: '/dashboard/operator', icon: DashboardIcon },
+    { name: 'Tiket Masuk', path: '/dashboard/operator/tickets', icon: TicketsIcon },
+    { name: 'Tiket Ditolak', path: '/dashboard/operator/tickets-rejected', icon: TicketsIcon },
+    { name: 'Profil', path: '/dashboard/operator/profile', icon: UsersIcon },
   ];
 
   return (
@@ -52,7 +45,7 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
       >
         {/* Header / Logo Area Sidebar */}
         <div className="h-16 flex items-center px-6 border-b border-[var(--line-dark)] lg:hidden">
-          <span className="font-['Fraunces'] font-bold text-lg text-[var(--ink)]">Admin Menu</span>
+          <span className="font-['Fraunces'] font-bold text-lg text-[var(--ink)]">Operator Menu</span>
         </div>
 
         {/* Menu Navigation */}
@@ -61,8 +54,10 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
             const Icon = item.icon;
             // Logika active state yang presisi
             let isActive = false;
-            if (item.path === '/admin') {
-              isActive = pathname === '/admin';
+            if (item.path === '/dashboard/operator') {
+              isActive = pathname === '/dashboard/operator';
+            } else if (item.path === '/dashboard/operator/tickets') {
+              isActive = pathname === '/dashboard/operator/tickets' || pathname?.startsWith('/dashboard/operator/tickets/');
             } else {
               isActive = pathname?.startsWith(item.path) || false;
             }
@@ -91,9 +86,15 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
 
         {/* Footer Area Sidebar (Opsional) */}
         <div className="p-4 border-t border-[var(--line)] flex flex-col gap-3">
-
+          <button 
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-3 py-2 rounded-xl text-[14.5px] text-red-600 font-medium hover:bg-red-50 transition-colors w-full text-left"
+          >
+            <LogoutIcon isActive={false} />
+            Logout
+          </button>
           <div className="bg-[var(--paper-2)] p-4 rounded-xl flex flex-col gap-1">
-            <span className="text-[11px] font-mono text-[var(--text-dim)] uppercase tracking-wider">HelpIT Admin</span>
+            <span className="text-[11px] font-mono text-[var(--text-dim)] uppercase tracking-wider">HelpIT Operator</span>
             <span className="text-xs text-[var(--text-dim)] font-medium">v1.0.0 &copy; 2026</span>
           </div>
         </div>

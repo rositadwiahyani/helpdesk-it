@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import AdminSidebar from './AdminSidebar';
-import AdminTopbar from './AdminTopbar';
+import Topbar from '@/components/shared/layout/Topbar';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   // Sidebar tertutup by default di mobile, tapi di desktop kita buat true by default
@@ -41,7 +41,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${isSidebarOpen ? 'lg:pl-64' : 'lg:pl-0'}`}>
         
         {/* Topbar (Atas) */}
-        <AdminTopbar 
+        <Topbar 
           onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} 
           pageTitle={getPageTitle()}
         />
