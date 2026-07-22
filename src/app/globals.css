@@ -528,6 +528,15 @@ footer{background:var(--ink); color:rgba(250,246,236,0.62); padding:64px 0 28px;
 }
 
 .animate-pop-card {
-  /* Durasi diubah jadi 0.9s biar lebih rileks dan mulus */
-  animation: popInCard 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: popInCard 1.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.quick-grid .quick-card:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.quick-grid .quick-card:nth-child(2) {
+  animation-delay: 1.4s;
+}
+.quick-grid .quick-card:nth-child(3) {
+  animation-delay: 2.4s;
 }
