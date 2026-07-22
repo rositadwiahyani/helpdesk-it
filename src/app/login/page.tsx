@@ -1,8 +1,8 @@
 'use client';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import AuthCard from '@/components/AuthCard';
-import { loginUser } from '@/lib/AuthService';
+import AuthCard from '@/components/auth/AuthCard';
+import { fetchClient } from '@/lib/apiClient';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,15 +17,33 @@ export default function LoginPage() {
     setErrorMsg('');
 
     try {
-      const authData = await loginUser(email, password);
+      const authData = await fetchClient('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password })
+      });
       
-      if (authData?.user) {
+      if (authData?.success && authData?.data?.session?.access_token) {
+        // Set cookie so Server Components can read it
+        document.cookie = `auth_token=${authData.data.session.access_token}; path=/; max-age=86400`;
         localStorage.setItem('isLoggedIn', 'true');
-        // Arahkan sementara ke dashboard operator
-        router.push('/dashboard/operator');
+        
+        // Cek role untuk routing
+        const role = authData.data.profile?.role || authData.data.user?.user_metadata?.role || '';
+        let targetPath = '/dashboard/operator'; // Default fallback
+        if (role === 'teknisi' || role === 'agent') targetPath = '/dashboard/teknisi';
+        else if (role === 'pimpinan') targetPath = '/dashboard/pimpinan';
+        else if (role === 'admin') targetPath = '/dashboard/administrasi';
+        
+        router.push(targetPath);
+      } else {
+        throw new Error('Respons tidak valid dari server.');
       }
-    } catch (error: any) {
-      setErrorMsg(error.message || 'Gagal login. Periksa kembali email dan password Anda.');
+    } catch (error) {
+      if (error instanceof Error) {
+        setErrorMsg(error.message || 'Gagal login. Periksa kembali email dan password Anda.');
+      } else {
+        setErrorMsg('Gagal login. Periksa kembali email dan password Anda.');
+      }
     } finally {
       setLoading(false);
     }

@@ -1,14 +1,31 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
+import { fetchClient } from '@/lib/apiClient';
 import AdminSidebar from './AdminSidebar';
 import Topbar from './AdminTopbar';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  // Di desktop sidebar selalu terlihat (fixed, tanpa collapse).
-  // State ini sekarang murni mengontrol drawer di mobile.
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [userProfile, setUserProfile] = useState<any>(null);
   const pathname = usePathname();
+
+  useEffect(() => {
+    fetchClient('/auth/me').then(res => {
+      if (res.success && res.data) {
+        const userData = res.data.user || {};
+        const userMeta = userData.user_metadata || {};
+        const profileData = res.data.profile || {};
+        
+        setUserProfile({
+          name: profileData.name || userMeta.name || userMeta.full_name || userData.email?.split('@')[0] || 'User',
+          role: profileData.role || userMeta.role || 'operator',
+          email: profileData.email || userData.email || '',
+          ...profileData
+        });
+      }
+    }).catch(err => console.error("Error fetching user profile:", err));
+  }, []);
 
   // Helper untuk breadcrumb induk ("Menu" untuk admin, kosong/lain untuk operator)
   const getBreadcrumbParent = () => {
