@@ -53,20 +53,20 @@ export default function TicketTable({
       className: "w-12 px-4"
     },
     {
-      header: 'Ticket',
+      header: 'No. Tiket',
       accessorKey: 'id',
       cell: (ticket) => (
         <Link 
           href={`/admin/tickets/${ticket.id}`} 
           className="font-mono font-bold text-[var(--gold-soft)] hover:text-[var(--gold-dim)] hover:underline transition-colors block whitespace-nowrap"
         >
-          {ticket.id}
+          {ticket.id.startsWith('#') ? ticket.id : `#${ticket.id}`}
         </Link>
       ),
       className: "w-32"
     },
     {
-      header: 'Last Updated',
+      header: 'Last Update',
       accessorKey: 'updatedDate',
       cell: (ticket) => (
         <span className="text-[13px] text-[var(--text-dim)] block whitespace-nowrap">
@@ -101,26 +101,33 @@ export default function TicketTable({
       className: "w-52"
     },
     {
-      header: 'Status',
-      accessorKey: 'status',
-      cell: (ticket) => <StatusBadge status={ticket.status} />,
-      className: "w-32"
-    },
-    {
       header: 'Priority',
       accessorKey: 'priority',
       cell: (ticket) => <PriorityBadge priority={ticket.priority} />,
       className: "w-28"
     },
     {
-      header: 'Assigned To',
+      header: 'Assign To',
       accessorKey: 'assignedTo',
       cell: (ticket) => (
         <span className="font-medium text-[var(--ink)] truncate block">
-          {ticket.assignedTo || '-'}
+          {ticket.assignedTo || 'Unassigned'}
         </span>
       ),
       className: "w-36"
+    },
+    {
+      header: 'Status',
+      accessorKey: 'status',
+      cell: (ticket) => (
+        <StatusBadge
+          status={ticket.status}
+          // NOTE: field 'overdue' belum ada di tipe Ticket (lib/mock/tickets.ts).
+          // Tambahkan `overdue?: boolean;` pada interface Ticket lalu hapus cast "as any" ini.
+          overdue={(ticket as any).overdue}
+        />
+      ),
+      className: "w-44"
     }
   ];
 
