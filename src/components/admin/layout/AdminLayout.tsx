@@ -5,55 +5,58 @@ import AdminSidebar from './AdminSidebar';
 import AdminTopbar from './AdminTopbar';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  // Sidebar tertutup by default di mobile, tapi di desktop kita buat true by default
+  // Di desktop sidebar selalu terlihat (fixed, tanpa collapse).
+  // State ini sekarang murni mengontrol drawer di mobile.
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const pathname = usePathname();
 
-  // Helper to determine page title from pathname
+  // Helper untuk breadcrumb induk ("Menu" untuk admin, kosong/lain untuk operator)
+  const getBreadcrumbParent = () => {
+    if (pathname?.startsWith('/dashboard/operator')) return 'Dashboard';
+    return 'Menu';
+  };
+
+  // Helper untuk menentukan judul halaman aktif dari pathname
   const getPageTitle = () => {
-    if (!pathname) return 'Dashboard';
+    if (!pathname) return 'Dashboard Administrator';
+
+    // Operator
     if (pathname.includes('/dashboard/operator/tickets-rejected')) return 'Tiket Ditolak';
     if (pathname.includes('/dashboard/operator/tickets')) return 'Tiket Masuk';
     if (pathname.includes('/dashboard/operator/profile')) return 'Profil';
-    if (pathname.includes('/dashboard/operator')) return 'Dashboard';
-    
-    // Fallbacks for Admin
-    if (pathname.includes('/users')) return 'Users';
-    if (pathname.includes('/tickets')) return 'Tickets';
-    if (pathname.includes('/departments')) return 'Departments';
-    if (pathname.includes('/help-topics')) return 'Help Topics';
-    if (pathname.includes('/roles')) return 'Roles';
-    if (pathname.includes('/knowledgebase')) return 'Knowledgebase';
-    if (pathname.includes('/settings')) return 'Settings';
-    if (pathname.includes('/emails')) return 'Emails';
-    if (pathname.includes('/agents') || pathname.includes('/dashboard/agent-directory')) return 'Agents';
-    if (pathname.includes('/manage')) return 'Manage';
-    if (pathname.includes('/dashboard/profile')) return 'My Profile';
-    return 'Dashboard';
+    if (pathname.includes('/dashboard/operator')) return 'Dashboard Operator';
+
+    // Admin — sesuai menu sidebar yang baru
+    if (pathname.includes('/admin/tickets')) return 'Tickets';
+    if (pathname.includes('/admin/users')) return 'Manajemen Pengguna';
+    if (pathname.includes('/admin/report-categories')) return 'Kategori Laporan';
+    if (pathname.includes('/admin/sla')) return 'Manajemen SLA';
+    if (pathname.includes('/admin/staff')) return 'Manajemen Staff';
+    if (pathname.includes('/admin/reports')) return 'Laporan & Ekspor';
+    if (pathname.includes('/admin/webhooks')) return 'Log API Webhook';
+    if (pathname.includes('/admin/settings')) return 'Pengaturan Sistem';
+    if (pathname.includes('/admin/dashboard')) return 'Dashboard Administrator';
+
+    return 'Dashboard Administrator';
   };
 
   return (
     <div className="min-h-screen bg-[var(--paper)] flex">
-      {/* Sidebar (Kiri) */}
+      {/* Sidebar (Kiri) — fixed, selalu tampil di desktop, drawer di mobile */}
       <AdminSidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-      {/* Main Content Wrapper (Kanan) */}
-      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${isSidebarOpen ? 'lg:pl-64' : 'lg:pl-0'}`}>
-        
-        {/* Topbar (Atas) */}
-        <AdminTopbar 
-          onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} 
+      {/* Main Content Wrapper (Kanan) — padding kiri tetap mengikuti lebar sidebar (w-72) di desktop */}
+      <div className="flex-1 flex flex-col min-w-0 lg:pl-72">
+
+        {/* Topbar (Atas) — breadcrumb "Menu > Judul Halaman" sudah termasuk di dalamnya */}
+        <AdminTopbar
+          onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          breadcrumbParent={getBreadcrumbParent()}
           pageTitle={getPageTitle()}
         />
 
-        {/* Placeholder Breadcrumb & Main Content */}
+        {/* Main Content */}
         <main className="flex-1 p-4 lg:p-8 overflow-y-auto">
-          {/* Breadcrumb Placeholder */}
-          <div className="mb-6 hidden md:block">
-            <div className="h-4 w-48 bg-[var(--line)] rounded-md animate-pulse"></div>
-          </div>
-
-          {/* Children (Halaman Dashboard/dll akan di-render di sini) */}
           <div className="w-full">
             {children}
           </div>

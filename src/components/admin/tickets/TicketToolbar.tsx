@@ -1,6 +1,9 @@
 import React from 'react';
+import { Ticket } from '@/lib/mock/tickets';
 
 interface TicketToolbarProps {
+  /** Dipakai untuk menghitung angka di setiap tab (All Tickets, New, dst) */
+  tickets: Ticket[];
   searchQuery: string;
   setSearchQuery: (q: string) => void;
   statusFilter: string;
@@ -21,6 +24,7 @@ interface TicketToolbarProps {
 }
 
 export default function TicketToolbar({
+  tickets,
   searchQuery,
   setSearchQuery,
   statusFilter,
@@ -42,13 +46,28 @@ export default function TicketToolbar({
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = React.useState(false);
   const [isAssignDropdownOpen, setIsAssignDropdownOpen] = React.useState(false);
   
+  // Tab & label sesuai desain "Tickets Monitoring".
+  // NOTE: value 'New' menggantikan status lama 'Open' — pastikan union type
+  // TicketStatus di lib/mock/tickets.ts juga sudah diganti dari 'Open' ke 'New'.
   const ticketTabs = [
-    { label: 'All', value: 'All' },
-    { label: 'Open', value: 'Open' },
-    { label: 'My Tickets', value: 'MyTickets' },
-    { label: 'Closed', value: 'Closed' },
-    { label: 'Trash', value: 'Trash' }
+    { label: 'All Tickets', value: 'All' },
+    { label: 'New', value: 'New' },
+    { label: 'In Progress', value: 'In Progress' },
+    { label: 'Waiting Verification', value: 'Waiting' },
+    { label: 'Resolved', value: 'Resolved' },
+    { label: 'Closed', value: 'Closed' }
   ];
+
+  const tabCounts = React.useMemo(() => {
+    return {
+      All: tickets.length,
+      New: tickets.filter((t) => t.status === ('New' as any)).length,
+      'In Progress': tickets.filter((t) => t.status === 'In Progress').length,
+      Waiting: tickets.filter((t) => t.status === 'Waiting').length,
+      Resolved: tickets.filter((t) => t.status === 'Resolved').length,
+      Closed: tickets.filter((t) => t.status === 'Closed').length,
+    } as Record<string, number>;
+  }, [tickets]);
 
   return (
     <div className="bg-white rounded-2xl border border-[var(--line)] shadow-sm overflow-hidden flex flex-col">
@@ -59,14 +78,16 @@ export default function TicketToolbar({
             <button
               key={tab.value}
               onClick={() => setActiveTab(tab.value)}
-              className={`px-5 py-2.5 text-[13.5px] font-bold rounded-t-lg border border-b-0 transition-colors whitespace-nowrap ${
+              className={`px-4 py-3 text-[13.5px] font-bold border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === tab.value
-                  ? 'bg-white border-[var(--line)] text-[var(--ink)]'
-                  : 'bg-transparent border-transparent text-[var(--text-dim)] hover:text-[var(--ink)] hover:bg-[var(--line-dark)]'
+                  ? 'border-blue-600 text-[var(--ink)]'
+                  : 'border-transparent text-[var(--text-dim)] hover:text-[var(--ink)]'
               }`}
-              style={activeTab === tab.value ? { marginBottom: '-1px' } : {}}
             >
-              {tab.label}
+              {tab.label}{' '}
+              <span className={activeTab === tab.value ? 'text-[var(--text-dim)]' : 'text-[var(--text-dim)]/70'}>
+                ({tabCounts[tab.value] ?? 0})
+              </span>
             </button>
           ))}
         </div>
