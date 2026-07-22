@@ -1,4 +1,4 @@
-import Beranda from '@/components/Beranda';
+import Beranda from '@/components/public/Beranda';
 
 export default function Home() {
   return (
