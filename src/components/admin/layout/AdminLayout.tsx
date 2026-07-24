@@ -3,10 +3,9 @@ import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { fetchClient } from '@/lib/apiClient';
 import AdminSidebar from './AdminSidebar';
-import AdminTopbar from './AdminTopbar'; // Sesuaikan nama import
+import AdminTopbar from './AdminTopbar';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [userProfile, setUserProfile] = useState<any>(null);
   const pathname = usePathname();
 
@@ -34,7 +33,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const getPageTitle = () => {
     if (!pathname) return 'Dashboard Administrator';
-    // ... (kode getPageTitle Anda biarkan sama seperti sebelumnya) ...
     if (pathname.includes('/admin/tickets')) return 'Tickets';
     return 'Dashboard Administrator';
   };
@@ -42,14 +40,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="min-h-screen bg-[var(--paper)] flex">
       {/* Sidebar (Permanen) */}
-      <AdminSidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+      <AdminSidebar />
 
-      {/* Wrapper Kanan (Mengikuti Sidebar) */}
-      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${isSidebarOpen ? 'lg:pl-[288px]' : 'lg:pl-0'}`}>
+      {/* Wrapper Kanan (Mengikuti Sidebar secara permanen dengan padding kiri 288px) */}
+      <div className="flex-1 flex flex-col min-w-0 pl-[288px]">
         
-        {/* Topbar (Permanen) - SEBELUMNYA LUPA DIPANGGIL DI SINI */}
+        {/* Topbar (Permanen) */}
         <AdminTopbar 
-          onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
           pageTitle={getPageTitle()}
           breadcrumbParent={getBreadcrumbParent()}
           userName={userProfile?.name}

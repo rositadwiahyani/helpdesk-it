@@ -1,14 +1,9 @@
 'use client';
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
-interface AdminSidebarProps {
-  isOpen: boolean;
-  setIsOpen: (isOpen: boolean) => void;
-}
-
-export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
+export default function AdminSidebar() {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -20,14 +15,14 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
 
   let MENU_ITEMS = [
     { name: 'Beranda', path: '/dashboard/administrasi', icon: HomeIcon },
-    { name: 'Tickets', path: '/admin/tickets', icon: TicketsIcon },
-    { name: 'Manajemen Pengguna', path: '/admin/users', icon: UsersIcon },
-    { name: 'Kategori Laporan', path: '/admin/report-categories', icon: CategoryIcon },
-    { name: 'Manajemen SLA', path: '/admin/sla', icon: SlaIcon },
-    { name: 'Manajemen Staff', path: '/admin/staff', icon: StaffIcon },
-    { name: 'Laporan & Ekspor', path: '/admin/reports', icon: ReportIcon },
-    { name: 'Log API Webhook', path: '/admin/webhooks', icon: WebhookIcon },
-    { name: 'Pengaturan Sistem', path: '/admin/settings', icon: SettingsIcon },
+    { name: 'Tickets', path: '/dashboard/administrasi/tickets', icon: TicketsIcon },
+    { name: 'Manajemen Pengguna', path: '/dashboard/administrasi/users', icon: UsersIcon },
+    { name: 'Kategori Laporan', path: '/dashboard/administrasi/report-categories', icon: CategoryIcon },
+    { name: 'Manajemen SLA', path: '/dashboard/administrasi/sla', icon: SlaIcon },
+    { name: 'Manajemen Staff', path: '/dashboard/administrasi/staff', icon: StaffIcon },
+    { name: 'Laporan & Ekspor', path: '/dashboard/administrasi/reports', icon: ReportIcon },
+    { name: 'Log API Webhook', path: '/dashboard/administrasi/webhook', icon: WebhookIcon },
+    { name: 'Pengaturan Sistem', path: '/dashboard/administrasi/settings', icon: SettingsIcon },
   ];
 
   if (pathname?.startsWith('/dashboard/operator')) {
@@ -41,18 +36,7 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
 
   return (
     <>
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden transition-opacity"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
-
-      <aside
-        className={`fixed inset-y-0 left-0 z-50 w-72 bg-[#0B1B2E] flex flex-col transition-transform duration-300 ease-[var(--ease)] ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
+      <aside className="fixed inset-y-0 left-0 z-50 w-72 bg-[#0B1B2E] flex flex-col">
         {/* Header / Logo Area Sidebar */}
         <div className="h-[92px] flex items-center gap-3 px-6 border-b border-white/10 flex-none">
           <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center flex-none">
@@ -75,11 +59,13 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
           {MENU_ITEMS.map((item) => {
             const Icon = item.icon;
             let isActive = false;
-            if (item.path === '/dashboard/operator') {
-              isActive = pathname === '/dashboard/operator';
-            } else if (item.path === '/dashboard/operator/tickets') {
-              isActive = pathname === '/dashboard/operator/tickets' || pathname?.startsWith('/dashboard/operator/tickets/');
+            
+            // Perbaikan logic active state
+            if (item.path === '/dashboard/administrasi' || item.path === '/dashboard/operator') {
+              // Untuk root dashboard, harus exact match
+              isActive = pathname === item.path;
             } else {
+              // Untuk submenu lainnya, bisa match awalannya (misal untuk sub-halaman detail tiket)
               isActive = pathname === item.path || pathname?.startsWith(item.path + '/') || false;
             }
 
@@ -87,11 +73,6 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
               <Link
                 key={item.name}
                 href={item.path}
-                onClick={() => {
-                  if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-                    setIsOpen(false);
-                  }
-                }}
                 className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[14px] transition-all duration-200 ${
                   isActive
                     ? 'bg-blue-600 font-bold shadow-md shadow-blue-900/50'
