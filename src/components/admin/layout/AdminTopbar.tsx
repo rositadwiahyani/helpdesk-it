@@ -82,7 +82,7 @@ export default function AdminTopbar({
   const initials = displayUserName.substring(0, 2).toUpperCase();
 
   const pathname = usePathname();
-  const activeTitle = routeMapping[pathname || ''] || 'Dashboard Administrator';
+  const activeTitle = routeMapping[pathname || ''] || pageTitle;
 
   return (
     <div className="sticky top-0 z-40 h-20 w-full bg-white border-b border-[var(--line)]">
