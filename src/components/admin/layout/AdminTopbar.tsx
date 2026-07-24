@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 
 interface AdminTopbarProps {
-  onMenuClick: () => void;
+  onMenuClick?: () => void;
   pageTitle?: string;
   breadcrumbParent?: string;
   userName?: string;

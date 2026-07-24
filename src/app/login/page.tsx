@@ -2,11 +2,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AuthCard from '@/components/auth/AuthCard';
-<<<<<<< HEAD
 import { loginUser } from '@/lib/AuthService';
-=======
-import { fetchClient } from '@/lib/apiClient';
->>>>>>> 61586f21bf62b3be78daeaf51e816875b9f73142
 
 export default function LoginPage() {
   const router = useRouter();
@@ -58,7 +54,6 @@ export default function LoginPage() {
         setErrorMsg(error.message || 'Gagal login. Periksa kembali email dan password Anda.');
       } else {
         setErrorMsg('Gagal login. Periksa kembali email dan password Anda.');
-      }
       }
     } finally {
       setLoading(false);

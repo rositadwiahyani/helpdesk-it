@@ -63,11 +63,9 @@ export default async function TeknisiOpenTicketsPage() {
             </div>
 
             <TeknisiTicketTable 
-                tickets={openTickets}
-                categories={formattedCategories}
-                departments={departments}
-                currentUserId={user?.id}
-                hideAssignedToMeFilter={false} 
+                initialTickets={openTickets}
+                mainCategories={formattedCategories}
+                actionType="assign"
             />
         </div>
     );

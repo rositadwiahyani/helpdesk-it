@@ -1,11 +1,7 @@
 import React from 'react';
 import TeknisiStatistics from '@/components/teknisi/tickets/TeknisiStatistics';
-<<<<<<< HEAD
-import { supabase } from '@/lib/supabase';
-=======
 import { fetchServer } from '@/lib/apiServer';
 import { redirect } from 'next/navigation';
->>>>>>> 61586f21bf62b3be78daeaf51e816875b9f73142
 
 export const dynamic = 'force-dynamic';
 
