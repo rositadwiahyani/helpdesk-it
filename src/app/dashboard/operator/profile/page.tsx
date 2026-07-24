@@ -1,81 +1,166 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { fetchClient } from '@/lib/apiClient';
-import DashboardSubNav from '@/components/admin/layout/DashboardSubNav';
 
 export default function ProfilePage() {
-  const [activeTab, setActiveTab] = useState('account');
-  const [profile, setProfile] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<any>({});
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
+
+  const [formData, setFormData] = useState({
+    name: '',
+    phone: '',
+    ext: '',
+    mobile: '',
+    username: '',
+    password: '',
+  });
 
   useEffect(() => {
-    fetchClient('/auth/me').then(res => {
-      if (res.success && res.data) {
-        const userData = res.data.user || {};
-        const userMeta = userData.user_metadata || {};
-        const profileData = res.data.profile || {};
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        setCurrentUser(user);
         
-        setProfile({
-          name: profileData.name || userMeta.name || userMeta.full_name || userData.email?.split('@')[0] || 'User',
-          role: profileData.role || userMeta.role || 'operator',
-          email: profileData.email || userData.email || '',
-          ...profileData
+        let displayUserName = user.name || user.full_name || user.user_metadata?.full_name || user.user_metadata?.name;
+        if (!displayUserName && user.email) {
+          displayUserName = user.email.split('@')[0];
+        }
+        
+        setFormData({
+          name: displayUserName || '',
+          phone: user.phone || '',
+          ext: user.ext || '',
+          mobile: user.mobile || '',
+          username: user.username || '',
+          password: '',
         });
+      } catch (e) {
+        console.error('Failed to parse user', e);
       }
-    }).catch(err => console.error(err));
+    }
+    setIsLoaded(true);
   }, []);
+
+  let displayUserRole = currentUser.role || currentUser.user_metadata?.role || 'Super Administrator';
+  if (displayUserRole === 'authenticated') {
+    if (currentUser.email?.includes('operator')) displayUserRole = 'Operator Helpdesk';
+    else if (currentUser.email?.includes('teknisi')) displayUserRole = 'Teknisi Helpdesk';
+    else displayUserRole = 'Administrator';
+  }
+
+  const initials = formData.name ? formData.name.substring(0, 2).toUpperCase() : 'OP';
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSaving(true);
+    setMessage(null);
+
+    try {
+      const token = localStorage.getItem('access_token');
+      if (!token) throw new Error('Akses token tidak ditemukan, silakan login ulang.');
+
+      const response = await fetch('http://localhost:5000/api/auth/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          userId: currentUser.id,
+          name: formData.name,
+          phone: formData.phone,
+          ext: formData.ext,
+          mobile: formData.mobile,
+          username: formData.username,
+          password: formData.password || undefined,
+        })
+      });
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Gagal menyimpan profil');
+
+      setMessage({ type: 'success', text: 'Profil berhasil diperbarui!' });
+      
+      const updatedUser = { ...currentUser, ...formData };
+      delete updatedUser.password;
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      setCurrentUser(updatedUser);
+
+      setFormData(prev => ({ ...prev, password: '' }));
+
+    } catch (error: any) {
+      setMessage({ type: 'error', text: error.message });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (!isLoaded) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--gold)]"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6 p-6 md:p-10">
       <div>
         <h2 className="text-2xl font-bold text-[var(--ink)] mb-1">Profil Saya</h2>
-        <p className="text-[var(--text-dim)] text-sm">Kelola profil dan preferensi akun Anda.</p>
+        <p className="text-[var(--text-dim)] text-sm">Kelola profil dan autentikasi akun Anda.</p>
       </div>
 
       <div className="bg-white rounded-2xl border border-[var(--line)] shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300 -mt-2">
-
-        {/* Header Title */}
         <div className="p-5 md:p-6 border-b border-[var(--line-dark)]">
           <h3 className="font-bold text-[18px] text-[var(--ink)]">My Account Profile</h3>
         </div>
 
+        {message && (
+          <div className={`mx-5 mt-5 p-4 rounded-xl text-sm font-medium ${message.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+            {message.text}
+          </div>
+        )}
 
-        {/* Form Content */}
-        <div className="p-5 md:p-8 flex flex-col bg-white min-h-[400px]">
-
-          {/* =========================================================================
-                ACCOUNT SETTINGS 
-                ========================================================================= */}
-          <div className="flex flex-col gap-8 animate-in fade-in duration-300">
+        <form onSubmit={handleSave}>
+          <div className="p-5 md:p-8 flex flex-col bg-white">
+            <div className="flex flex-col gap-8 animate-in fade-in duration-300">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="md:col-span-1 flex flex-col items-center gap-3 pt-2">
                   <div className="w-24 h-24 rounded-full bg-[var(--gold)] flex items-center justify-center text-white text-3xl font-bold shadow-sm uppercase">
-                    {profile?.name ? profile.name.substring(0, 2) : '..'}
+                    {initials}
                   </div>
-                  <button className="text-[13px] font-bold text-[var(--gold-soft)] hover:text-[var(--gold-dim)] transition-colors">Avatar</button>
+                  <button type="button" className="text-[13px] font-bold text-[var(--gold-soft)] hover:text-[var(--gold-dim)] transition-colors">Avatar</button>
                 </div>
                 <div className="md:col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div className="flex flex-col gap-2">
                     <label className="text-[13px] font-bold text-[var(--ink)]">Name</label>
-                    <input type="text" defaultValue={profile?.name || ''} className="bg-[var(--paper)] border border-[var(--line-dark)] rounded-xl px-4 py-2.5 text-[14px] focus:outline-none focus:border-[var(--gold-soft)] transition-colors" />
+                    <input type="text" name="name" value={formData.name} onChange={handleChange} required className="bg-[var(--paper)] border border-[var(--line-dark)] rounded-xl px-4 py-2.5 text-[14px] focus:outline-none focus:border-[var(--gold-soft)] transition-colors" />
                   </div>
                   <div className="flex flex-col gap-2">
                     <label className="text-[13px] font-bold text-[var(--ink)]">Role</label>
-                    <input type="text" readOnly value={profile?.role || ''} className="bg-[var(--paper-2)] border border-[var(--line-dark)] rounded-xl px-4 py-2.5 text-[14px] outline-none cursor-not-allowed uppercase" />
+                    <input type="text" value={displayUserRole} disabled className="bg-[var(--paper-2)] opacity-70 cursor-not-allowed border border-[var(--line-dark)] rounded-xl px-4 py-2.5 text-[14px] focus:outline-none focus:border-[var(--gold-soft)] transition-colors" />
                   </div>
                   <div className="flex flex-col gap-2 sm:col-span-2">
                     <label className="text-[13px] font-bold text-[var(--ink)]">Email Address</label>
-                    <input type="email" defaultValue={profile?.email || ''} className="bg-[var(--paper)] border border-[var(--line-dark)] rounded-xl px-4 py-2.5 text-[14px] focus:outline-none focus:border-[var(--gold-soft)] transition-colors" />
+                    <input type="email" value={currentUser.email || ""} disabled className="bg-[var(--paper-2)] opacity-70 cursor-not-allowed border border-[var(--line-dark)] rounded-xl px-4 py-2.5 text-[14px] focus:outline-none focus:border-[var(--gold-soft)] transition-colors" />
                   </div>
                   <div className="flex flex-col gap-2">
                     <label className="text-[13px] font-bold text-[var(--ink)]">Phone Number</label>
                     <div className="flex gap-2">
-                      <input type="text" className="bg-[var(--paper)] border border-[var(--line-dark)] rounded-xl px-4 py-2.5 text-[14px] focus:outline-none focus:border-[var(--gold-soft)] transition-colors w-full" />
-                      <input type="text" placeholder="Ext" className="bg-[var(--paper)] border border-[var(--line-dark)] rounded-xl px-4 py-2.5 text-[14px] focus:outline-none focus:border-[var(--gold-soft)] transition-colors w-24" />
+                      <input type="text" name="phone" value={formData.phone} onChange={handleChange} className="bg-[var(--paper)] border border-[var(--line-dark)] rounded-xl px-4 py-2.5 text-[14px] focus:outline-none focus:border-[var(--gold-soft)] transition-colors w-full" />
+                      <input type="text" name="ext" placeholder="Ext" value={formData.ext} onChange={handleChange} className="bg-[var(--paper)] border border-[var(--line-dark)] rounded-xl px-4 py-2.5 text-[14px] focus:outline-none focus:border-[var(--gold-soft)] transition-colors w-24" />
                     </div>
                   </div>
                   <div className="flex flex-col gap-2">
                     <label className="text-[13px] font-bold text-[var(--ink)]">Mobile Number</label>
-                    <input type="text" className="bg-[var(--paper)] border border-[var(--line-dark)] rounded-xl px-4 py-2.5 text-[14px] focus:outline-none focus:border-[var(--gold-soft)] transition-colors" />
+                    <input type="text" name="mobile" value={formData.mobile} onChange={handleChange} className="bg-[var(--paper)] border border-[var(--line-dark)] rounded-xl px-4 py-2.5 text-[14px] focus:outline-none focus:border-[var(--gold-soft)] transition-colors" />
                   </div>
                 </div>
               </div>
@@ -87,46 +172,28 @@ export default function ProfilePage() {
                   Authentication
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 md:grid-cols-4">
-                  <div className="flex flex-col gap-2 md:col-span-3 sm:col-span-1">
-                    <label className="text-[13px] font-bold text-[var(--ink)]">Username <span className="text-red-500">*</span></label>
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      <input type="text" defaultValue={profile?.name || ''} className="bg-[var(--paper)] border border-[var(--line-dark)] rounded-xl px-4 py-2.5 text-[14px] focus:outline-none focus:border-[var(--gold-soft)] transition-colors w-full sm:max-w-[280px]" />
-                      <button className="bg-[var(--paper-2)] text-[var(--text-dim)] border border-[var(--line)] px-4 py-2.5 rounded-xl text-[13.5px] font-bold hover:bg-[var(--line)] transition-colors flex items-center justify-center gap-2 w-full sm:w-auto">
-                        <svg className="w-4 h-4 opacity-75" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                        Change Password
-                      </button>
-                    </div>
+                  <div className="flex flex-col gap-2 md:col-span-2 sm:col-span-1">
+                    <label className="text-[13px] font-bold text-[var(--ink)]">Username</label>
+                    <input type="text" name="username" value={formData.username} onChange={handleChange} placeholder="Username untuk login" className="bg-[var(--paper)] border border-[var(--line-dark)] rounded-xl px-4 py-2.5 text-[14px] focus:outline-none focus:border-[var(--gold-soft)] transition-colors w-full" />
+                  </div>
+                  <div className="flex flex-col gap-2 md:col-span-2 sm:col-span-1">
+                    <label className="text-[13px] font-bold text-[var(--ink)]">Change Password</label>
+                    <input type="password" name="password" value={formData.password} onChange={handleChange} className="bg-[var(--paper)] border border-[var(--line-dark)] rounded-xl px-4 py-2.5 text-[14px] focus:outline-none focus:border-[var(--gold-soft)] transition-colors w-full" />
                   </div>
                 </div>
               </div>
-
-              <hr className="border-[var(--line-dark)]" />
-
-              <div className="flex flex-col gap-4">
-                <h4 className="font-bold text-[15.5px] text-[var(--ink)]">Status and Settings</h4>
-                <label className="flex items-center gap-3 cursor-pointer group w-max">
-                  <div className="relative flex items-center justify-center w-5 h-5 rounded border-[1.5px] border-[var(--line-dark)] bg-white group-hover:border-[var(--gold-soft)] transition-colors">
-                    <input type="checkbox" className="peer absolute opacity-0 w-full h-full cursor-pointer" />
-                    <svg className="w-3.5 h-3.5 text-[var(--gold)] opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                  </div>
-                  <span className="text-[14px] text-[var(--ink)] font-semibold select-none group-hover:text-[var(--gold-dim)] transition-colors">Vacation Mode</span>
-                </label>
-              </div>
+            </div>
           </div>
-        </div>
 
-        {/* Action Footer */}
-        <div className="bg-[var(--paper-2)]/50 border-t border-[var(--line)] p-5 md:p-6 flex flex-wrap items-center justify-center gap-3">
-          <button className="bg-[var(--ink)] text-white px-7 py-2.5 rounded-xl text-sm font-bold shadow-sm hover:bg-[var(--text)] hover:shadow-md transition-all active:scale-95">
-            Save Changes
-          </button>
-          <button className="bg-white border border-[var(--line)] text-[var(--text-dim)] px-7 py-2.5 rounded-xl text-sm font-bold hover:bg-[var(--paper-2)] transition-colors active:scale-95">
-            Reset
-          </button>
-          <button className="bg-white border border-[var(--line)] text-[var(--text-dim)] px-7 py-2.5 rounded-xl text-sm font-bold hover:bg-[var(--paper-2)] transition-colors active:scale-95">
-            Cancel
-          </button>
-        </div>
+          <div className="bg-[var(--paper-2)]/50 border-t border-[var(--line)] p-5 md:p-6 flex flex-wrap items-center justify-center gap-3">
+            <button type="submit" disabled={isSaving} className="bg-[var(--ink)] text-white px-7 py-2.5 rounded-xl text-sm font-bold shadow-sm hover:bg-[var(--text)] hover:shadow-md transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+              {isSaving ? 'Menyimpan...' : 'Save Changes'}
+            </button>
+            <button type="button" onClick={() => window.location.reload()} className="bg-white border border-[var(--line)] text-[var(--text-dim)] px-7 py-2.5 rounded-xl text-sm font-bold hover:bg-[var(--paper-2)] transition-colors active:scale-95">
+              Reset
+            </button>
+          </div>
+        </form>
 
       </div>
     </div>

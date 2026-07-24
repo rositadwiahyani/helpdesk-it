@@ -1,50 +1,43 @@
-//import { NextResponse, type NextRequest } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 
-//export async function middleware(request: NextRequest) {
-  //const url = request.nextUrl.clone();
+export async function middleware(request: NextRequest) {
+  const url = request.nextUrl.clone();
+  
+  // Periksa cookie isLoggedIn yang di set oleh halaman login
+  const isLoggedIn = request.cookies.get('isLoggedIn')?.value === 'true';
+  const userRole = request.cookies.get('userRole')?.value || '';
 
-  // Ambil token dari cookie
-  //const authToken = request.cookies.get('auth_token')?.value;
+  // A. Jika user MENCOBA mengakses halaman dashboard tapi BELUM login
+  if (url.pathname.startsWith('/dashboard') && !isLoggedIn) {
+    url.pathname = '/login';
+    return NextResponse.redirect(url);
+  }
 
-  // Jika mencoba akses dashboard tapi belum login
-  //if (url.pathname.startsWith('/dashboard')) {
-    //if (!authToken) {
-      //url.pathname = '/login';
-      //return NextResponse.redirect(url);
-    //}
+  // B. Role-Based Access Control (RBAC) untuk Dashboard
+  if (isLoggedIn && url.pathname.startsWith('/dashboard')) {
+    if (url.pathname.startsWith('/dashboard/teknisi') && userRole !== 'teknisi') {
+      url.pathname = '/dashboard/operator';
+      return NextResponse.redirect(url);
+    }
+    if (url.pathname.startsWith('/dashboard/operator') && userRole === 'teknisi') {
+      url.pathname = '/dashboard/teknisi';
+      return NextResponse.redirect(url);
+    }
+  }
 
-    // Di production, di sini kita bisa verify JWT / fetch role dari Backend API.
-    // Untuk tahap ini, kita sekadar memastikan token ada untuk basic protection.
-    // Role based routing (di frontend) ditangani saat login. 
-    // Namun idealnya, decode JWT payload (role) di sini untuk block unauthorized access.
-  //}
+  // C. Jika user SUDAH login tapi mencoba kembali ke halaman login/register
+  if ((url.pathname.startsWith('/login') || url.pathname.startsWith('/register')) && isLoggedIn) {
+    url.pathname = userRole === 'teknisi' ? '/dashboard/teknisi' : '/dashboard/operator';
+    return NextResponse.redirect(url);
+  }
 
-  // Jika sudah login tapi mencoba ke login
-  //if ((url.pathname.startsWith('/login') || url.pathname.startsWith('/register')) && authToken) {
-    //url.pathname = '/dashboard/operator'; // default, ideally redirect to their specific role dashboard
-    //return NextResponse.redirect(url);
-  //}
-
-  //return NextResponse.next();
-//}
-
-//export const config = {
-  //matcher: [
-    //'/dashboard/:path*',
-    //'/login',
-    //'/register'
-  //],
-//};
-
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-
-export function middleware(request: NextRequest) {
-  // Langsung izinkan semua request lewat tanpa cek cookie/token
   return NextResponse.next();
 }
 
-// Atau dikosongkan matcher-nya
 export const config = {
-  matcher: [], // Menghapus pengecekan pada route admin/dashboard
+  matcher: [
+    '/dashboard/:path*',
+    '/login',
+    '/register'
+  ],
 };

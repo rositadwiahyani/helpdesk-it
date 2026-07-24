@@ -1,21 +1,28 @@
 'use client';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { logoutUser } from '@/lib/AuthService';
 
-interface TeknisiSidebarProps {
+interface OperatorSidebarProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
 }
 
-export default function TeknisiSidebar({ isOpen, setIsOpen }: TeknisiSidebarProps) {
+export default function OperatorSidebar({ isOpen, setIsOpen }: OperatorSidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    await logoutUser();
+    router.push('/login');
+  };
 
   const MENU_ITEMS = [
-    { name: 'Dashboard', path: '/dashboard/teknisi', icon: HomeIcon },
-    { name: 'Open Tickets', path: '/dashboard/teknisi/tickets', icon: TicketsIcon },
-    { name: 'My Tasks', path: '/dashboard/teknisi/tasks', icon: StaffIcon },
-    { name: 'Resolved Tickets', path: '/dashboard/teknisi/resolved', icon: TicketsIcon },
-    { name: 'Profil', path: '/dashboard/teknisi/profile', icon: StaffIcon },
+    { name: 'Dashboard', path: '/dashboard/operator', icon: HomeIcon },
+    { name: 'Tiket Masuk', path: '/dashboard/operator/tickets', icon: TicketsIcon },
+    { name: 'Tiket Ditolak', path: '/dashboard/operator/tickets-rejected', icon: TicketsIcon },
+    { name: 'Profil', path: '/dashboard/operator/profile', icon: StaffIcon },
   ];
 
   return (
@@ -54,9 +61,10 @@ export default function TeknisiSidebar({ isOpen, setIsOpen }: TeknisiSidebarProp
           {MENU_ITEMS.map((item) => {
             const Icon = item.icon;
             let isActive = false;
-            
-            if (item.path === '/dashboard/teknisi') {
-              isActive = pathname === '/dashboard/teknisi';
+            if (item.path === '/dashboard/operator') {
+              isActive = pathname === '/dashboard/operator';
+            } else if (item.path === '/dashboard/operator/tickets') {
+              isActive = pathname === '/dashboard/operator/tickets' || pathname?.startsWith('/dashboard/operator/tickets/');
             } else {
               isActive = pathname === item.path || pathname?.startsWith(item.path + '/') || false;
             }
@@ -86,15 +94,8 @@ export default function TeknisiSidebar({ isOpen, setIsOpen }: TeknisiSidebarProp
         {/* Footer Area Sidebar - Logout */}
         <div className="p-4 border-t border-white/10 flex-none">
           <button
-            onClick={() => {
-              localStorage.removeItem('isLoggedIn');
-              localStorage.removeItem('user');
-              localStorage.removeItem('access_token');
-              document.cookie = 'isLoggedIn=; path=/; max-age=0';
-              document.cookie = 'userRole=; path=/; max-age=0';
-              window.location.href = '/login';
-            }}
-            className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl w-full text-[14px] font-semibold text-[#F87171] hover:bg-red-500/10 transition-colors"
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[14px] font-semibold text-[#F87171] hover:bg-red-500/10 transition-colors"
           >
             <LogoutIcon isActive={false} />
             Logout

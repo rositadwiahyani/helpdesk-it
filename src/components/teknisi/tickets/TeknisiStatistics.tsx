@@ -1,39 +1,16 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from 'recharts';
-import TeknisiTicketTable from './TeknisiTicketTable';
 
 type Ticket = any;
 type Category = { id: string; name: string };
-type Department = { id: string; name: string };
-type TicketLog = any;
 
 interface TeknisiStatisticsProps {
   tickets: Ticket[];
-  ticketLogs: TicketLog[];
   categories: Category[];
-  departments: Department[];
-  currentUserId: string;
 }
 
-export default function TeknisiStatistics({
-  tickets,
-  ticketLogs,
-  categories,
-  departments,
-  currentUserId,
-}: TeknisiStatisticsProps) {
-  // Date range state (default: 30 hari terakhir)
+export default function TeknisiStatistics({ tickets, categories }: TeknisiStatisticsProps) {
   const [startDate, setStartDate] = useState(() => {
     const d = new Date();
     d.setDate(d.getDate() - 30);
@@ -42,119 +19,151 @@ export default function TeknisiStatistics({
   const [endDate, setEndDate] = useState(() => {
     return new Date().toISOString().split('T')[0];
   });
+  
+  const [deptId, setDeptId] = useState<number | null>(null);
 
-  const [activeTab, setActiveTab] = useState<'department' | 'topics'>('department');
+  React.useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+        try {
+            const user = JSON.parse(userStr);
+            if (user.dept_id) setDeptId(user.dept_id);
+        } catch (e) {}
+    }
+  }, []);
 
-  // Filter data berdasarkan rentang tanggal
-  const filteredData = useMemo(() => {
+  const filteredTickets = useMemo(() => {
     const start = new Date(startDate);
     start.setHours(0, 0, 0, 0);
     const end = new Date(endDate);
     end.setHours(23, 59, 59, 999);
 
-    const validTickets = tickets.filter((t) => {
+    return tickets.filter((t) => {
       const d = new Date(t.created_at);
       return d >= start && d <= end;
     });
+  }, [tickets, startDate, endDate]);
 
-    const validLogs = ticketLogs.filter((l) => {
-      const d = new Date(l.created_at);
-      return d >= start && d <= end;
+  const statsTable = useMemo(() => {
+    const topicMap: Record<string, any> = {};
+
+    const filteredCategories = deptId 
+      ? categories.filter((c: any) => c.dept_id === deptId)
+      : categories;
+
+    filteredCategories.forEach((c) => {
+      topicMap[c.id] = { name: c.name, opened: 0, resolved: 0 };
     });
+    // Menghilangkan "Kategori Lain" jika kita hanya fokus pada kategori departemen sendiri
+    // topicMap['unassigned'] = { name: 'Kategori Lain', opened: 0, resolved: 0 };
 
-    return { validTickets, validLogs };
-  }, [tickets, ticketLogs, startDate, endDate]);
-
-  // Siapkan data grafik (Agregasi harian)
-  const chartData = useMemo(() => {
-    const { validTickets, validLogs } = filteredData;
-    const days: Record<string, { date: string; opened: number; verified: number }> = {};
-
-    validTickets.forEach((t) => {
-      const d = new Date(t.created_at).toISOString().split('T')[0];
-      if (!days[d]) days[d] = { date: d, opened: 0, verified: 0 };
-      days[d].opened += 1;
-    });
-
-    validLogs.forEach((l) => {
-      if (l.action === 'CHANGE_STATUS' || l.action === 'REJECT_TICKET') {
-        const d = new Date(l.created_at).toISOString().split('T')[0];
-        if (!days[d]) days[d] = { date: d, opened: 0, verified: 0 };
-        days[d].verified += 1;
+    filteredTickets.forEach((t) => {
+      const catId = t.category_id || 'unassigned';
+      if (!topicMap[catId]) {
+        topicMap[catId] = { name: t.category?.name || 'Unknown', opened: 0, resolved: 0 };
+      }
+      // Hanya hitung jika kategori termasuk dalam filter departemen kita
+      if (topicMap[catId]) {
+          topicMap[catId].opened += 1;
+          
+          if (t.status === 'Resolved' || t.status === 'Closed') {
+            topicMap[catId].resolved += 1;
+          }
       }
     });
 
-    return Object.values(days).sort((a, b) => a.date.localeCompare(b.date));
-  }, [filteredData]);
+    return Object.values(topicMap)
+      .filter((t: any) => t.opened > 0 || t.resolved > 0)
+      .sort((a: any, b: any) => b.opened - a.opened);
+  }, [filteredTickets, categories, deptId]);
 
-  // Tiket terbaru (5 tiket terakhir)
-  const recentTickets = useMemo(() => {
-    return [...tickets].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 5);
-  }, [tickets]);
+  const handleReset = () => {
+    const d = new Date();
+    setEndDate(d.toISOString().split('T')[0]);
+    d.setDate(d.getDate() - 30);
+    setStartDate(d.toISOString().split('T')[0]);
+  };
 
   return (
-    <div className="flex flex-col gap-8">
-      {/* Date Range Filter */}
-      <div className="bg-white p-6 border border-slate-200 rounded-xl shadow-sm flex flex-col sm:flex-row sm:items-end gap-4">
+    <div className="bg-white border border-[var(--line-dark)] rounded-2xl p-6 shadow-sm flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <label className="block text-xs font-semibold text-slate-500 mb-1">Mulai Tanggal</label>
-          <input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            className="w-full sm:w-auto p-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
-          />
+          <h3 className="text-lg font-bold text-[var(--ink)]">Distribusi Kategori</h3>
+          <p className="text-sm text-[var(--text-dim)]">Berdasarkan tiket yang ditugaskan ke departemen Anda.</p>
         </div>
-        <div>
-          <label className="block text-xs font-semibold text-slate-500 mb-1">Sampai Tanggal</label>
-          <input
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            className="w-full sm:w-auto p-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-        <div className="ml-auto text-sm font-medium text-slate-600 bg-slate-100 py-2 px-4 rounded-lg">
-          Range: {startDate} - {endDate}
-        </div>
-      </div>
-
-      {/* Chart */}
-      <div className="bg-white p-6 border border-slate-200 rounded-xl shadow-sm">
-        <h2 className="text-lg font-bold text-slate-800 mb-6">Grafik Aktivitas Tiket</h2>
-        <div className="h-80 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-              <XAxis dataKey="date" tick={{ fontSize: 12, fill: '#64748b' }} tickMargin={10} />
-              <YAxis tick={{ fontSize: 12, fill: '#64748b' }} tickMargin={10} />
-              <Tooltip 
-                contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+        
+        {/* Filter Tanggal */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
+            <div className="flex flex-col">
+              <label className="text-[10px] font-bold text-[var(--text-dim)] uppercase tracking-wider mb-1 ml-1">Mulai Tanggal</label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="py-1.5 px-3 border border-[var(--line-dark)] rounded-lg text-sm text-[var(--ink)] bg-[var(--paper-2)] outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)] transition-shadow"
               />
-              <Legend wrapperStyle={{ paddingTop: '20px' }} />
-              <Line type="monotone" name="Tiket Masuk" dataKey="opened" stroke="#3b82f6" strokeWidth={3} activeDot={{ r: 8 }} />
-              <Line type="monotone" name="Tiket Diverifikasi" dataKey="verified" stroke="#10b981" strokeWidth={3} activeDot={{ r: 8 }} />
-            </LineChart>
-          </ResponsiveContainer>
+            </div>
+            <span className="text-[var(--text-dim)] mt-5">-</span>
+            <div className="flex flex-col">
+              <label className="text-[10px] font-bold text-[var(--text-dim)] uppercase tracking-wider mb-1 ml-1">Sampai Tanggal</label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="py-1.5 px-3 border border-[var(--line-dark)] rounded-lg text-sm text-[var(--ink)] bg-[var(--paper-2)] outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)] transition-shadow"
+              />
+            </div>
+          </div>
+          
+          <button 
+            onClick={handleReset}
+            className="mt-5 py-1.5 px-4 bg-white border border-[var(--line-dark)] rounded-lg text-sm font-medium text-[var(--ink)] hover:bg-[var(--paper-2)] transition-colors"
+          >
+            Reset
+          </button>
         </div>
       </div>
 
-      {/* Recent Tickets Table */}
-      <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden mt-2">
-        <div className="p-6 border-b border-slate-200 bg-slate-50">
-          <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-            Tiket Terbaru Departemen Anda
-          </h2>
-          <p className="text-sm text-slate-500 mt-1">5 tiket terakhir yang ditugaskan ke departemen Anda.</p>
-        </div>
-        <TeknisiTicketTable 
-            tickets={recentTickets}
-            categories={categories}
-            mainCategories={categories.filter(c => !c.name.includes('/'))}
-            departments={departments}
-            actionType="assign"
-            currentUserId={currentUserId}
-        />
+      <div className="overflow-x-auto border border-slate-100 rounded-xl">
+        <table className="w-full text-left text-[13px]">
+          <thead className="bg-slate-50 border-b border-slate-100 text-slate-500 font-semibold">
+            <tr>
+              <th className="px-5 py-3">Topik / Kategori</th>
+              <th className="px-5 py-3 text-center">Total Masuk</th>
+              <th className="px-5 py-3 text-center">Diselesaikan</th>
+              <th className="px-5 py-3 text-right">Completion Rate</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {statsTable.length === 0 ? (
+              <tr>
+                <td colSpan={4} className="px-5 py-8 text-center text-slate-400 font-medium">
+                  Tidak ada data untuk rentang waktu ini.
+                </td>
+              </tr>
+            ) : (
+              statsTable.map((item: any) => {
+                const rate = item.opened === 0 ? 0 : Math.round((item.resolved / item.opened) * 100);
+                return (
+                  <tr key={item.name} className="hover:bg-slate-50/50 transition-colors">
+                    <td className="px-5 py-3 font-semibold text-slate-700">{item.name}</td>
+                    <td className="px-5 py-3 text-center text-slate-600">{item.opened}</td>
+                    <td className="px-5 py-3 text-center text-emerald-600 font-medium">{item.resolved}</td>
+                    <td className="px-5 py-3 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <div className="w-24 h-2 bg-slate-100 rounded-full overflow-hidden">
+                          <div className={`h-full ${rate >= 75 ? 'bg-emerald-500' : rate >= 50 ? 'bg-amber-500' : 'bg-red-500'}`} style={{ width: `${rate}%` }}></div>
+                        </div>
+                        <span className="text-slate-600 font-medium w-9 text-right">{rate}%</span>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 // 1. Import fungsi loginStaff dari file authService kamu (sesuaikan path-nya jika perlu)
-import { loginStaff } from '../services/AuthService';
+import { loginStaff, updateStaffProfile } from '../services/AuthService';
 import { supabase } from '../config/supabase';
 
 /**
@@ -30,6 +30,38 @@ export const loginHandler = async (req: Request, res: Response) => {
     console.error('Error pada loginHandler:', error.message);
     return res.status(401).json({ 
       error: error.message || 'Login gagal. Periksa email dan password Anda.' 
+    });
+  }
+};
+
+/**
+ * PUT /api/auth/profile
+ * Handler untuk update profil staf (dan password)
+ */
+export const updateProfileHandler = async (req: Request, res: Response) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Token tidak valid atau tidak ditemukan.' });
+    }
+    const token = authHeader.split(' ')[1];
+
+    const { userId, name, phone, ext, mobile, username, password } = req.body;
+    
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID wajib disertakan.' });
+    }
+
+    await updateStaffProfile(token, userId, { name, phone, ext, mobile, username, password });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Profil berhasil diperbarui.',
+    });
+  } catch (error: any) {
+    console.error('Error pada updateProfileHandler:', error.message);
+    return res.status(500).json({
+      error: error.message || 'Gagal memperbarui profil.',
     });
   }
 };
