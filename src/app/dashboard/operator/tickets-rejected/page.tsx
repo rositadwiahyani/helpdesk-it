@@ -13,9 +13,9 @@ export default async function OperatorRejectedTicketsPage() {
         .from('tickets')
         .select(`
             *,
-            category:category_id (name)
+            category:categories (name)
         `)
-        .eq('status', 'Ditolak')
+        .eq('status', 'Rejected')
         .order('created_at', { ascending: false });
 
     // Mengambil SLA Configs

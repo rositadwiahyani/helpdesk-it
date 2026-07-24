@@ -2,27 +2,21 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-interface AdminSidebarProps {
+interface TeknisiSidebarProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
 }
 
-export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
+export default function TeknisiSidebar({ isOpen, setIsOpen }: TeknisiSidebarProps) {
   const pathname = usePathname();
 
-  let MENU_ITEMS = [
-    { name: 'Beranda', path: '/admin/dashboard', icon: HomeIcon },
-    { name: 'Tickets', path: '/admin/tickets', icon: TicketsIcon },
-    { name: 'Manajemen Pengguna', path: '/admin/users', icon: UsersIcon },
-    { name: 'Kategori Laporan', path: '/admin/report-categories', icon: CategoryIcon },
-    { name: 'Manajemen SLA', path: '/admin/sla', icon: SlaIcon },
-    { name: 'Manajemen Staff', path: '/admin/staff', icon: StaffIcon },
-    { name: 'Laporan & Ekspor', path: '/admin/reports', icon: ReportIcon },
-    { name: 'Log API Webhook', path: '/admin/webhooks', icon: WebhookIcon },
-    { name: 'Pengaturan Sistem', path: '/admin/settings', icon: SettingsIcon },
+  const MENU_ITEMS = [
+    { name: 'Dashboard', path: '/dashboard/teknisi', icon: HomeIcon },
+    { name: 'Open Tickets', path: '/dashboard/teknisi/tickets', icon: TicketsIcon },
+    { name: 'My Tasks', path: '/dashboard/teknisi/tasks', icon: StaffIcon },
+    { name: 'Resolved Tickets', path: '/dashboard/teknisi/resolved', icon: TicketsIcon },
+    { name: 'Profil', path: '/dashboard/teknisi/profile', icon: StaffIcon },
   ];
-
-
 
   return (
     <>
@@ -59,7 +53,13 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
         <nav className="flex-1 overflow-y-auto py-5 px-4 flex flex-col gap-1">
           {MENU_ITEMS.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.path || pathname?.startsWith(item.path + '/') || false;
+            let isActive = false;
+            
+            if (item.path === '/dashboard/teknisi') {
+              isActive = pathname === '/dashboard/teknisi';
+            } else {
+              isActive = pathname === item.path || pathname?.startsWith(item.path + '/') || false;
+            }
 
             return (
               <Link
@@ -85,22 +85,25 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
 
         {/* Footer Area Sidebar - Logout */}
         <div className="p-4 border-t border-white/10 flex-none">
-          <Link
-            href="/login"
-            className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[14px] font-semibold text-[#F87171] hover:bg-red-500/10 transition-colors"
+          <button
+            onClick={() => {
+              localStorage.removeItem('isLoggedIn');
+              localStorage.removeItem('user');
+              localStorage.removeItem('access_token');
+              document.cookie = 'isLoggedIn=; path=/; max-age=0';
+              document.cookie = 'userRole=; path=/; max-age=0';
+              window.location.href = '/login';
+            }}
+            className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl w-full text-[14px] font-semibold text-[#F87171] hover:bg-red-500/10 transition-colors"
           >
             <LogoutIcon isActive={false} />
             Logout
-          </Link>
+          </button>
         </div>
       </aside>
     </>
   );
 }
-
-// ==========================================
-// KUMPULAN ICON SVG (Stroke modern style)
-// ==========================================
 
 function HomeIcon({ isActive }: { isActive: boolean }) {
   return (
@@ -120,36 +123,6 @@ function TicketsIcon({ isActive }: { isActive: boolean }) {
   );
 }
 
-function UsersIcon({ isActive }: { isActive: boolean }) {
-  return (
-    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-    </svg>
-  );
-}
-
-function CategoryIcon({ isActive }: { isActive: boolean }) {
-  return (
-    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-      <path d="M20.59 13.41 12 22l-9-9V3h10l7.59 7.59a2 2 0 0 1 0 2.82Z" />
-      <circle cx="7.5" cy="7.5" r="1.3" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
-
-function SlaIcon({ isActive }: { isActive: boolean }) {
-  return (
-    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-      <path d="m12 20 9-9-3-3-9 9v3h3Z" />
-      <path d="m14.5 6.5 3 3" />
-      <path d="M2 21h6" />
-    </svg>
-  );
-}
-
 function StaffIcon({ isActive }: { isActive: boolean }) {
   return (
     <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
@@ -157,38 +130,6 @@ function StaffIcon({ isActive }: { isActive: boolean }) {
       <circle cx="9" cy="10" r="2" />
       <path d="M6 16c.5-2 2-3 3-3s2.5 1 3 3" />
       <path d="M14 9h4M14 13h4" />
-    </svg>
-  );
-}
-
-function ReportIcon({ isActive }: { isActive: boolean }) {
-  return (
-    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-      <path d="M4 20V10" />
-      <path d="M10 20V4" />
-      <path d="M16 20v-7" />
-      <path d="M2 20h20" />
-    </svg>
-  );
-}
-
-function WebhookIcon({ isActive }: { isActive: boolean }) {
-  return (
-    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-      <circle cx="12" cy="4" r="1.8" />
-      <circle cx="4" cy="12" r="1.8" />
-      <circle cx="20" cy="12" r="1.8" />
-      <circle cx="12" cy="20" r="1.8" />
-      <path d="M12 5.8v3.4M6 12h3.4M14.6 12H18M12 14.8v3.4" />
-    </svg>
-  );
-}
-
-function SettingsIcon({ isActive }: { isActive: boolean }) {
-  return (
-    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
     </svg>
   );
 }

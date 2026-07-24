@@ -138,35 +138,48 @@ export default function OperatorStatistics({
   const activeStatsData = activeTab === 'department' ? statsTable.departments : statsTable.topics;
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       {/* Date Range Filter */}
-      <div className="bg-white p-6 border border-slate-200 rounded-xl shadow-sm flex flex-col sm:flex-row sm:items-end gap-4">
+      <div className="bg-white border border-[var(--line-dark)] rounded-2xl p-5 md:p-6 shadow-sm flex flex-col sm:flex-row sm:items-end gap-4 animate-in fade-in duration-300">
         <div>
-          <label className="block text-xs font-semibold text-slate-500 mb-1">Mulai Tanggal</label>
+          <label className="block text-[11px] font-bold text-[var(--text-dim)] uppercase tracking-wider mb-2">Mulai Tanggal</label>
           <input
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="w-full sm:w-auto p-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full sm:w-auto px-4 py-2.5 bg-[var(--paper)] border border-[var(--line-dark)] rounded-xl text-[14px] font-medium outline-none focus:border-[var(--gold-soft)] transition-colors"
           />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-slate-500 mb-1">Sampai Tanggal</label>
+          <label className="block text-[11px] font-bold text-[var(--text-dim)] uppercase tracking-wider mb-2">Sampai Tanggal</label>
           <input
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
-            className="w-full sm:w-auto p-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full sm:w-auto px-4 py-2.5 bg-[var(--paper)] border border-[var(--line-dark)] rounded-xl text-[14px] font-medium outline-none focus:border-[var(--gold-soft)] transition-colors"
           />
         </div>
-        <div className="ml-auto text-sm font-medium text-slate-600 bg-slate-100 py-2 px-4 rounded-lg">
-          Range: {startDate} - {endDate}
+        <div className="ml-auto flex items-center gap-3">
+          <div className="text-[13px] font-bold text-[var(--ink)] bg-[var(--paper-2)] py-2.5 px-4 rounded-xl border border-[var(--line-dark)]">
+            Range: {startDate} - {endDate}
+          </div>
+          <button
+            onClick={() => {
+              const d = new Date();
+              d.setDate(d.getDate() - 30);
+              setStartDate(d.toISOString().split('T')[0]);
+              setEndDate(new Date().toISOString().split('T')[0]);
+            }}
+            className="text-[13px] font-bold text-[var(--ink)] hover:bg-[var(--paper-2)] py-2.5 px-4 rounded-xl border border-[var(--line)] transition-colors"
+          >
+            Reset
+          </button>
         </div>
       </div>
 
       {/* Chart */}
-      <div className="bg-white p-6 border border-slate-200 rounded-xl shadow-sm">
-        <h2 className="text-lg font-bold text-slate-800 mb-6">Grafik Aktivitas Tiket</h2>
+      <div className="bg-white border border-[var(--line-dark)] rounded-2xl p-6 md:p-8 shadow-sm animate-in fade-in duration-300 delay-75">
+        <h2 className="text-[18px] font-bold text-[var(--ink)] mb-6">Grafik Aktivitas Tiket</h2>
         <div className="h-80 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
@@ -185,24 +198,23 @@ export default function OperatorStatistics({
       </div>
 
       {/* Statistics Table */}
-      <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-slate-200 bg-slate-50">
-          <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-            Statistics <span className="flex items-center justify-center w-5 h-5 rounded-full bg-slate-200 text-[10px] text-slate-500 font-black">?</span>
+      <div className="bg-white border border-[var(--line-dark)] rounded-2xl shadow-sm overflow-hidden animate-in fade-in duration-300 delay-150">
+        <div className="p-6 md:p-8 border-b border-[var(--line-dark)]">
+          <h2 className="text-[18px] font-bold text-[var(--ink)] flex items-center gap-2 mb-1">
+            Statistics
           </h2>
-          <p className="text-sm text-slate-500 mt-1">Statistics of tickets organized by department and help topic.</p>
         </div>
         
         {/* Tabs */}
-        <div className="flex border-b border-slate-200 bg-white">
+        <div className="flex border-b border-[var(--line-dark)] bg-white px-2">
           <button 
-            className={`px-6 py-4 text-sm font-semibold transition-colors border-b-2 ${activeTab === 'department' ? 'border-blue-600 text-blue-700 bg-blue-50/50' : 'border-transparent text-slate-600 hover:text-slate-800 hover:bg-slate-50'}`}
+            className={`px-6 py-4 text-[13px] font-bold transition-colors border-b-2 -mb-[1px] ${activeTab === 'department' ? 'border-[#3b82f6] text-[#3b82f6]' : 'border-transparent text-[var(--text-dim)] hover:text-[var(--ink)]'}`}
             onClick={() => setActiveTab('department')}
           >
             Department
           </button>
           <button 
-            className={`px-6 py-4 text-sm font-semibold transition-colors border-b-2 ${activeTab === 'topics' ? 'border-blue-600 text-blue-700 bg-blue-50/50' : 'border-transparent text-slate-600 hover:text-slate-800 hover:bg-slate-50'}`}
+            className={`px-6 py-4 text-[13px] font-bold transition-colors border-b-2 -mb-[1px] ${activeTab === 'topics' ? 'border-[#3b82f6] text-[#3b82f6]' : 'border-transparent text-[var(--text-dim)] hover:text-[var(--ink)]'}`}
             onClick={() => setActiveTab('topics')}
           >
             Topics
@@ -212,26 +224,26 @@ export default function OperatorStatistics({
         {/* Table */}
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
-            <thead className="text-xs text-slate-500 bg-white border-b border-slate-200">
+            <thead className="bg-[var(--paper-2)]/30 border-b border-[var(--line-dark)]">
               <tr>
-                <th className="px-6 py-4 font-semibold w-1/3">{activeTab === 'department' ? 'Department' : 'Topics'}</th>
-                <th className="px-6 py-4 font-semibold">Opened <span className="font-normal text-xs block text-slate-400">Dibuat</span></th>
-                <th className="px-6 py-4 font-semibold">Assigned <span className="font-normal text-xs block text-slate-400">Diterima/Verifikasi</span></th>
-                <th className="px-6 py-4 font-semibold">Closed <span className="font-normal text-xs block text-slate-400">Ditolak</span></th>
+                <th className="px-6 py-4 text-[11px] font-bold text-[var(--text-dim)] uppercase tracking-wider w-1/3">{activeTab === 'department' ? 'Department' : 'Topics'}</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-[var(--text-dim)] uppercase tracking-wider text-center">Opened <span className="font-medium text-[10px] block opacity-70 mt-0.5">Dibuat</span></th>
+                <th className="px-6 py-4 text-[11px] font-bold text-[var(--text-dim)] uppercase tracking-wider text-center">Assigned <span className="font-medium text-[10px] block opacity-70 mt-0.5">Diterima/Verifikasi</span></th>
+                <th className="px-6 py-4 text-[11px] font-bold text-[var(--text-dim)] uppercase tracking-wider text-center">Closed <span className="font-medium text-[10px] block opacity-70 mt-0.5">Ditolak</span></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-[var(--line-dark)]">
               {activeStatsData.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="text-center py-12 text-slate-400">Belum ada data untuk periode ini.</td>
+                  <td colSpan={4} className="text-center py-12 text-[var(--text-dim)] text-[14px]">Belum ada data untuk periode ini.</td>
                 </tr>
               ) : (
                 activeStatsData.map((row, idx) => (
-                  <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4 font-semibold text-slate-700">{row.name}</td>
-                    <td className="px-6 py-4 text-slate-600">{row.opened}</td>
-                    <td className="px-6 py-4 text-slate-600">{row.assigned}</td>
-                    <td className="px-6 py-4 text-slate-600">{row.closed}</td>
+                  <tr key={idx} className="hover:bg-[var(--paper-2)]/30 transition-colors">
+                    <td className="px-6 py-4 text-[14px] font-bold text-[var(--ink)]">{row.name}</td>
+                    <td className="px-6 py-4 text-[14px] text-center font-medium text-[var(--ink)]">{row.opened}</td>
+                    <td className="px-6 py-4 text-[14px] text-center font-medium text-[var(--ink)]">{row.assigned}</td>
+                    <td className="px-6 py-4 text-[14px] text-center font-medium text-[var(--ink)]">{row.closed}</td>
                   </tr>
                 ))
               )}

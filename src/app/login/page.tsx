@@ -1,12 +1,12 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import AuthCard from '@/components/AuthCard';
+import AuthCard from '@/components/auth/AuthCard';
 import { loginUser } from '@/lib/AuthService';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
+  const [usernameOrEmail, setUsernameOrEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -17,12 +17,26 @@ export default function LoginPage() {
     setErrorMsg('');
 
     try {
-      const authData = await loginUser(email, password);
+      const authData = await loginUser(usernameOrEmail, password);
       
       if (authData?.user) {
         localStorage.setItem('isLoggedIn', 'true');
-        // Arahkan sementara ke dashboard operator
-        router.push('/dashboard/operator');
+        const combinedUser = { ...authData.user, ...(authData.profile || {}) };
+        localStorage.setItem('user', JSON.stringify(combinedUser));
+        if (authData.session?.access_token) {
+          localStorage.setItem('access_token', authData.session.access_token);
+        }
+        document.cookie = `isLoggedIn=true; path=/; max-age=86400`;
+        if (combinedUser.role) {
+          document.cookie = `userRole=${combinedUser.role}; path=/; max-age=86400`;
+        }
+        
+        // Arahkan ke dashboard sesuai role
+        if (combinedUser.role === 'teknisi') {
+          router.push('/dashboard/teknisi');
+        } else {
+          router.push('/dashboard/operator');
+        }
       }
     } catch (error: any) {
       setErrorMsg(error.message || 'Gagal login. Periksa kembali email dan password Anda.');
@@ -44,12 +58,12 @@ export default function LoginPage() {
           </div>
         )}
         <div className="field">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Email atau Username</label>
           <input 
-            type="email" 
-            placeholder="Masukkan Email..." 
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            type="text" 
+            placeholder="Masukkan Email atau Username..." 
+            value={usernameOrEmail}
+            onChange={(e) => setUsernameOrEmail(e.target.value)}
             required 
             className="w-full p-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[var(--gold)]"
           />

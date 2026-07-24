@@ -1,69 +1,44 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  });
-
-  // 1. Inisialisasi Supabase Client khusus untuk Middleware (Server-Side)
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value;
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          request.cookies.set({ name, value, ...options });
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          });
-          response.cookies.set({ name, value, ...options });
-        },
-        remove(name: string, options: CookieOptions) {
-          request.cookies.set({ name, value: '', ...options });
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          });
-          response.cookies.set({ name, value: '', ...options });
-        },
-      },
-    }
-  );
-
-  // 2. Ambil data sesi user aktif
-  const { data: { user } } = await supabase.auth.getUser();
-
   const url = request.nextUrl.clone();
-
-  // 3. LOGIKA PROTEKSI RUTE (GUARD)
+  
+  // Periksa cookie isLoggedIn yang di set oleh halaman login
+  const isLoggedIn = request.cookies.get('isLoggedIn')?.value === 'true';
+  const userRole = request.cookies.get('userRole')?.value || '';
 
   // A. Jika user MENCOBA mengakses halaman dashboard tapi BELUM login
-  if (url.pathname.startsWith('/dashboard') && !user) {
+  if (url.pathname.startsWith('/dashboard') && !isLoggedIn) {
     url.pathname = '/login';
     return NextResponse.redirect(url);
   }
 
-  // B. Jika user SUDAH login tapi mencoba kembali ke halaman login/register
-  if ((url.pathname.startsWith('/login') || url.pathname.startsWith('/register')) && user) {
-    url.pathname = '/dashboard';
+  // B. Role-Based Access Control (RBAC) untuk Dashboard
+  if (isLoggedIn && url.pathname.startsWith('/dashboard')) {
+    if (url.pathname.startsWith('/dashboard/teknisi') && userRole !== 'teknisi') {
+      url.pathname = '/dashboard/operator';
+      return NextResponse.redirect(url);
+    }
+    if (url.pathname.startsWith('/dashboard/operator') && userRole === 'teknisi') {
+      url.pathname = '/dashboard/teknisi';
+      return NextResponse.redirect(url);
+    }
+  }
+
+  // C. Jika user SUDAH login tapi mencoba kembali ke halaman login/register
+  if ((url.pathname.startsWith('/login') || url.pathname.startsWith('/register')) && isLoggedIn) {
+    url.pathname = userRole === 'teknisi' ? '/dashboard/teknisi' : '/dashboard/operator';
     return NextResponse.redirect(url);
   }
 
-  return response;
+  return NextResponse.next();
 }
 
 // 4. Tentukan halaman mana saja yang akan diawasi oleh Middleware ini
 export const config = {
   matcher: [
-
+    '/dashboard/:path*',
+    '/login',
+    '/register'
   ],
 };
