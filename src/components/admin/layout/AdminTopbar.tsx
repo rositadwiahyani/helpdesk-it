@@ -1,48 +1,54 @@
 'use client';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 
 interface AdminTopbarProps {
-  onMenuClick: () => void;
-  pageTitle?: string;      // Judul halaman aktif, mis. "Dashboard Administrator"
-  breadcrumbParent?: string; // Induk breadcrumb, default "Menu"
+  pageTitle?: string;      
+  breadcrumbParent?: string; 
   userName?: string;
   userRole?: string;
   avatarSrc?: string;
 }
 
+const routeMapping: Record<string, string> = {
+  '/dashboard': 'Dashboard Administrator',
+  '/dashboard/administrasi/tickets': 'Tickets',
+  '/dashboard/administrasi/users': 'Manajemen Pengguna',
+  '/dashboard/administrasi/report-categories': 'Kategori Laporan',
+  '/dashboard/administrasi/reports': 'Laporan & Ekspor',
+  '/dashboard/administrasi/sla': 'Manajemen SLA',
+  '/dashboard/administrasi/staff': 'Manajemen Staff',
+  '/dashboard/administrasi/webhook': 'API Logs & Webhooks',
+  '/dashboard/administrasi/settings': 'Pengaturan Sistem',
+};
+
 export default function AdminTopbar({
-  onMenuClick,
   pageTitle = 'Dashboard Administrator',
   breadcrumbParent = 'Menu',
   userName = 'Admin User',
   userRole = 'Super Administrator',
   avatarSrc = '/avatar-admin.jpg',
 }: AdminTopbarProps) {
+  const pathname = usePathname();
+  
+  // Menentukan judul berdasarkan mapping pathname, fallback ke 'Dashboard Administrator'
+  const activeTitle = routeMapping[pathname || ''] || 'Dashboard Administrator';
+
   return (
     <div className="sticky top-0 z-40 h-20 w-full bg-white border-b border-[var(--line)]">
       <div className="flex h-full items-center justify-between px-6 lg:px-10">
 
-        {/* Kiri: Hamburger (khusus mobile) + Breadcrumb */}
+        {/* Kiri: Breadcrumb (Tombol Hamburger dihapus) */}
         <div className="flex items-center gap-4">
-          {/* Hamburger hanya tampil di layar kecil, karena di gambar (desktop) sidebar selalu terbuka */}
-          <button
-            onClick={onMenuClick}
-            className="lg:hidden p-2 -ml-2 rounded-xl text-[var(--text-dim)] hover:bg-[var(--paper-2)] hover:text-[var(--ink)] transition-colors"
-            aria-label="Buka menu"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
 
-          {/* Breadcrumb: Menu > Dashboard Administrator */}
+          {/* Breadcrumb: Menu > Dinamis berdasarkan Pathname */}
           <div className="flex items-center gap-2 text-[15px]">
             <span className="text-[var(--text-dim)]">{breadcrumbParent}</span>
             <svg className="w-4 h-4 text-[var(--text-dim)]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
             </svg>
             <span className="font-semibold text-[var(--ink)] truncate max-w-[200px] md:max-w-xs">
-              {pageTitle}
+              {activeTitle}
             </span>
           </div>
         </div>
@@ -72,7 +78,7 @@ export default function AdminTopbar({
                 {userRole}
               </span>
             </div>
-            {/* Avatar foto asli, bukan lagi inisial */}
+            {/* Avatar foto asli */}
             <div className="relative w-11 h-11 rounded-full overflow-hidden ring-1 ring-[var(--line)] shrink-0">
               <Image
                 src={avatarSrc}

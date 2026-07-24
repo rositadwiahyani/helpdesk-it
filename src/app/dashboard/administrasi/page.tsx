@@ -5,8 +5,6 @@ import TicketTrendChart from "@/components/admin/dashboard/TicketTrendChart";
 import CategoryDistribution from "@/components/admin/dashboard/CategoryDistribution";
 import OverviewTable from "@/components/admin/dashboard/OverviewTable";
 import RecentActivities from "@/components/admin/dashboard/RecentActivities";
-import TicketWorkspace from "@/components/admin/tickets/TicketWorkspace";
-import HeaderTopnavbarShell from "@/components/admin/tickets/TopNavBar";
 
 export default function DashboardAdministrasiPage() {
   return (
