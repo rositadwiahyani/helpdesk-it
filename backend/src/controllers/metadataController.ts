@@ -9,7 +9,7 @@ export const getDepartments = async (req: Request, res: Response) => {
     const { data, error } = await supabase
       .from('departments')
       .select('id, name')
-      .eq('is_active', true)
+      .eq('status', true)
       .order('name');
     
     if (error) throw error;
