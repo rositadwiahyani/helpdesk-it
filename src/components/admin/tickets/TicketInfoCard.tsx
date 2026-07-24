@@ -1,7 +1,5 @@
 import React from 'react';
 import { Ticket } from '@/lib/mock/tickets';
-import PriorityBadge from './PriorityBadge';
-import StatusBadge from './StatusBadge';
 
 interface TicketInfoCardProps {
   ticket: Ticket;
@@ -32,8 +30,12 @@ export default function TicketInfoCard({ ticket }: TicketInfoCardProps) {
         <div className="flex flex-col gap-1.5 border-b border-[var(--line-dark)] pb-3">
           <span className="text-[var(--text-dim)] text-[10.5px] uppercase tracking-wider font-bold">Status & Priority</span>
           <div className="flex flex-wrap gap-2 mt-1">
-            <StatusBadge status={ticket.status} />
-            <PriorityBadge priority={ticket.priority} />
+            <span className="px-2 py-1 bg-[var(--gold-soft)] text-[var(--gold)] font-bold rounded-lg">
+              {ticket.priority}
+            </span>
+            <span className="px-2 py-1 bg-[var(--success)] text-[var(--success-text)] font-bold rounded-lg">
+              {ticket.status}
+            </span>
           </div>
         </div>
 

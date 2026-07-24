@@ -4,6 +4,8 @@ dotenv.config();
 import express from 'express';
 import authRoutes from './routes/auth.routes';
 import ticketRoutes from './routes/ticket.routes';
+import metadataRoutes from './routes/metadata.routes';
+import operatorRoutes from './routes/operator.routes';
 
 const app = express();
 
@@ -23,6 +25,8 @@ app.use(express.json());
 // Registrasi Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/admin/tickets', ticketRoutes);
+app.use('/api/admin', metadataRoutes);
+app.use('/api/operator', operatorRoutes);
 
 app.get('/', (req, res) => {
   res.send('API Helpdesk IT UNDIP Aktif!');

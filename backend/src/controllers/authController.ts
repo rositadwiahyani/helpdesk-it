@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 // 1. Import fungsi loginStaff dari file authService kamu (sesuaikan path-nya jika perlu)
 import { loginStaff, updateStaffProfile } from '../services/AuthService';
+import { supabase } from '../config/supabase';
 
 /**
  * POST /api/auth/login
@@ -62,5 +63,36 @@ export const updateProfileHandler = async (req: Request, res: Response) => {
     return res.status(500).json({
       error: error.message || 'Gagal memperbarui profil.',
     });
+  }
+};
+
+/**
+ * GET /api/auth/me
+ * Mendapatkan data user saat ini berdasarkan token
+ */
+export const getMe = async (req: Request, res: Response) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ error: 'Token tidak ditemukan.' });
+
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    
+    if (error || !user) {
+      return res.status(401).json({ error: 'Token tidak valid.' });
+    }
+
+    // Ambil profile
+    const { data: profile } = await supabase
+        .from('staff_profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+    return res.status(200).json({
+      success: true,
+      data: { user, profile }
+    });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message });
   }
 };

@@ -11,13 +11,6 @@ import Knowledgebase from '@/components/public/Knowledgebase';
 export default function KnowledgebasePage() {
   const router = useRouter();
 
-  // Wajib login buat akses ini
-  useEffect(() => {
-    if (localStorage.getItem('isLoggedIn') !== 'true') {
-      router.push('/login');
-    }
-  }, [router]);
-
   return (
     <>
       <Header />

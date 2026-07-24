@@ -34,7 +34,6 @@ export async function middleware(request: NextRequest) {
   return NextResponse.next();
 }
 
-// 4. Tentukan halaman mana saja yang akan diawasi oleh Middleware ini
 export const config = {
   matcher: [
     '/dashboard/:path*',

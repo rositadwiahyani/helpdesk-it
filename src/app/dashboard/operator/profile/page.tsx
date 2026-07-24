@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { fetchClient } from '@/lib/apiClient';
 
 export default function ProfilePage() {
   const [currentUser, setCurrentUser] = useState<any>({});
@@ -87,13 +88,11 @@ export default function ProfilePage() {
 
       setMessage({ type: 'success', text: 'Profil berhasil diperbarui!' });
       
-      // Update local storage so changes persist
       const updatedUser = { ...currentUser, ...formData };
       delete updatedUser.password;
       localStorage.setItem('user', JSON.stringify(updatedUser));
       setCurrentUser(updatedUser);
 
-      // Reset password field
       setFormData(prev => ({ ...prev, password: '' }));
 
     } catch (error: any) {
@@ -119,7 +118,6 @@ export default function ProfilePage() {
       </div>
 
       <div className="bg-white rounded-2xl border border-[var(--line)] shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300 -mt-2">
-
         <div className="p-5 md:p-6 border-b border-[var(--line-dark)]">
           <h3 className="font-bold text-[18px] text-[var(--ink)]">My Account Profile</h3>
         </div>
@@ -135,7 +133,7 @@ export default function ProfilePage() {
             <div className="flex flex-col gap-8 animate-in fade-in duration-300">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="md:col-span-1 flex flex-col items-center gap-3 pt-2">
-                  <div className="w-24 h-24 rounded-full bg-[var(--gold)] flex items-center justify-center text-white text-3xl font-bold shadow-sm">
+                  <div className="w-24 h-24 rounded-full bg-[var(--gold)] flex items-center justify-center text-white text-3xl font-bold shadow-sm uppercase">
                     {initials}
                   </div>
                   <button type="button" className="text-[13px] font-bold text-[var(--gold-soft)] hover:text-[var(--gold-dim)] transition-colors">Avatar</button>

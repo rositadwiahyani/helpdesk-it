@@ -1,8 +1,12 @@
 'use client';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AuthCard from '@/components/auth/AuthCard';
+<<<<<<< HEAD
 import { loginUser } from '@/lib/AuthService';
+=======
+import { fetchClient } from '@/lib/apiClient';
+>>>>>>> 61586f21bf62b3be78daeaf51e816875b9f73142
 
 export default function LoginPage() {
   const router = useRouter();
@@ -20,26 +24,42 @@ export default function LoginPage() {
       const authData = await loginUser(usernameOrEmail, password);
       
       if (authData?.user) {
-        localStorage.setItem('isLoggedIn', 'true');
+        // Gabungkan data user dan profile
         const combinedUser = { ...authData.user, ...(authData.profile || {}) };
-        localStorage.setItem('user', JSON.stringify(combinedUser));
+        
+        // Simpan token ke localStorage dan cookie
         if (authData.session?.access_token) {
           localStorage.setItem('access_token', authData.session.access_token);
+          document.cookie = `auth_token=${authData.session.access_token}; path=/; max-age=86400`;
         }
+        
+        // Simpan state login untuk middleware
+        localStorage.setItem('user', JSON.stringify(combinedUser));
+        localStorage.setItem('isLoggedIn', 'true');
         document.cookie = `isLoggedIn=true; path=/; max-age=86400`;
+        
         if (combinedUser.role) {
           document.cookie = `userRole=${combinedUser.role}; path=/; max-age=86400`;
         }
         
-        // Arahkan ke dashboard sesuai role
-        if (combinedUser.role === 'teknisi') {
-          router.push('/dashboard/teknisi');
-        } else {
-          router.push('/dashboard/operator');
-        }
+        // Cek role untuk routing
+        const role = combinedUser.role || combinedUser.user_metadata?.role || '';
+        let targetPath = '/dashboard/operator'; // Default fallback
+        if (role === 'teknisi' || role === 'agent') targetPath = '/dashboard/teknisi';
+        else if (role === 'pimpinan') targetPath = '/dashboard/pimpinan';
+        else if (role === 'admin') targetPath = '/dashboard/administrasi';
+        
+        router.push(targetPath);
+      } else {
+        throw new Error('Respons tidak valid dari server.');
       }
-    } catch (error: any) {
-      setErrorMsg(error.message || 'Gagal login. Periksa kembali email dan password Anda.');
+    } catch (error) {
+      if (error instanceof Error) {
+        setErrorMsg(error.message || 'Gagal login. Periksa kembali email dan password Anda.');
+      } else {
+        setErrorMsg('Gagal login. Periksa kembali email dan password Anda.');
+      }
+      }
     } finally {
       setLoading(false);
     }

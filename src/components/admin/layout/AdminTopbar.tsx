@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState, useRef } from 'react';
-// Hapus import Image yang error jika file tidak ada
+import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 
 interface AdminTopbarProps {
   onMenuClick: () => void;
@@ -11,9 +12,21 @@ interface AdminTopbarProps {
   avatarSrc?: string;
 }
 
+const routeMapping: Record<string, string> = {
+  '/dashboard': 'Dashboard Administrator',
+  '/dashboard/administrasi/tickets': 'Tickets',
+  '/dashboard/administrasi/users': 'Manajemen Pengguna',
+  '/dashboard/administrasi/report-categories': 'Kategori Laporan',
+  '/dashboard/administrasi/reports': 'Laporan & Ekspor',
+  '/dashboard/administrasi/sla': 'Manajemen SLA',
+  '/dashboard/administrasi/staff': 'Manajemen Staff',
+  '/dashboard/administrasi/webhook': 'API Logs & Webhooks',
+  '/dashboard/administrasi/settings': 'Pengaturan Sistem',
+};
+
 export default function AdminTopbar({
   onMenuClick,
-  pageTitle = 'Dashboard',
+  pageTitle = 'Dashboard Administrator',
   breadcrumbParent = 'Menu',
   userName = 'Admin User',
   userRole = 'Super Administrator',
@@ -53,14 +66,12 @@ export default function AdminTopbar({
     }
   }, []);
 
-  // Ambil nama dari berbagai kemungkinan struktur backend (Supabase/Custom)
   let displayUserName = currentUser.name || currentUser.full_name || currentUser.user_metadata?.full_name || currentUser.user_metadata?.name;
   if (!displayUserName && currentUser.email) {
     displayUserName = currentUser.email.split('@')[0];
   }
   displayUserName = displayUserName || userName;
 
-  // Percantik role jika dari Supabase cuma tulisan "authenticated"
   let displayUserRole = currentUser.role || currentUser.user_metadata?.role || userRole;
   if (displayUserRole === 'authenticated') {
     if (currentUser.email?.includes('operator')) displayUserRole = 'Operator Helpdesk';
@@ -70,11 +81,14 @@ export default function AdminTopbar({
 
   const initials = displayUserName.substring(0, 2).toUpperCase();
 
+  const pathname = usePathname();
+  const activeTitle = routeMapping[pathname || ''] || 'Dashboard Administrator';
+
   return (
     <div className="sticky top-0 z-40 h-20 w-full bg-white border-b border-[var(--line)]">
       <div className="flex h-full items-center justify-between px-6 lg:px-10">
 
-        {/* Kiri: Hamburger (khusus mobile) + Breadcrumb */}
+        {/* Kiri: Breadcrumb (Tombol Hamburger dihapus) */}
         <div className="flex items-center gap-4">
           <button
             onClick={onMenuClick}
@@ -86,14 +100,14 @@ export default function AdminTopbar({
             </svg>
           </button>
 
-          {/* Breadcrumb */}
+          {/* Breadcrumb: Menu > Dinamis berdasarkan Pathname */}
           <div className="flex items-center gap-2 text-[15px]">
             <span className="text-[var(--text-dim)]">{breadcrumbParent}</span>
             <svg className="w-4 h-4 text-[var(--text-dim)]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
             </svg>
             <span className="font-semibold text-[var(--ink)] truncate max-w-[200px] md:max-w-xs">
-              {pageTitle}
+              {activeTitle}
             </span>
           </div>
         </div>

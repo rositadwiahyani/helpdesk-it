@@ -1,9 +1,9 @@
-import BlankLayout from '@/components/admin/layout/BlankLayout';
+import AdminLayout from '@/components/admin/layout/AdminLayout';
 
 export default function AdministrasiLayout({ children }: { children: React.ReactNode }) {
   return (
-    <BlankLayout>
+    <AdminLayout>
       {children}
-    </BlankLayout>
+    </AdminLayout>
   );
 }

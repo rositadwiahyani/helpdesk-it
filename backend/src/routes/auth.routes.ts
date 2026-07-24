@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { loginHandler, updateProfileHandler } from '../controllers/authController';
+import { loginHandler, updateProfileHandler, getMe } from '../controllers/authController';
 
 const router = Router();
 
@@ -8,6 +8,7 @@ const router = Router();
  * Endpoint untuk login staf/admin Helpdesk UNDIP
  */
 router.post('/login', loginHandler);
+router.get('/me', getMe);
 
 /**
  * PUT /api/auth/profile
