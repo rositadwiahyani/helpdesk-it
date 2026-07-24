@@ -30,10 +30,10 @@ export default async function TeknisiOpenTicketsPage() {
     const ticketsResponse = await fetchServer('/admin/tickets');
     let tickets = ticketsResponse.data || [];
     
-    // Filter tiket khusus untuk departemen teknisi ini dan status Open
+    // Filter tiket khusus untuk departemen teknisi ini dan status Open/Verified/Assigned
     const openTickets = tickets.filter((t: any) => 
         t.dept_id === deptId && 
-        (t.status === 'Open' || t.status === 'Verified') && 
+        (t.status === 'Open' || t.status === 'Verified' || t.status === 'Assigned') && 
         !t.tech_id
     );
 

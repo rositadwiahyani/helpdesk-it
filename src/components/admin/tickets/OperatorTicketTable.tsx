@@ -62,7 +62,7 @@ export default function OperatorTicketTable({
             // Optimistic update: remove ticket from the current view
             setTickets(prev => prev.filter(t => t.id !== ticketId));
 
-            const newStatus = action === 'accept' ? 'Assigned' : action === 'reject' ? 'Rejected' : 'Open';
+            const newStatus = action === 'accept' ? 'Assigned' : action === 'reject' ? 'Ditolak' : 'Open';
             
             // Supabase call
             const { error } = await supabase
@@ -151,7 +151,7 @@ export default function OperatorTicketTable({
         setIsBulkRejecting(true);
         try {
             const isRollback = actionType === 'rollback';
-            const newStatus = isRollback ? 'Open' : 'Rejected';
+            const newStatus = isRollback ? 'Open' : 'Ditolak';
             
             const promises = selectedTickets.map(async (ticketId) => {
                 const ticket = tickets.find(t => t.id === ticketId);
@@ -383,7 +383,7 @@ export default function OperatorTicketTable({
                             </th>
                             <th className="px-5 py-4 whitespace-nowrap w-48">CATEGORY</th>
                             <th className="px-5 py-4 whitespace-nowrap w-32">PRIORITY</th>
-                            <th className="px-5 py-4 whitespace-nowrap w-44">ASSIGNED TO</th>
+                            <th className="px-5 py-4 whitespace-nowrap w-44">ASSIGNED TO / UNIT</th>
                             <th className="px-5 py-4 text-right whitespace-nowrap w-40">ACTION</th>
                         </tr>
                     </thead>
@@ -481,13 +481,13 @@ export default function OperatorTicketTable({
                                         {actionType === 'verify' ? (
                                             <div className="relative w-[140px]">
                                                 <select 
-                                                    value={ticket.tech_id || ''}
-                                                    onChange={(e) => handleInlineUpdate(ticket.id, 'tech_id', e.target.value)}
+                                                    value={ticket.dept_id || ''}
+                                                    onChange={(e) => handleInlineUpdate(ticket.id, 'dept_id', e.target.value ? Number(e.target.value) : null)}
                                                     className="w-full bg-white border border-slate-200 rounded-lg pl-3 pr-8 py-1.5 text-[13px] text-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none cursor-pointer appearance-none hover:border-slate-300 transition-colors"
                                                 >
                                                     <option value="">Pilih Unit...</option>
-                                                    {technicians?.map(tech => (
-                                                        <option key={tech.id} value={tech.id}>{tech.name}</option>
+                                                    {departments?.map(dept => (
+                                                        <option key={dept.id} value={dept.id}>{dept.name}</option>
                                                     ))}
                                                 </select>
                                                 <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -495,7 +495,7 @@ export default function OperatorTicketTable({
                                                 </svg>
                                             </div>
                                         ) : (
-                                            <span className="text-slate-500 text-[13px]">{ticket.tech?.name || ticket.tech_id || '-'}</span>
+                                            <span className="text-slate-500 text-[13px]">{ticket.department?.name || departments?.find(d => String(d.id) === String(ticket.dept_id))?.name || ticket.dept_id || '-'}</span>
                                         )}
                                     </td>
                                     <td className="px-5 py-4 align-middle text-right whitespace-nowrap">
