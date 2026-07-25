@@ -167,7 +167,7 @@ export default function TicketTableSection({ activeTab = 'all', newlyAddedTicket
   return (
     <div className="flex flex-col rounded-lg border border-[#C3C6D1] bg-[#FFF] shadow-sm w-full overflow-hidden">
       <div className="w-full overflow-x-auto">
-        <table className="w-full text-left min-w-max">
+        <table className="w-full text-left table-auto">
           <thead className="bg-[#F3F3F6] border-b border-[#C3C6D1]">
             <tr>
               <th className="px-4 py-4 w-12 text-center">
@@ -178,31 +178,31 @@ export default function TicketTableSection({ activeTab = 'all', newlyAddedTicket
                   onChange={handleSelectAll}
                 />
               </th>
-              <th className="px-4 py-4 w-[15%]">
+              <th className="px-4 py-4">
                 <div className="flex items-center cursor-pointer group">
                   <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">NO. TIKET</span>
                   <SortIcon />
                 </div>
               </th>
-              <th className="px-4 py-4 w-[15%]">
+              <th className="px-4 py-4">
                 <div className="flex items-center cursor-pointer group">
                   <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">LAST UPDATE</span>
                   <SortIcon />
                 </div>
               </th>
-              <th className="px-4 py-4 w-[35%]">
+              <th className="px-4 py-4">
                 <div className="flex items-center cursor-pointer group">
                   <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">SUBJECT</span>
                   <SortIcon />
                 </div>
               </th>
-              <th className="px-4 py-4 w-[20%]">
+              <th className="px-4 py-4">
                 <div className="flex items-center cursor-pointer group">
                   <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">FROM</span>
                   <SortIcon />
                 </div>
               </th>
-              <th className="px-4 py-4 w-[15%]">
+              <th className="px-4 py-4">
                 <div className="flex items-center cursor-pointer group">
                   <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">PRIORITY</span>
                   <SortIcon />
