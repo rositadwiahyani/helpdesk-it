@@ -1,17 +1,14 @@
 "use client";
-import React, { useState } from 'react';
-import StaffHeader from "./StaffHeader";
-import StaffToolbar from "./StaffToolbar";
+
+import { useState } from "react";
 import StaffTableSection from "./StaffTableSection";
 
+type StaffTab = "agents" | "teams" | "departments";
+
 export default function StaffWorkspace() {
-  const [activeTab, setActiveTab] = useState('Agents');
+  const [activeTab, setActiveTab] = useState<StaffTab>("agents");
 
   return (
-    <div className="flex p-6 flex-col items-start gap-6 w-full">
-      <StaffHeader activeTab={activeTab} setActiveTab={setActiveTab} />
-      <StaffToolbar />
-      <StaffTableSection />
-    </div>
+    <StaffTableSection activeTab={activeTab} onTabChange={setActiveTab} />
   );
 }

@@ -39,24 +39,28 @@ export default function OverviewTable() {
 
   return (
     <section className="flex w-full flex-col overflow-hidden rounded-lg border border-[#c3c6d1] bg-white shadow-sm">
-      <div className="flex w-full items-start border-b border-[#c3c6d1] bg-white px-4">
+      {/* Menambahkan overflow-x-auto dan whitespace-nowrap agar tab bisa discroll di HP */}
+      <div className="flex w-full items-start border-b border-[#c3c6d1] bg-white px-4 overflow-x-auto whitespace-nowrap scrollbar-hide">
         {tableTabs.map((tab) => {
           const isActive = activeTableTab === tab;
           return (
             <button
               key={tab}
               onClick={() => setActiveTableTab(tab)}
-              className={`px-6 ${isActive ? "border-b-2 border-[#001e40] bg-[#001e400d] py-4" : "border-b-2 border-transparent py-[17px]"}`}
+              className={`px-6 transition-colors ${isActive ? "border-b-2 border-[#001e40] bg-[#001e400d] py-4" : "border-b-2 border-transparent py-[17px] hover:bg-gray-50"}`}
             >
               <span className={`text-sm ${isActive ? "font-bold text-[#001e40]" : "text-[#43474f]"}`}>{tab}</span>
             </button>
           );
         })}
       </div>
+      
+      {/* Div pembungkus table sudah w-full overflow-x-auto dari aslinya */}
       <div className="w-full overflow-x-auto">
         <table className="w-full min-w-[958px] border-collapse">
           <thead className="bg-[#f3f3f6]">
             <tr>
+              {/* Mempertahankan ukuran w-[363px] spesifik */}
               <th className="w-[363px] text-left p-4 text-[11px] font-bold text-[#43474f]">
                 {activeTableData.columnLabel}
               </th>
@@ -68,7 +72,11 @@ export default function OverviewTable() {
           </thead>
           <tbody>
             {activeTableData.rows.map((row) => (
-              <tr key={row.name} className="border-t border-[#c3c6d1]">
+              <tr 
+                key={row.name} 
+                className="border-t border-[#c3c6d1] hover:bg-[#f8f9fb] transition-colors cursor-pointer"
+                onClick={() => alert(`Lihat detail untuk: ${row.name}`)}
+              >
                 <th className="p-4 text-left text-sm font-bold text-[#001e40]">{row.name}</th>
                 <td className="p-4 text-center text-sm text-[#43474f]">{row.opened}</td>
                 <td className="p-4 text-center text-sm text-[#43474f]">{row.assigned}</td>

@@ -9,11 +9,14 @@ const summaryCards = [
 
 export default function SummaryCards() {
   return (
-    <section className="flex w-full items-start justify-center gap-6">
+    // Tetap menggunakan w-full items-start justify-center gap-6, ditambah flex-wrap agar tidak bertumpuk di HP
+    <section className="flex flex-col sm:flex-row flex-wrap lg:flex-nowrap w-full items-start justify-center gap-6">
       {summaryCards.map((card) => (
         <article
           key={card.label}
-          className="flex flex-1 flex-col items-start gap-4 rounded-xl border border-gray-100 bg-white p-6 shadow-sm"
+          onClick={() => alert(`Aksi: Memfilter tabel untuk ${card.label}`)}
+          // Mempertahankan semua style asli, ditambah class interaktif (hover, cursor) dan responsif (w-full/min-w)
+          className="flex flex-1 w-full sm:w-auto min-w-[200px] flex-col items-start gap-4 rounded-xl border border-gray-100 bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-md cursor-pointer"
         >
           <p className="[font-family:'Nimbus_Sans-Bold',Helvetica] text-[10px] font-bold tracking-[1px] leading-[15px] text-gray-400">
             {card.label}

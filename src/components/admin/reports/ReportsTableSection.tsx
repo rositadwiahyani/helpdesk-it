@@ -56,13 +56,16 @@ export default function ReportsTableSection({
           </svg>
         </div>
       </div>
-      <div className="flex justify-center items-start gap-4 w-full">
+      
+      {/* flex-col untuk mobile, lg:flex-row agar sejajar secara proporsional mengisi w-full di layar lebar */}
+      <div className="flex flex-col lg:flex-row justify-center items-start gap-4 w-full">
+        
         <div
           className="flex p-4 items-center gap-4 rounded border border-[#C3C6D1] bg-[#F9F9FC] w-full hover:bg-gray-100 transition-colors"
           onClick={() => handleItemClick("Ticket_Export_Oct.csv")}
           style={{ cursor: "pointer" }}
         >
-          <div className="flex justify-center items-center rounded-sm bg-[#DCFCE7] w-10 h-10">
+          <div className="flex justify-center items-center rounded-sm bg-[#DCFCE7] w-10 h-10 shrink-0">
             <svg
               width="20"
               height="20"
@@ -90,12 +93,13 @@ export default function ReportsTableSection({
             </div>
           </div>
         </div>
+
         <div
           className="flex p-4 items-center gap-4 rounded border border-[#C3C6D1] bg-[#F9F9FC] w-full hover:bg-gray-100 transition-colors"
           onClick={() => handleItemClick("Monthly_Report_Q3.xlsx")}
           style={{ cursor: "pointer" }}
         >
-          <div className="flex justify-center items-center rounded-sm bg-[#DBEAFE] w-10 h-10">
+          <div className="flex justify-center items-center rounded-sm bg-[#DBEAFE] w-10 h-10 shrink-0">
             <svg
               width="18"
               height="18"
@@ -123,12 +127,13 @@ export default function ReportsTableSection({
             </div>
           </div>
         </div>
+
         <div
           className="flex p-4 items-center gap-4 rounded border border-[#C3C6D1] bg-[#F9F9FC] w-full hover:bg-gray-100 transition-colors"
           onClick={() => handleItemClick("SLA_Metrics_v2.csv")}
           style={{ cursor: "pointer" }}
         >
-          <div className="flex justify-center items-center rounded-sm bg-[#FFEDD5] w-10 h-10">
+          <div className="flex justify-center items-center rounded-sm bg-[#FFEDD5] w-10 h-10 shrink-0">
             <svg
               width="16"
               height="20"
