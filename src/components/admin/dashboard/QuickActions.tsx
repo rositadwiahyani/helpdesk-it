@@ -1,11 +1,11 @@
-import { FiUserPlus, FiFolderPlus, FiClock, FiSettings } from "react-icons/fi";
+import { UserPlus, FolderPlus, Clock, Settings } from "lucide-react";
 
 export default function QuickActions() {
   const actions = [
-    { label: "Tambah User", icon: <FiUserPlus className="w-5 h-5 mb-2" /> },
-    { label: "Tambah Dept", icon: <FiFolderPlus className="w-5 h-5 mb-2" /> },
-    { label: "Kelola SLA", icon: <FiClock className="w-5 h-5 mb-2" /> },
-    { label: "Kelola Webhook", icon: <FiSettings className="w-5 h-5 mb-2" /> },
+    { label: "Tambah User", icon: <UserPlus className="w-5 h-5 mb-2" /> },
+    { label: "Tambah Dept", icon: <FolderPlus className="w-5 h-5 mb-2" /> },
+    { label: "Kelola SLA", icon: <Clock className="w-5 h-5 mb-2" /> },
+    { label: "Kelola Webhook", icon: <Settings className="w-5 h-5 mb-2" /> },
   ];
 
   return (
