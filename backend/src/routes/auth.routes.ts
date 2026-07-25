@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { loginHandler, getMe } from '../controllers/authController';
+import { loginHandler, updateProfileHandler, getMe } from '../controllers/authController';
 
 const router = Router();
 
@@ -9,5 +9,11 @@ const router = Router();
  */
 router.post('/login', loginHandler);
 router.get('/me', getMe);
+
+/**
+ * PUT /api/auth/profile
+ * Endpoint untuk update profile
+ */
+router.put('/profile', updateProfileHandler);
 
 export default router;

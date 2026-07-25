@@ -26,30 +26,34 @@ export default async function OperatorDashboard() {
     const { todayCount, verifiedCount, openCount } = counts;
 
     return (
-        <div className="w-full h-full text-slate-800 font-sans p-6 md:p-10">
-            <div className="mb-8 flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Dashboard Operator</h1>
-                    <p className="text-sm text-slate-500 mt-1">Ringkasan statistik dan aktivitas helpdesk.</p>
-                </div>
+        <div className="flex flex-col gap-6 p-6 md:p-10">
+            <div>
+                <h2 className="text-2xl font-bold text-[var(--ink)] mb-1">Beranda Operator</h2>
+                <p className="text-[var(--text-dim)] text-sm">Ringkasan statistik dan aktivitas helpdesk secara real-time.</p>
             </div>
 
             {/* Statistik Hari Ini */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-8">
-                <div className="bg-white border border-slate-200 rounded-xl p-5 flex-1 shadow-sm">
-                    <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Tiket Dibuat Hari Ini</div>
-                    <div className="text-3xl font-black text-slate-800">{todayCount || 0}</div>
-                    <div className="text-xs text-slate-500 mt-1">Total masuk hari ini</div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="bg-white border border-[var(--line-dark)] rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div className="text-[11px] font-bold text-[var(--text-dim)] uppercase tracking-wider mb-2">Tiket Dibuat Hari Ini</div>
+                        <div className="text-4xl font-bold text-[var(--ink)]">{todayCount || 0}</div>
+                    </div>
+                    <div className="text-xs text-[var(--text-dim)] mt-4">Total masuk hari ini</div>
                 </div>
-                <div className="bg-white border border-slate-200 rounded-xl p-5 flex-1 shadow-sm">
-                    <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Menunggu Verifikasi</div>
-                    <div className="text-3xl font-black text-orange-600">{openCount}</div>
-                    <div className="text-xs text-slate-500 mt-1">Status Open</div>
+                <div className="bg-white border border-[var(--line-dark)] rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div className="text-[11px] font-bold text-[var(--text-dim)] uppercase tracking-wider mb-2">Menunggu Verifikasi</div>
+                        <div className="text-4xl font-bold text-[var(--gold)]">{openCount}</div>
+                    </div>
+                    <div className="text-xs text-[var(--text-dim)] mt-4">Status Open</div>
                 </div>
-                <div className="bg-white border border-slate-200 rounded-xl p-5 flex-1 shadow-sm">
-                    <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Diverifikasi Hari Ini</div>
-                    <div className="text-3xl font-black text-emerald-600">{verifiedCount || 0}</div>
-                    <div className="text-xs text-slate-500 mt-1">Diterima / Ditolak</div>
+                <div className="bg-white border border-[var(--line-dark)] rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div className="text-[11px] font-bold text-[var(--text-dim)] uppercase tracking-wider mb-2">Diverifikasi Hari Ini</div>
+                        <div className="text-4xl font-bold text-[var(--ink)]">{verifiedCount || 0}</div>
+                    </div>
+                    <div className="text-xs text-[var(--text-dim)] mt-4">Diterima / Ditolak</div>
                 </div>
             </div>
 

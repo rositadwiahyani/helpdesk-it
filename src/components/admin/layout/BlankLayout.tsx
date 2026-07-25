@@ -21,7 +21,7 @@ export default function BlankLayout({ children }: { children: React.ReactNode })
   return (
     <div className="min-h-screen bg-[var(--paper)] flex">
       {/* Sidebar (Kiri) — sebelumnya di-import tapi tidak pernah dirender */}
-      <AdminSidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+      <AdminSidebar />
 
       {/* Wrapper konten kanan, padding kiri menyesuaikan lebar sidebar (w-72) di desktop */}
       <div className="flex-1 flex flex-col min-w-0 lg:pl-72">

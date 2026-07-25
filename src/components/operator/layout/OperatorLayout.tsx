@@ -1,27 +1,26 @@
 'use client';
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
-import TeknisiSidebar from './TeknisiSidebar';
+import OperatorSidebar from './OperatorSidebar';
 import AdminTopbar from '@/components/admin/layout/AdminTopbar';
 
-export default function TeknisiLayout({ children }: { children: React.ReactNode }) {
+export default function OperatorLayout({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const pathname = usePathname();
 
   const getPageTitle = () => {
-    if (!pathname) return 'Dashboard Teknisi';
-    if (pathname.includes('/dashboard/teknisi/tickets')) return 'Open Tickets';
-    if (pathname.includes('/dashboard/teknisi/tasks')) return 'My Tasks';
-    if (pathname.includes('/dashboard/teknisi/resolved')) return 'Resolved Tickets';
-    if (pathname.includes('/dashboard/teknisi/profile')) return 'Profil';
-    if (pathname.includes('/dashboard/teknisi')) return 'Dashboard Teknisi';
-    return 'Dashboard Teknisi';
+    if (!pathname) return 'Dashboard Operator';
+    if (pathname.includes('/dashboard/operator/tickets-rejected')) return 'Tiket Ditolak';
+    if (pathname.includes('/dashboard/operator/tickets')) return 'Tiket Masuk';
+    if (pathname.includes('/dashboard/operator/profile')) return 'Profil';
+    if (pathname.includes('/dashboard/operator')) return 'Dashboard Operator';
+    return 'Dashboard Operator';
   };
 
   return (
     <div className="min-h-screen bg-[var(--paper)] flex">
       {/* Sidebar (Kiri) */}
-      <TeknisiSidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+      <OperatorSidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
       {/* Main Content Wrapper (Kanan) */}
       <div className="flex-1 flex flex-col min-w-0 lg:pl-72">

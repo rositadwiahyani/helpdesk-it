@@ -60,11 +60,9 @@ export default async function TeknisiMyTasksPage() {
             </div>
 
             <TeknisiTicketTable 
-                tickets={myTasks}
-                categories={formattedCategories}
-                departments={departments}
-                currentUserId={user?.id}
-                hideAssignedToMeFilter={true}
+                initialTickets={myTasks}
+                mainCategories={formattedCategories}
+                actionType="resolve"
             />
         </div>
     );

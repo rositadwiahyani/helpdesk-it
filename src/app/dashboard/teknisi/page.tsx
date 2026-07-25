@@ -59,53 +59,47 @@ export default async function TeknisiDashboard() {
     today.setHours(0, 0, 0, 0);
     const todayStr = today.toISOString();
 
-    // 1. Open Tickets Hari Ini: Tiket di-assign ke departemen ini hari ini, status Open/Verified, belum di-assign ke tech
-    const openTicketsToday = tickets.filter((t: any) => 
-        t.created_at >= todayStr && 
-        !t.tech_id && 
-        t.status !== 'Resolved'
-    ).length;
-
-    // 2. Tugas Saya Hari Ini: Tiket yang sedang dikerjakan oleh teknisi ini
-    const myTasksToday = tickets.filter((t: any) => 
-        t.tech_id === user.id && 
-        t.status !== 'Resolved'
-    ).length; 
-
-    // 3. Ticket Solved Hari Ini (oleh departemen ini)
-    const solvedToday = tickets.filter((t: any) => 
-        t.status === 'Resolved' && 
-        t.updated_at >= todayStr 
-    ).length;
+    const todayCount = (tickets || []).filter((t: any) => new Date(t.created_at) >= today && t.status !== 'Ditolak').length;
+    const openCount = (tickets || []).filter((t: any) => t.status === 'Assigned' || t.status === 'Open').length;
+    const resolvedCount = (tickets || []).filter((t: any) => (t.status === 'Resolved' || t.status === 'Closed') && new Date(t.resolved_at || t.created_at) >= today).length;
 
     return (
-        <div className="w-full h-full text-slate-800 font-sans p-6 md:p-10">
-            <div className="mb-8 flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Dashboard Teknisi</h1>
-                    <p className="text-sm text-slate-500 mt-1">Ringkasan statistik dan tugas unit Anda.</p>
-                </div>
+        <div className="flex flex-col gap-6 p-6 md:p-10">
+            <div>
+                <h2 className="text-2xl font-bold text-[var(--ink)] mb-1">Dashboard Teknisi</h2>
+                <p className="text-[var(--text-dim)] text-sm">Ringkasan tugas dan statistik tiket departemen Anda.</p>
             </div>
 
             {/* Statistik Hari Ini */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-8">
-                <div className="bg-white border border-slate-200 rounded-xl p-5 flex-1 shadow-sm">
-                    <div className="text-xs font-semibold text-amber-500 uppercase tracking-wider mb-2">Open Tickets Baru (Hari Ini)</div>
-                    <div className="text-3xl font-black text-slate-800">{openTicketsToday || 0}</div>
-                    <div className="text-xs text-slate-500 mt-1">Tiket unit menunggu dikerjakan</div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="bg-white border border-[var(--line-dark)] rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div className="text-[11px] font-bold text-[var(--text-dim)] uppercase tracking-wider mb-2">Tiket Masuk Hari Ini</div>
+                        <div className="text-4xl font-bold text-[var(--ink)]">{todayCount || 0}</div>
+                    </div>
+                    <div className="text-xs text-[var(--text-dim)] mt-4">Total diteruskan hari ini</div>
                 </div>
-                <div className="bg-white border border-slate-200 rounded-xl p-5 flex-1 shadow-sm">
-                    <div className="text-xs font-semibold text-blue-500 uppercase tracking-wider mb-2">Tugas Saya (Aktif)</div>
-                    <div className="text-3xl font-black text-slate-800">{myTasksToday || 0}</div>
-                    <div className="text-xs text-slate-500 mt-1">Tiket sedang Anda tangani</div>
+                <div className="bg-white border border-[var(--line-dark)] rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div className="text-[11px] font-bold text-[var(--text-dim)] uppercase tracking-wider mb-2">Open Ticket</div>
+                        <div className="text-4xl font-bold text-[var(--gold)]">{openCount}</div>
+                    </div>
+                    <div className="text-xs text-[var(--text-dim)] mt-4">Menunggu ditangani</div>
                 </div>
-                <div className="bg-white border border-slate-200 rounded-xl p-5 flex-1 shadow-sm">
-                    <div className="text-xs font-semibold text-emerald-500 uppercase tracking-wider mb-2">Tiket Diselesaikan (Hari Ini)</div>
-                    <div className="text-3xl font-black text-slate-800">{solvedToday || 0}</div>
-                    <div className="text-xs text-slate-500 mt-1">Kinerja penyelesaian hari ini</div>
+                <div className="bg-white border border-[var(--line-dark)] rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div className="text-[11px] font-bold text-[var(--text-dim)] uppercase tracking-wider mb-2">Selesai Hari Ini</div>
+                        <div className="text-4xl font-bold text-emerald-600">{resolvedCount || 0}</div>
+                    </div>
+                    <div className="text-xs text-[var(--text-dim)] mt-4">Tiket berhasil diselesaikan</div>
                 </div>
             </div>
-            
+
+            {/* Komponen Statistik Kategori */}
+            <TeknisiStatistics 
+                tickets={tickets || []}
+                categories={rawCategories || []}
+            />
         </div>
     );
 }

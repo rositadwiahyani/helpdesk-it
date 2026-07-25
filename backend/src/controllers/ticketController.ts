@@ -9,18 +9,7 @@ export const getTicketsForDashboard = async (req: Request, res: Response) => {
   try {
     const { data, error } = await supabase
       .from('tickets')
-      .select(`
-        id,
-        ticket_number,
-        subject,
-        description,
-        status,
-        created_at,
-        attachment_url,
-        profiles(full_name, nim_nip, unit),
-        departments(name),
-        help_topics(topic_name)
-      `)
+      .select('*, category:categories(name), dept:departments(name), tech:staff_profiles!tickets_tech_id_fkey(name)')
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -43,19 +32,8 @@ export const getTicketByNum = async (req: Request, res: Response) => {
 
     const { data, error } = await supabase
       .from('tickets')
-      .select(`
-        id,
-        ticket_number,
-        subject,
-        description,
-        status,
-        created_at,
-        attachment_url,
-        profiles(full_name, nim_nip, unit),
-        departments(name),
-        help_topics(topic_name)
-      `)
-      .eq('ticket_number', ticketNum)
+      .select('*, category:categories(name), dept:departments(name), tech:staff_profiles!tickets_tech_id_fkey(name)')
+      .eq('ticket_num', ticketNum)
       .single();
 
     if (error) {
@@ -75,16 +53,17 @@ export const getTicketByNum = async (req: Request, res: Response) => {
 export const updateTicketByStaff = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { status, admin_id } = req.body;
+    const { status, tech_id, dept_id, priority, category_id } = req.body;
 
     const updatePayload: any = {
-      status,
       updated_at: new Date().toISOString()
     };
 
-    if (admin_id) {
-      updatePayload.admin_id = admin_id;
-    }
+    if (status) updatePayload.status = status;
+    if (tech_id !== undefined) updatePayload.tech_id = tech_id;
+    if (dept_id !== undefined) updatePayload.dept_id = dept_id;
+    if (priority) updatePayload.priority = priority;
+    if (category_id !== undefined) updatePayload.category_id = category_id;
 
     const { data, error } = await supabase
       .from('tickets')
@@ -112,14 +91,8 @@ export const getTicketMessages = async (req: Request, res: Response) => {
     const { ticketId } = req.params;
 
     const { data, error } = await supabase
-      .from('messages')
-      .select(`
-        id,
-        message,
-        created_at,
-        sender_id,
-        profiles(full_name, role_id(role_name))
-      `)
+      .from('ticket_messages')
+      .select('*, tech:staff_profiles!ticket_messages_sender_id_fkey(name, role)')
       .eq('ticket_id', ticketId)
       .order('created_at', { ascending: true });
 
@@ -143,11 +116,12 @@ export const sendStaffResponse = async (req: Request, res: Response) => {
     const { sender_id, message } = req.body;
 
     const { data, error } = await supabase
-      .from('messages')
+      .from('ticket_messages')
       .insert([
         {
           ticket_id: ticketId,
           sender_id: sender_id,
+          sender_type: 'ADMIN',
           message: message
         }
       ])

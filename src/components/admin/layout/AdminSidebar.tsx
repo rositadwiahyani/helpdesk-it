@@ -25,14 +25,7 @@ export default function AdminSidebar() {
     { name: 'Pengaturan Sistem', path: '/dashboard/administrasi/settings', icon: SettingsIcon },
   ];
 
-  if (pathname?.startsWith('/dashboard/operator')) {
-    MENU_ITEMS = [
-      { name: 'Dashboard', path: '/dashboard/operator', icon: HomeIcon },
-      { name: 'Tiket Masuk', path: '/dashboard/operator/tickets', icon: TicketsIcon },
-      { name: 'Tiket Ditolak', path: '/dashboard/operator/tickets-rejected', icon: TicketsIcon },
-      { name: 'Profil', path: '/dashboard/operator/profile', icon: StaffIcon },
-    ];
-  }
+
 
   return (
     <>
