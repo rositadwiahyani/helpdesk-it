@@ -4,13 +4,15 @@ import React, { useState } from 'react';
 import TicketHeader from "./TicketHeader";
 import TicketToolbar, { TabFilter } from "./TicketToolbar";
 import TicketTableSection, { Ticket } from "./TicketTableSection";
-import TicketStatistics from "./TicketStatistics";
 import NewTicketModal from "./NewTicketModal";
 
 export default function TicketWorkspace() {
   const [isNewTicketModalOpen, setIsNewTicketModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<TabFilter>('all');
   const [newlyAddedTicket, setNewlyAddedTicket] = useState<Ticket | null>(null);
+  
+  // State untuk bulk action
+  const [selectedTickets, setSelectedTickets] = useState<string[]>([]);
 
   const handleNewTicket = () => setIsNewTicketModalOpen(true);
   const handleExportCsv = () => alert("Proses Export CSV sedang berjalan. Data akan terunduh sesaat lagi.");
@@ -62,11 +64,15 @@ export default function TicketWorkspace() {
         onNewTicket={handleNewTicket} 
         onExportCsv={handleExportCsv}
         onOpenFilters={handleOpenFilters}
+        selectedCount={selectedTickets.length}
       />
       
-      <TicketTableSection activeTab={activeTab} newlyAddedTicket={newlyAddedTicket} />
-      
-      <TicketStatistics />
+      <TicketTableSection 
+        activeTab={activeTab} 
+        newlyAddedTicket={newlyAddedTicket} 
+        selectedTickets={selectedTickets}
+        onSelectionChange={setSelectedTickets}
+      />
 
       {isNewTicketModalOpen && (
         <NewTicketModal 

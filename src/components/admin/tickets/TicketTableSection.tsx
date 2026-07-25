@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 
-// --- Tambahkan "export" pada Types agar bisa dipakai di TicketWorkspace ---
 export type PriorityLevel = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
 export type TicketStatus = 'NEW' | 'IN PROGRESS' | 'WAITING VERIFICATION' | 'RESOLVED' | 'CLOSED';
 
@@ -28,13 +27,13 @@ export interface Ticket {
   isOverdue: boolean;
 }
 
-// --- Tambahkan newlyAddedTicket pada Props ---
 interface TicketTableSectionProps {
   activeTab?: string;
   newlyAddedTicket?: Ticket | null;
+  selectedTickets?: string[];
+  onSelectionChange?: (selectedIds: string[]) => void;
 }
 
-// --- Dummy Data ---
 const DUMMY_TICKETS: Ticket[] = [
   {
     id: '1',
@@ -86,60 +85,64 @@ const DUMMY_TICKETS: Ticket[] = [
   },
 ];
 
-export default function TicketTableSection({ activeTab = 'all', newlyAddedTicket }: TicketTableSectionProps) {
+export default function TicketTableSection({ activeTab = 'all', newlyAddedTicket, selectedTickets = [], onSelectionChange }: TicketTableSectionProps) {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
 
-  // --- Effect baru untuk menangkap dan menambahkan tiket ke tabel ---
   useEffect(() => {
     if (newlyAddedTicket) {
-      // Cek agar tidak duplikat saat re-render
       const isExist = DUMMY_TICKETS.some(t => t.id === newlyAddedTicket.id);
-      if (!isExist) {
-        DUMMY_TICKETS.unshift(newlyAddedTicket); // Masukkan tiket baru di paling atas
-      }
+      if (!isExist) DUMMY_TICKETS.unshift(newlyAddedTicket);
     }
   }, [newlyAddedTicket]);
 
-  // Pagination config
-  const totalItems = 244 + DUMMY_TICKETS.length; // Angka dinamis menyesuaikan data dummy
+  const totalItems = 244 + DUMMY_TICKETS.length;
   const itemsPerPage = 4;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
   useEffect(() => {
     const fetchTickets = async () => {
       setIsLoading(true);
-      try {
-        // Simulasi hit endpoint misal: `/api/tickets?page=${currentPage}&status=${activeTab}`
-        setTimeout(() => {
-          let filteredData = DUMMY_TICKETS;
-          
-          // Memfilter data berdasarkan active tab 
-          if (activeTab !== 'all') {
-            const statusMap: Record<string, string> = {
-              'new': 'NEW',
-              'in_progress': 'IN PROGRESS',
-              'waiting_verification': 'WAITING VERIFICATION',
-              'resolved': 'RESOLVED',
-              'closed': 'CLOSED'
-            };
-            filteredData = DUMMY_TICKETS.filter(t => t.status === statusMap[activeTab]);
-          }
-
-          setTickets(filteredData);
-          setIsLoading(false);
-        }, 500);
-      } catch (error) {
-        console.error('Error fetching tickets:', error);
+      setTimeout(() => {
+        let filteredData = DUMMY_TICKETS;
+        if (activeTab !== 'all') {
+          const statusMap: Record<string, string> = {
+            'new': 'NEW',
+            'in_progress': 'IN PROGRESS',
+            'waiting_verification': 'WAITING VERIFICATION',
+            'resolved': 'RESOLVED',
+            'closed': 'CLOSED'
+          };
+          filteredData = DUMMY_TICKETS.filter(t => t.status === statusMap[activeTab]);
+        }
+        setTickets(filteredData);
         setIsLoading(false);
-      }
+      }, 500);
     };
-
     fetchTickets();
-  }, [currentPage, activeTab, newlyAddedTicket]); // <--- Tambahkan newlyAddedTicket di dependency agar tabel re-render otomatis
+  }, [currentPage, activeTab, newlyAddedTicket]);
 
-  // ... (SISA KODE RENDER BADGE DAN KOMPONEN TABEL SAMA PERSIS SEPERTI SEBELUMNYA)
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (onSelectionChange) {
+      if (e.target.checked) {
+        onSelectionChange(tickets.map(t => t.id));
+      } else {
+        onSelectionChange([]);
+      }
+    }
+  };
+
+  const handleSelectRow = (ticketId: string, checked: boolean) => {
+    if (onSelectionChange) {
+      if (checked) {
+        onSelectionChange([...selectedTickets, ticketId]);
+      } else {
+        onSelectionChange(selectedTickets.filter(id => id !== ticketId));
+      }
+    }
+  };
+
   const renderPriorityBadge = (priority: PriorityLevel) => {
     const styles = {
       CRITICAL: { bg: 'bg-[#FFDAD6]', text: 'text-[#93000A]' },
@@ -157,230 +160,128 @@ export default function TicketTableSection({ activeTab = 'all', newlyAddedTicket
     );
   };
 
-  const renderStatusBadge = (status: TicketStatus, isOverdue: boolean) => {
-    const styles = {
-      'NEW': { bg: 'bg-[#D5E3FF]', text: 'text-[#001B3C]' },
-      'IN PROGRESS': { bg: 'bg-[#D8E2FF]', text: 'text-[#001A41]' },
-      'WAITING VERIFICATION': { bg: 'bg-[#E0E3E6]', text: 'text-[#43474A]' },
-      'RESOLVED': { bg: 'bg-[#DCFCE7]', text: 'text-[#166534]' },
-      'CLOSED': { bg: 'bg-[#E2E2E5]', text: 'text-[#43474F]' },
-    }[status] || { bg: 'bg-[#E2E2E5]', text: 'text-[#43474F]' };
-
-    if (isOverdue) {
-      return (
-        <div className="flex pl-6 flex-col items-start gap-1 w-[118px]">
-          <div className={`flex py-0.5 px-2 items-center rounded-sm ${styles.bg} w-full`}>
-            <p className={`${styles.text} font-iBMPlexSans text-[11px] font-bold leading-5 w-fit`}>
-              {status}
-            </p>
-          </div>
-          <div className="flex items-center gap-1 w-full">
-            <svg width="11" height="10" viewBox="0 0 11 10" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex flex-col items-start w-fit">
-              <path d="M0 9.5L5.5 0L11 9.5H0ZM1.725 8.5H9.275L5.5 2L1.725 8.5ZM5.5 8C5.64167 8 5.76042 7.95208 5.85625 7.85625C5.95208 7.76042 6 7.64167 6 7.5C6 7.35833 5.95208 7.23958 5.85625 7.14375C5.76042 7.04792 5.64167 7 5.5 7C5.35833 7 5.23958 7.04792 5.14375 7.14375C5.04792 7.23958 5 7.35833 5 7.5C5 7.64167 5.04792 7.76042 5.14375 7.85625C5.23958 7.95208 5.35833 8 5.5 8ZM5 6.5H6V4H5V6.5Z" fill="#BA1A1A" />
-            </svg>
-            <p className="text-[#BA1A1A] font-iBMPlexSans text-[10px] font-bold leading-5 w-fit">
-              OVERDUE
-            </p>
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <div className="flex pt-[35px] pr-6 pb-[35px] pl-12 flex-col items-start w-[166px]">
-        <div className={`flex py-0.5 px-2 items-center rounded-sm ${styles.bg} w-fit`}>
-          <p className={`${styles.text} font-iBMPlexSans text-[11px] font-bold leading-5 w-fit`}>
-            {status}
-          </p>
-        </div>
-      </div>
-    );
-  };
+  const SortIcon = () => (
+    <svg className="w-3 h-3 ml-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path></svg>
+  );
 
   return (
-    <div className="flex flex-col items-start rounded-lg border border-[#C3C6D1] bg-[#FFF] shadow-[01px2px0rgba(0,0,0,0.05)] w-full overflow-hidden">
-      
-      <div className="flex flex-col items-start -space-y-px w-full overflow-x-auto">
-        
-        {/* Table Header */}
-        <div className="flex justify-start items-start border-b border-b-[#C3C6D1] bg-[#F3F3F6] w-full min-w-max">
-          <div className="flex py-4 px-6 flex-col items-start w-[85px]">
-            <p className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">NO. TIKET</p>
-          </div>
-          <div className="flex py-4 px-6 flex-col items-start w-[97px]">
-            <p className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">LAST UPDATE</p>
-          </div>
-          <div className="flex pt-6 pr-6 pb-[25px] pl-6 flex-col items-start w-80">
-            <p className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">SUBJECT</p>
-          </div>
-          <div className="flex pt-6 pr-6 pb-[25px] pl-6 flex-col items-start w-[153px]">
-            <p className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">FROM</p>
-          </div>
-          <div className="flex pt-6 pr-6 pb-[25px] pl-6 flex-col items-start w-[117px]">
-            <p className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">PRIORITY</p>
-          </div>
-          <div className="flex pt-6 pr-6 pb-[25px] pl-6 flex-col items-start w-[121px]">
-            <p className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">ASSIGN TO</p>
-          </div>
-          <div className="flex pt-6 pr-6 pb-[25px] pl-6 flex-col items-start w-[142px]">
-            <p className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">STATUS</p>
-          </div>
-        </div>
-
-        <div className="flex flex-col items-start -space-y-px w-full min-w-max">
-          {isLoading ? (
-            <div className="flex py-10 w-full justify-center">
-              <p className="text-[#43474F] font-iBMPlexSans text-sm">Loading tickets...</p>
-            </div>
-          ) : tickets.length === 0 ? (
-            <div className="flex py-10 w-full justify-center">
-              <p className="text-[#43474F] font-iBMPlexSans text-sm">Tidak ada tiket pada filter ini.</p>
-            </div>
-          ) : (
-            tickets.map((ticket, index) => (
-              <div 
-                key={ticket.id} 
-                className={`flex justify-start items-center border-b border-b-[#C3C6D1] w-full ${index % 2 === 1 ? 'bg-[#F9F9FC]' : ''} ${index === 0 ? 'pr-6' : ''}`}
-              >
-                {/* No. Tiket */}
-                <div className="flex pt-4 pr-6 pb-[17px] pl-6 flex-col items-start w-[85px]">
-                  <p className="text-[#0059BB] font-liberationSerif text-sm font-semibold leading-5 w-fit">
+    <div className="flex flex-col rounded-lg border border-[#C3C6D1] bg-[#FFF] shadow-sm w-full overflow-hidden">
+      <div className="w-full overflow-x-auto">
+        <table className="w-full text-left min-w-max">
+          <thead className="bg-[#F3F3F6] border-b border-[#C3C6D1]">
+            <tr>
+              <th className="px-4 py-4 w-12 text-center">
+                <input 
+                  type="checkbox" 
+                  className="rounded border-gray-300 w-4 h-4 text-[#0059BB] focus:ring-[#0059BB]"
+                  checked={tickets.length > 0 && selectedTickets.length === tickets.length}
+                  onChange={handleSelectAll}
+                />
+              </th>
+              <th className="px-4 py-4 w-[15%]">
+                <div className="flex items-center cursor-pointer group">
+                  <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">NO. TIKET</span>
+                  <SortIcon />
+                </div>
+              </th>
+              <th className="px-4 py-4 w-[15%]">
+                <div className="flex items-center cursor-pointer group">
+                  <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">LAST UPDATE</span>
+                  <SortIcon />
+                </div>
+              </th>
+              <th className="px-4 py-4 w-[35%]">
+                <div className="flex items-center cursor-pointer group">
+                  <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">SUBJECT</span>
+                  <SortIcon />
+                </div>
+              </th>
+              <th className="px-4 py-4 w-[20%]">
+                <div className="flex items-center cursor-pointer group">
+                  <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">FROM</span>
+                  <SortIcon />
+                </div>
+              </th>
+              <th className="px-4 py-4 w-[15%]">
+                <div className="flex items-center cursor-pointer group">
+                  <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">PRIORITY</span>
+                  <SortIcon />
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#C3C6D1]">
+            {isLoading ? (
+              <tr><td colSpan={6} className="py-10 text-center text-sm text-[#43474F]">Loading tickets...</td></tr>
+            ) : tickets.length === 0 ? (
+              <tr><td colSpan={6} className="py-10 text-center text-sm text-[#43474F]">Tidak ada tiket pada filter ini.</td></tr>
+            ) : (
+              tickets.map((ticket, index) => (
+                <tr key={ticket.id} className={`hover:bg-slate-50 transition-colors ${index % 2 === 1 ? 'bg-[#F9F9FC]' : ''}`}>
+                  <td className="px-4 py-4 text-center">
+                    <input 
+                      type="checkbox" 
+                      className="rounded border-gray-300 w-4 h-4 text-[#0059BB] focus:ring-[#0059BB]"
+                      checked={selectedTickets.includes(ticket.id)}
+                      onChange={(e) => handleSelectRow(ticket.id, e.target.checked)}
+                    />
+                  </td>
+                  <td className="px-4 py-4 text-[#0059BB] font-liberationSerif text-sm font-semibold whitespace-nowrap">
                     {ticket.ticketNumber}
-                  </p>
-                </div>
-
-                {/* Last Update */}
-                <div className="flex py-[27px] px-6 flex-col items-start w-[97px]">
-                  <p className="text-[#43474F] font-iBMPlexSans text-sm leading-5 w-fit">
+                  </td>
+                  <td className="px-4 py-4 text-[#43474F] font-iBMPlexSans text-sm whitespace-nowrap">
                     {ticket.lastUpdate}
-                  </p>
-                </div>
-
-                {/* Subject */}
-                <div className="flex max-w-[320px] py-[26px] px-6 flex-col items-start gap-0.5 w-80">
-                  <div className="flex flex-col items-start w-full overflow-hidden">
-                    <p className="text-[#1A1C1E] font-iBMPlexSans text-sm font-medium leading-5 w-full">
+                  </td>
+                  <td className="px-4 py-4 max-w-xs">
+                    <p className="text-[#1A1C1E] font-iBMPlexSans text-sm font-medium truncate mb-0.5">
                       {ticket.subject}
                     </p>
-                  </div>
-                  <div className="flex flex-col items-start w-full">
-                    <p className="text-[#43474F] font-iBMPlexSans text-[11px] leading-5 w-full">
+                    <p className="text-[#43474F] font-iBMPlexSans text-[11px] truncate">
                       {ticket.category}
                     </p>
-                  </div>
-                </div>
-
-                {/* From */}
-                <div className="flex pl-6 items-center gap-2 w-[129px]">
-                  <button className={`cursor-pointer text-nowrap flex pt-0.5 pr-0 pb-[3px] pl-0 justify-center items-center shrink-0 rounded-xl ${ticket.requester.initialsBg} ${ticket.requester.initialsWidth || 'w-6'} h-6`}>
-                    <p className={`${ticket.requester.initialsText} font-iBMPlexSans text-[10px] font-bold leading-5 w-fit`}>
-                      {ticket.requester.initials}
-                    </p>
-                  </button>
-                  <div className="flex pr-[5px] flex-col items-start w-fit">
-                    <p className="text-[#1A1C1E] font-iBMPlexSans text-sm leading-5 w-fit">
-                      {ticket.requester.name}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Priority */}
-                <div className="flex pt-[35px] pr-6 pb-[35px] pl-12 flex-col items-start w-[141px]">
-                  {renderPriorityBadge(ticket.priority)}
-                </div>
-
-                {/* Assign To */}
-                {ticket.assignee ? (
-                  <div className="flex pl-6 justify-end items-center gap-2 w-[97px] h-10">
-                    <img 
-                      src={ticket.assignee.avatarUrl} 
-                      className="rounded-xl border border-[#C3C6D1] w-6 h-6 overflow-hidden max-w-none" 
-                      alt={ticket.assignee.name} 
-                    />
-                    <div className="flex flex-col items-start w-fit">
-                      <p className="text-[#1A1C1E] font-iBMPlexSans text-sm leading-5 w-fit">
-                        {ticket.assignee.name}
-                      </p>
+                  </td>
+                  <td className="px-4 py-4">
+                    <div className="flex items-center gap-2">
+                      <div className={`flex items-center justify-center shrink-0 rounded-full ${ticket.requester.initialsBg} w-6 h-6`}>
+                        <span className={`${ticket.requester.initialsText} font-bold text-[10px]`}>
+                          {ticket.requester.initials}
+                        </span>
+                      </div>
+                      <span className="text-[#1A1C1E] font-iBMPlexSans text-sm truncate max-w-[120px]">
+                        {ticket.requester.name}
+                      </span>
                     </div>
-                  </div>
-                ) : (
-                  <div className="flex py-[37px] px-6 flex-col items-start w-[121px]">
-                    <p className="text-[#43474F] font-iBMPlexSans text-sm leading-5 w-fit">
-                      Unassigned
-                    </p>
-                  </div>
-                )}
-
-                {/* Status */}
-                {renderStatusBadge(ticket.status, ticket.isOverdue)}
-              </div>
-            ))
-          )}
-        </div>
+                  </td>
+                  <td className="px-4 py-4">
+                    {renderPriorityBadge(ticket.priority)}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
 
       {/* Pagination */}
       <div className="flex py-4 px-6 justify-between items-center border-t border-t-[#C3C6D1] bg-[#FFF] w-full">
-        <div className="flex flex-col items-start w-fit">
-          <p className="text-[#1A1C1E] font-iBMPlexSans text-[13px] leading-[18px] w-fit">
-            Showing {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} tickets
-          </p>
-        </div>
-        <div className="flex items-center gap-2 w-fit">
-          <button 
-            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-            className={`flex justify-center items-center rounded border border-[#C3C6D1] w-8 h-8 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-50'}`}
-          >
-            <svg width="7" height="10" viewBox="0 0 7 10" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex flex-col items-center w-fit ">
-              <path d="M5 10L0 5L5 0L6.16667 1.16667L2.33333 5L6.16667 8.83333L5 10Z" fill="black" />
-            </svg>
+        <p className="text-[#1A1C1E] font-iBMPlexSans text-[13px]">
+          Showing {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} tickets
+        </p>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className={`flex justify-center items-center rounded border border-[#C3C6D1] w-8 h-8 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-50'}`}>
+            <svg width="7" height="10" viewBox="0 0 7 10" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 10L0 5L5 0L6.16667 1.16667L2.33333 5L6.16667 8.83333L5 10Z" fill="black" /></svg>
           </button>
           
-          <button 
-            onClick={() => setCurrentPage(1)}
-            className={`cursor-pointer text-nowrap flex pt-2 pr-0 pb-[9px] pl-0 justify-center items-center rounded w-8 h-8 ${currentPage === 1 ? 'bg-[#0070EA]' : 'hover:bg-gray-100'}`}
-          >
-            <p className={`${currentPage === 1 ? 'text-[#FEFCFF]' : 'text-[#000]'} font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]`}>
-              1
-            </p>
-          </button>
-          <button 
-            onClick={() => setCurrentPage(2)}
-            className={`cursor-pointer text-nowrap flex pt-2 pr-0 pb-[9px] pl-0 justify-center items-center rounded w-8 h-8 ${currentPage === 2 ? 'bg-[#0070EA]' : 'hover:bg-gray-100'}`}
-          >
-            <p className={`${currentPage === 2 ? 'text-[#FEFCFF]' : 'text-[#000]'} font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]`}>
-              2
-            </p>
-          </button>
-          <button 
-            onClick={() => setCurrentPage(3)}
-            className={`cursor-pointer text-nowrap flex pt-2 pr-0 pb-[9px] pl-0 justify-center items-center rounded w-8 h-8 ${currentPage === 3 ? 'bg-[#0070EA]' : 'hover:bg-gray-100'}`}
-          >
-            <p className={`${currentPage === 3 ? 'text-[#FEFCFF]' : 'text-[#000]'} font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]`}>
-              3
-            </p>
-          </button>
-          <div className="flex py-0 px-1 flex-col items-start w-fit">
-            <p className="text-[#000] font-iBMPlexSans text-base leading-6 w-fit">...</p>
-          </div>
-          <button 
-            onClick={() => setCurrentPage(totalPages)}
-            className={`cursor-pointer text-nowrap flex pt-2 pr-0 pb-[9px] pl-0 justify-center items-center rounded w-8 h-8 ${currentPage === totalPages ? 'bg-[#0070EA]' : 'hover:bg-gray-100'}`}
-          >
-            <p className={`${currentPage === totalPages ? 'text-[#FEFCFF]' : 'text-[#000]'} font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]`}>
-              {totalPages}
-            </p>
-          </button>
-
-          <button 
-            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
-            className={`flex justify-center items-center rounded border border-[#C3C6D1] w-8 h-8 ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-50'}`}
-          >
-            <svg width="7" height="10" viewBox="0 0 7 10" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex flex-col items-center w-fit ">
-              <path d="M3.83333 5L0 1.16667L1.16667 0L6.16667 5L1.16667 10L0 8.83333L3.83333 5Z" fill="black" />
-            </svg>
+          <button onClick={() => setCurrentPage(1)} className={`cursor-pointer rounded w-8 h-8 flex items-center justify-center font-semibold text-xs ${currentPage === 1 ? 'bg-[#0070EA] text-white' : 'hover:bg-gray-100 text-black'}`}>1</button>
+          <button onClick={() => setCurrentPage(2)} className={`cursor-pointer rounded w-8 h-8 flex items-center justify-center font-semibold text-xs ${currentPage === 2 ? 'bg-[#0070EA] text-white' : 'hover:bg-gray-100 text-black'}`}>2</button>
+          <button onClick={() => setCurrentPage(3)} className={`cursor-pointer rounded w-8 h-8 flex items-center justify-center font-semibold text-xs ${currentPage === 3 ? 'bg-[#0070EA] text-white' : 'hover:bg-gray-100 text-black'}`}>3</button>
+          
+          <span className="px-1 text-base">...</span>
+          
+          <button onClick={() => setCurrentPage(totalPages)} className={`cursor-pointer rounded w-8 h-8 flex items-center justify-center font-semibold text-xs ${currentPage === totalPages ? 'bg-[#0070EA] text-white' : 'hover:bg-gray-100 text-black'}`}>{totalPages}</button>
+          
+          <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className={`flex justify-center items-center rounded border border-[#C3C6D1] w-8 h-8 ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-50'}`}>
+            <svg width="7" height="10" viewBox="0 0 7 10" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3.83333 5L0 1.16667L1.16667 0L6.16667 5L1.16667 10L0 8.83333L3.83333 5Z" fill="black" /></svg>
           </button>
         </div>
       </div>
