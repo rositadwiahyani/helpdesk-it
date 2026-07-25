@@ -4,10 +4,11 @@ import ReportsTableSection from "./ReportsTableSection";
 
 export default function ReportsWorkspace() {
   return (
-    <div className="flex w-full p-12 flex-col items-start gap-12 w-full">
+    // PERUBAHAN: Menghapus max-w-[1024px] agar layout mengisi ruang kosong di sebelah kanan
+    <div className="flex p-12 flex-col items-start gap-12 w-full">
       <ReportsHeader />
-      {/* Menggunakan grid 1 kolom di mobile, dan 2 kolom (rasio ~66% : 33%) di tablet/desktop */}
-      <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] items-start gap-12 w-full">
+      
+      <div className="flex flex-col items-start gap-12 w-full">
         <ReportsToolbar />
         <ReportsTableSection />
       </div>

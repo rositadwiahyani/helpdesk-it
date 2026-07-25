@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 
-// --- Types ---
-type PriorityLevel = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
-type TicketStatus = 'NEW' | 'IN PROGRESS' | 'WAITING VERIFICATION' | 'RESOLVED';
+// --- Tambahkan "export" pada Types agar bisa dipakai di TicketWorkspace ---
+export type PriorityLevel = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+export type TicketStatus = 'NEW' | 'IN PROGRESS' | 'WAITING VERIFICATION' | 'RESOLVED' | 'CLOSED';
 
-interface User {
+export interface User {
   name: string;
   initials?: string;
   initialsBg?: string;
@@ -15,7 +15,7 @@ interface User {
   avatarUrl?: string;
 }
 
-interface Ticket {
+export interface Ticket {
   id: string;
   ticketNumber: string;
   lastUpdate: string;
@@ -28,6 +28,12 @@ interface Ticket {
   isOverdue: boolean;
 }
 
+// --- Tambahkan newlyAddedTicket pada Props ---
+interface TicketTableSectionProps {
+  activeTab?: string;
+  newlyAddedTicket?: Ticket | null;
+}
+
 // --- Dummy Data ---
 const DUMMY_TICKETS: Ticket[] = [
   {
@@ -36,13 +42,7 @@ const DUMMY_TICKETS: Ticket[] = [
     lastUpdate: '2 mins ago',
     subject: 'SIAKAD login failure - Database Timeout',
     category: 'Category: Applications / Academic',
-    requester: {
-      name: 'Andi Saputra',
-      initials: 'AS',
-      initialsBg: 'bg-[#D5E3FF]',
-      initialsText: 'text-[#001B3C]',
-      initialsWidth: 'w-[22px]',
-    },
+    requester: { name: 'Andi Saputra', initials: 'AS', initialsBg: 'bg-[#D5E3FF]', initialsText: 'text-[#001B3C]', initialsWidth: 'w-[22px]' },
     priority: 'CRITICAL',
     assignee: null,
     status: 'NEW',
@@ -54,18 +54,9 @@ const DUMMY_TICKETS: Ticket[] = [
     lastUpdate: '15 mins ago',
     subject: 'WiFi access issue in Faculty of Law',
     category: 'Category: Infrastructure / Networking',
-    requester: {
-      name: 'Rina Maheswari',
-      initials: 'RM',
-      initialsBg: 'bg-[#D8E2FF]',
-      initialsText: 'text-[#001A41]',
-      initialsWidth: 'w-[19px]',
-    },
+    requester: { name: 'Rina Maheswari', initials: 'RM', initialsBg: 'bg-[#D8E2FF]', initialsText: 'text-[#001A41]', initialsWidth: 'w-[19px]' },
     priority: 'HIGH',
-    assignee: {
-      name: 'Deni Pratama',
-      avatarUrl: '/DeniPratama.png',
-    },
+    assignee: { name: 'Deni Pratama', avatarUrl: '/DeniPratama.png' },
     status: 'IN PROGRESS',
     isOverdue: false,
   },
@@ -75,18 +66,9 @@ const DUMMY_TICKETS: Ticket[] = [
     lastUpdate: '1 hour ago',
     subject: 'Request for Adobe Creative Cloud License',
     category: 'Category: Software / License',
-    requester: {
-      name: 'Tio Pamungkas',
-      initials: 'TP',
-      initialsBg: 'bg-[#E2E2E5]',
-      initialsText: 'text-[#43474F]',
-      initialsWidth: 'w-[19px]',
-    },
+    requester: { name: 'Tio Pamungkas', initials: 'TP', initialsBg: 'bg-[#E2E2E5]', initialsText: 'text-[#43474F]', initialsWidth: 'w-[19px]' },
     priority: 'MEDIUM',
-    assignee: {
-      name: 'Siti Aminah',
-      avatarUrl: '/SitiAminah.png',
-    },
+    assignee: { name: 'Siti Aminah', avatarUrl: '/SitiAminah.png' },
     status: 'WAITING VERIFICATION',
     isOverdue: false,
   },
@@ -96,45 +78,56 @@ const DUMMY_TICKETS: Ticket[] = [
     lastUpdate: '3 hours ago',
     subject: 'Printer repair - Rectorate Building 2nd Floor',
     category: 'Category: Hardware / Peripherals',
-    requester: {
-      name: 'Laras Wati',
-      initials: 'LW',
-      initialsBg: 'bg-[#D5E3FF]',
-      initialsText: 'text-[#001B3C]',
-      initialsWidth: 'w-6',
-    },
+    requester: { name: 'Laras Wati', initials: 'LW', initialsBg: 'bg-[#D5E3FF]', initialsText: 'text-[#001B3C]', initialsWidth: 'w-6' },
     priority: 'LOW',
-    assignee: {
-      name: 'Bambang Heru',
-      avatarUrl: '/BambangHeru.png',
-    },
+    assignee: { name: 'Bambang Heru', avatarUrl: '/BambangHeru.png' },
     status: 'RESOLVED',
     isOverdue: false,
   },
 ];
 
-export default function TicketTableSection() {
+export default function TicketTableSection({ activeTab = 'all', newlyAddedTicket }: TicketTableSectionProps) {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
 
+  // --- Effect baru untuk menangkap dan menambahkan tiket ke tabel ---
+  useEffect(() => {
+    if (newlyAddedTicket) {
+      // Cek agar tidak duplikat saat re-render
+      const isExist = DUMMY_TICKETS.some(t => t.id === newlyAddedTicket.id);
+      if (!isExist) {
+        DUMMY_TICKETS.unshift(newlyAddedTicket); // Masukkan tiket baru di paling atas
+      }
+    }
+  }, [newlyAddedTicket]);
+
   // Pagination config
-  const totalItems = 248;
+  const totalItems = 244 + DUMMY_TICKETS.length; // Angka dinamis menyesuaikan data dummy
   const itemsPerPage = 4;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
   useEffect(() => {
-    // Simulate API Fetch
     const fetchTickets = async () => {
       setIsLoading(true);
       try {
-        // TODO: Replace with real API call
-        // const response = await fetch(`/api/tickets?page=${currentPage}`);
-        // const data = await response.json();
-        
-        // Simulating network delay
+        // Simulasi hit endpoint misal: `/api/tickets?page=${currentPage}&status=${activeTab}`
         setTimeout(() => {
-          setTickets(DUMMY_TICKETS);
+          let filteredData = DUMMY_TICKETS;
+          
+          // Memfilter data berdasarkan active tab 
+          if (activeTab !== 'all') {
+            const statusMap: Record<string, string> = {
+              'new': 'NEW',
+              'in_progress': 'IN PROGRESS',
+              'waiting_verification': 'WAITING VERIFICATION',
+              'resolved': 'RESOLVED',
+              'closed': 'CLOSED'
+            };
+            filteredData = DUMMY_TICKETS.filter(t => t.status === statusMap[activeTab]);
+          }
+
+          setTickets(filteredData);
           setIsLoading(false);
         }, 500);
       } catch (error) {
@@ -144,9 +137,9 @@ export default function TicketTableSection() {
     };
 
     fetchTickets();
-  }, [currentPage]);
+  }, [currentPage, activeTab, newlyAddedTicket]); // <--- Tambahkan newlyAddedTicket di dependency agar tabel re-render otomatis
 
-  // --- Helper Renderers ---
+  // ... (SISA KODE RENDER BADGE DAN KOMPONEN TABEL SAMA PERSIS SEPERTI SEBELUMNYA)
   const renderPriorityBadge = (priority: PriorityLevel) => {
     const styles = {
       CRITICAL: { bg: 'bg-[#FFDAD6]', text: 'text-[#93000A]' },
@@ -170,7 +163,8 @@ export default function TicketTableSection() {
       'IN PROGRESS': { bg: 'bg-[#D8E2FF]', text: 'text-[#001A41]' },
       'WAITING VERIFICATION': { bg: 'bg-[#E0E3E6]', text: 'text-[#43474A]' },
       'RESOLVED': { bg: 'bg-[#DCFCE7]', text: 'text-[#166534]' },
-    }[status];
+      'CLOSED': { bg: 'bg-[#E2E2E5]', text: 'text-[#43474F]' },
+    }[status] || { bg: 'bg-[#E2E2E5]', text: 'text-[#43474F]' };
 
     if (isOverdue) {
       return (
@@ -206,11 +200,10 @@ export default function TicketTableSection() {
   return (
     <div className="flex flex-col items-start rounded-lg border border-[#C3C6D1] bg-[#FFF] shadow-[01px2px0rgba(0,0,0,0.05)] w-full overflow-hidden">
       
-      {/* PERUBAHAN UTAMA: overflow-hidden diubah menjadi overflow-x-auto */}
       <div className="flex flex-col items-start -space-y-px w-full overflow-x-auto">
         
-        {/* Table Header: penambahan min-w-max agar konten memaksa melebar memunculkan scroll */}
-        <div className="flex justify-center items-start border-b border-b-[#C3C6D1] bg-[#F3F3F6] w-full min-w-max">
+        {/* Table Header */}
+        <div className="flex justify-start items-start border-b border-b-[#C3C6D1] bg-[#F3F3F6] w-full min-w-max">
           <div className="flex py-4 px-6 flex-col items-start w-[85px]">
             <p className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">NO. TIKET</p>
           </div>
@@ -234,17 +227,20 @@ export default function TicketTableSection() {
           </div>
         </div>
 
-        {/* Table Body: penambahan min-w-max agar konten tabel selaras dengan Header */}
         <div className="flex flex-col items-start -space-y-px w-full min-w-max">
           {isLoading ? (
             <div className="flex py-10 w-full justify-center">
               <p className="text-[#43474F] font-iBMPlexSans text-sm">Loading tickets...</p>
             </div>
+          ) : tickets.length === 0 ? (
+            <div className="flex py-10 w-full justify-center">
+              <p className="text-[#43474F] font-iBMPlexSans text-sm">Tidak ada tiket pada filter ini.</p>
+            </div>
           ) : (
             tickets.map((ticket, index) => (
               <div 
                 key={ticket.id} 
-                className={`flex justify-center items-center border-b border-b-[#C3C6D1] w-full ${index % 2 === 1 ? 'bg-[#F9F9FC]' : ''} ${index === 0 ? 'pr-6' : ''}`}
+                className={`flex justify-start items-center border-b border-b-[#C3C6D1] w-full ${index % 2 === 1 ? 'bg-[#F9F9FC]' : ''} ${index === 0 ? 'pr-6' : ''}`}
               >
                 {/* No. Tiket */}
                 <div className="flex pt-4 pr-6 pb-[17px] pl-6 flex-col items-start w-[85px]">

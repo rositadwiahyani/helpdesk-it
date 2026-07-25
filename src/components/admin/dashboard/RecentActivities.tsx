@@ -11,6 +11,7 @@ const activities = [
       </>
     ),
     time: "2 MENIT YANG LALU",
+    ticketId: "#TIC-4421",
   },
   {
     iconBox: "bg-blue-50 border-blue-100",
@@ -24,6 +25,7 @@ const activities = [
       </>
     ),
     time: "15 MENIT YANG LALU",
+    ticketId: "#TIC-4418",
   },
 ];
 
@@ -37,13 +39,19 @@ const topicRanks = [
 
 export default function RecentActivities() {
   return (
-    <section className="grid h-fit w-full grid-cols-3 gap-6">
+    // Tetap menggunakan grid gap-6, ditambah cols-1 utk mobile dan cols-3 utk layar besar
+    <section className="grid h-fit w-full grid-cols-1 lg:grid-cols-3 gap-6">
+      
       {/* Aktivitas Terkini */}
-      <article className="col-[1_/_3] flex flex-col gap-6 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+      <article className="col-span-full lg:col-[1_/_3] flex flex-col gap-6 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="text-base font-bold text-slate-900">Aktivitas Terkini (Audit Log)</h2>
         <div className="flex flex-col gap-6">
           {activities.map((activity, i) => (
-            <div key={i} className="flex items-start gap-4">
+            <div 
+              key={i} 
+              className="flex items-start gap-4 p-2 -mx-2 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer"
+              onClick={() => alert(`Menuju tiket ${activity.ticketId}`)}
+            >
               <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded border ${activity.iconBox}`}></span>
               <div className="flex flex-col gap-1">
                 <p className="text-sm">{activity.content}</p>
@@ -52,16 +60,27 @@ export default function RecentActivities() {
             </div>
           ))}
         </div>
+        {/* Tambahan fungsi tombol sesuai instruksi tanpa merusak elemen lain */}
+        <button 
+          onClick={() => alert("Menampilkan semua log aktivitas")}
+          className="mt-2 text-sm text-[#0059bb] font-bold self-start px-4 py-2 bg-blue-50/50 hover:bg-blue-100 rounded-md transition-colors"
+        >
+          Lihat Semua Log →
+        </button>
       </article>
 
       {/* Top Kategori Keluhan */}
-      <article className="col-[3_/_4] flex flex-col gap-6 rounded-lg border border-[#c3c6d1] bg-white p-6 shadow-sm">
+      <article className="col-span-full lg:col-[3_/_4] flex flex-col gap-6 rounded-lg border border-[#c3c6d1] bg-white p-6 shadow-sm">
         <h2 className="text-xl font-medium text-[#001e40]">Top Kategori Keluhan</h2>
         <ol className="flex flex-col gap-2">
           {topicRanks.map((topic, index) => {
             const isFirst = index === 0;
             return (
-              <li key={topic.name} className="flex items-center justify-between p-2">
+              <li 
+                key={topic.name} 
+                onClick={() => alert(`Filter list keluhan: ${topic.name}`)}
+                className="flex items-center justify-between p-2 -mx-2 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer"
+              >
                 <span className="flex items-center gap-3">
                   <span className={`flex h-7 w-7 items-center justify-center rounded ${isFirst ? "bg-[#001e40]" : "bg-[#e8e8ea]"}`}>
                     <span className={`text-[11px] font-bold ${isFirst ? "text-white" : "text-[#43474f]"}`}>{index + 1}</span>
@@ -74,6 +93,7 @@ export default function RecentActivities() {
           })}
         </ol>
       </article>
+
     </section>
   );
 }

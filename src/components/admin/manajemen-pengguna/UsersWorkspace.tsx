@@ -9,72 +9,63 @@ import UsersTableSection from './UsersTableSection';
 export interface UserItem {
   id: string;
   name: string;
-  phone: string;
-  role: 'MAHASISWA' | 'DOSEN' | 'STAF IT';
+  nimNip: string;
+  fakultasUnit: string;
   status: 'Aktif' | 'Terblokir';
   createdDate: string;
 }
 
-// Dummy Data Pelapor
 const INITIAL_USERS: UserItem[] = [
-  { id: '1', name: 'Indra', phone: '62812345678853', role: 'MAHASISWA', status: 'Aktif', createdDate: '21 Juli 2026' },
-  { id: '2', name: 'Budi', phone: '628992842', role: 'DOSEN', status: 'Aktif', createdDate: '20 Juli 2026' },
-  { id: '3', name: 'Irfan', phone: '62859043867340', role: 'STAF IT', status: 'Aktif', createdDate: '20 Juli 2026' },
-  { id: '4', name: 'Rey', phone: '628123456785234', role: 'MAHASISWA', status: 'Terblokir', createdDate: '19 Juli 2026' },
-  { id: '5', name: 'Siti Aminah', phone: '6281298765432', role: 'MAHASISWA', status: 'Aktif', createdDate: '18 Juli 2026' },
-  { id: '6', name: 'Dr. Agus', phone: '6281345678901', role: 'DOSEN', status: 'Aktif', createdDate: '17 Juli 2026' },
-  { id: '7', name: 'Rian Pratama', phone: '6285712345678', role: 'STAF IT', status: 'Aktif', createdDate: '16 Juli 2026' },
-  { id: '8', name: 'Dewi Lestari', phone: '6281809876543', role: 'MAHASISWA', status: 'Terblokir', createdDate: '15 Juli 2026' },
-  { id: '9', name: 'Eko Wijaya', phone: '6281233445566', role: 'MAHASISWA', status: 'Aktif', createdDate: '14 Juli 2026' },
-  { id: '10', name: 'Fajar Nugraha', phone: '6285677889900', role: 'STAF IT', status: 'Aktif', createdDate: '13 Juli 2026' },
-  { id: '11', name: 'Gita Gutawa', phone: '6281900112233', role: 'MAHASISWA', status: 'Aktif', createdDate: '12 Juli 2026' },
-  { id: '12', name: 'Hendra Setiawan', phone: '6281223344556', role: 'DOSEN', status: 'Terblokir', createdDate: '11 Juli 2026' },
+  { id: '1', name: 'Indra', nimNip: '2401992019', fakultasUnit: 'Fakultas Teknik', status: 'Aktif', createdDate: '21 Juli 2026' },
+  { id: '2', name: 'Budi', nimNip: '1982039201', fakultasUnit: 'Fakultas Hukum', status: 'Aktif', createdDate: '20 Juli 2026' },
+  { id: '3', name: 'Irfan', nimNip: '1970102001', fakultasUnit: 'UPT TI', status: 'Aktif', createdDate: '20 Juli 2026' },
+  { id: '4', name: 'Rey', nimNip: '2401993022', fakultasUnit: 'Fakultas Kedokteran', status: 'Terblokir', createdDate: '19 Juli 2026' },
+  { id: '5', name: 'Siti Aminah', nimNip: '2401998822', fakultasUnit: 'Fakultas Ilmu Komputer', status: 'Aktif', createdDate: '18 Juli 2026' },
 ];
 
 export default function UserWorkspace() {
-  const [users] = useState<UserItem[]>(INITIAL_USERS);
+  const [users, setUsers] = useState<UserItem[]>(INITIAL_USERS);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedRole, setSelectedRole] = useState<string>('ALL');
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<UserItem | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    nimNip: '',
+    fakultasUnit: '',
+    status: 'Aktif' as 'Aktif' | 'Terblokir'
+  });
+
   const itemsPerPage = 4;
 
-  // Logic Pencarian & Filtering
   const filteredUsers = useMemo(() => {
     return users.filter((user) => {
       const matchesSearch =
         user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.phone.includes(searchQuery);
-      const matchesRole = selectedRole === 'ALL' || user.role === selectedRole;
+        user.nimNip.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesStatus = selectedStatus === 'ALL' || user.status === selectedStatus;
-      return matchesSearch && matchesRole && matchesStatus;
+      return matchesSearch && matchesStatus;
     });
-  }, [users, searchQuery, selectedRole, selectedStatus]);
+  }, [users, searchQuery, selectedStatus]);
 
-  // Logic Pagination
   const totalItems = filteredUsers.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
-
   const paginatedUsers = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     return filteredUsers.slice(startIndex, startIndex + itemsPerPage);
   }, [filteredUsers, currentPage, itemsPerPage]);
 
-  // Handler Seleksi Checkbox Single Row
   const handleSelectUser = useCallback((id: string) => {
-    setSelectedUserIds((prev) =>
-      prev.includes(id) ? prev.filter((userId) => userId !== id) : [...prev, id]
-    );
+    setSelectedUserIds((prev) => prev.includes(id) ? prev.filter((userId) => userId !== id) : [...prev, id]);
   }, []);
 
-  // Handler Seleksi Checkbox Select All
   const handleSelectAll = useCallback(() => {
     const currentPageIds = paginatedUsers.map((u) => u.id);
     const isAllCurrentSelected = currentPageIds.every((id) => selectedUserIds.includes(id));
-
     if (isAllCurrentSelected) {
       setSelectedUserIds((prev) => prev.filter((id) => !currentPageIds.includes(id)));
     } else {
@@ -82,25 +73,42 @@ export default function UserWorkspace() {
     }
   }, [paginatedUsers, selectedUserIds]);
 
-  // Action Per User
-  const handleUserAction = useCallback((user: UserItem) => {
-    alert(`Aksi untuk pengguna: ${user.name} (${user.phone})`);
+  const handleAddClick = useCallback(() => {
+    setEditingUser(null);
+    setFormData({ name: '', nimNip: '', fakultasUnit: '', status: 'Aktif' });
+    setIsModalOpen(true);
   }, []);
 
-  // Handler Toolbar
-  const handleFilterToggle = useCallback(() => {
-    alert('Filter dialog/popover dapat dihubungkan di sini.');
+  const handleEditClick = useCallback((user: UserItem) => {
+    setEditingUser(user);
+    setFormData({ name: user.name, nimNip: user.nimNip, fakultasUnit: user.fakultasUnit, status: user.status });
+    setIsModalOpen(true);
   }, []);
 
-  const handleExport = useCallback(() => {
-    alert('Mengekspor data pelapor...');
+  const handleDeleteClick = useCallback((id: string) => {
+    if (confirm('Apakah Anda yakin ingin menghapus pelapor ini?')) {
+      setUsers((prev) => prev.filter(u => u.id !== id));
+    }
   }, []);
 
-  const handleAddPelapor = useCallback(() => {
-    alert('Buka form Tambah Pelapor');
-  }, []);
+  const handleSaveForm = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingUser) {
+      setUsers(users.map((u) => u.id === editingUser.id ? { ...u, ...formData } : u));
+    } else {
+      const newUser: UserItem = {
+        id: Date.now().toString(),
+        name: formData.name,
+        nimNip: formData.nimNip,
+        fakultasUnit: formData.fakultasUnit,
+        status: formData.status,
+        createdDate: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }),
+      };
+      setUsers([newUser, ...users]);
+    }
+    setIsModalOpen(false);
+  };
 
-  // Statistik Ringkasan Data
   const stats = useMemo(() => {
     return {
       total: users.length,
@@ -110,22 +118,15 @@ export default function UserWorkspace() {
   }, [users]);
 
   return (
-    <div className="flex flex-col items-start gap-6 w-full p-6 bg-[#F9FAFB] min-h-screen">
+    <div className="flex flex-col items-start gap-6 w-full p-6 bg-[#F9FAFB] min-h-screen relative">
       <UsersHeader />
-      <UsersStatistics
-        totalUsers={stats.total}
-        activeUsers={stats.active}
-        blockedUsers={stats.blocked}
-      />
+      <UsersStatistics totalUsers={stats.total} activeUsers={stats.active} blockedUsers={stats.blocked} />
       <UsersToolbar
         searchQuery={searchQuery}
-        onSearchChange={(query) => {
-          setSearchQuery(query);
-          setCurrentPage(1);
-        }}
-        onFilterClick={handleFilterToggle}
-        onExportClick={handleExport}
-        onAddClick={handleAddPelapor}
+        onSearchChange={(query) => { setSearchQuery(query); setCurrentPage(1); }}
+        onFilterClick={() => alert('Filter Popover Action')}
+        onExportClick={() => alert('Exporting...')}
+        onAddClick={handleAddClick}
       />
       <UsersTableSection
         users={paginatedUsers}
@@ -138,8 +139,49 @@ export default function UserWorkspace() {
         onSelectUser={handleSelectUser}
         onSelectAll={handleSelectAll}
         onPageChange={setCurrentPage}
-        onUserAction={handleUserAction}
+        onEditUser={handleEditClick}
+        onDeleteUser={handleDeleteClick}
       />
+
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+              <h3 className="text-lg font-bold text-[#001E40] font-iBMPlexSans">
+                {editingUser ? 'Edit Data Pelapor' : 'Tambah Pelapor Baru'}
+              </h3>
+              <button onClick={() => setIsModalOpen(false)} className="text-gray-500 hover:text-black">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+              </button>
+            </div>
+            <form onSubmit={handleSaveForm} className="p-6 flex flex-col gap-4">
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-semibold text-gray-700 font-iBMPlexSans">Nama Lengkap</label>
+                <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="border border-gray-300 rounded p-2 text-sm focus:outline-none focus:border-[#0059BB]" placeholder="Masukkan nama..." />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-semibold text-gray-700 font-iBMPlexSans">NIM / NIP</label>
+                <input required type="text" value={formData.nimNip} onChange={e => setFormData({...formData, nimNip: e.target.value})} className="border border-gray-300 rounded p-2 text-sm focus:outline-none focus:border-[#0059BB]" placeholder="Masukkan NIM / NIP..." />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-semibold text-gray-700 font-iBMPlexSans">Fakultas / Unit Kerja</label>
+                <input required type="text" value={formData.fakultasUnit} onChange={e => setFormData({...formData, fakultasUnit: e.target.value})} className="border border-gray-300 rounded p-2 text-sm focus:outline-none focus:border-[#0059BB]" placeholder="Cth: Fakultas Teknik / UPT TI" />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-semibold text-gray-700 font-iBMPlexSans">Status</label>
+                <select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value as 'Aktif'|'Terblokir'})} className="border border-gray-300 rounded p-2 text-sm focus:outline-none focus:border-[#0059BB]">
+                  <option value="Aktif">Aktif</option>
+                  <option value="Terblokir">Terblokir</option>
+                </select>
+              </div>
+              <div className="mt-4 flex justify-end gap-3">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 font-iBMPlexSans text-sm">Batal</button>
+                <button type="submit" className="px-4 py-2 bg-[#0059BB] text-white rounded hover:bg-[#004795] font-iBMPlexSans text-sm">Simpan</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

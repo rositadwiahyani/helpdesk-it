@@ -32,7 +32,6 @@ export default function ReportsToolbar({
 
   const [isExporting, setIsExporting] = useState(false);
 
-  // Menentukan state yang aktif (dari prop vs lokal)
   const activeFromDate = fromDate !== undefined ? fromDate : localFromDate;
   const activeSetFromDate = setFromDate || setLocalFromDate;
 
@@ -42,12 +41,10 @@ export default function ReportsToolbar({
   const activeStatus = status !== undefined ? status : localStatus;
   const activeSetStatus = setStatus || setLocalStatus;
 
-  // Handler ekspor data
   const handleExport = () => {
     if (isExporting) return;
     setIsExporting(true);
     
-    // Simulasi loading ekspor API
     setTimeout(() => {
       setIsExporting(false);
       if (onExport) {
@@ -84,8 +81,12 @@ export default function ReportsToolbar({
           </p>
         </div>
       </div>
+      
+      {/* Wrapper scroll dihapus, w-full dikembalikan murni agar merentang penuh 100% tanpa batas minimal */}
       <div className="flex p-6 flex-col items-start gap-6 w-full">
-        <div className="flex justify-center items-start gap-6 w-full">
+        
+        {/* flex-col md:flex-row agar input tanggal tumpuk vertikal di layar mobile, sejajar di layar besar */}
+        <div className="flex flex-col md:flex-row justify-center items-start gap-6 w-full">
           <div className="flex flex-col items-start gap-2 w-full">
             <div className="flex flex-col items-start w-full">
               <p className="text-[#1A1C1E] font-iBMPlexSans text-base leading-6 w-full tracking-[0.05em]">
@@ -103,21 +104,11 @@ export default function ReportsToolbar({
                         </p>
                       ) : (
                         <>
-                          <p className="text-[#1A1C1E] font-iBMPlexSans text-base leading-6 w-fit">
-                            mm
-                          </p>
-                          <p className="text-[#1A1C1E] font-iBMPlexSans text-base leading-6 w-fit">
-                            &#x2F;
-                          </p>
-                          <p className="text-[#1A1C1E] font-iBMPlexSans text-base leading-6 w-fit">
-                            dd
-                          </p>
-                          <p className="text-[#1A1C1E] font-iBMPlexSans text-base leading-6 w-fit">
-                            &#x2F;
-                          </p>
-                          <p className="text-[#1A1C1E] font-iBMPlexSans text-base leading-6 w-fit">
-                            yyyy
-                          </p>
+                          <p className="text-[#1A1C1E] font-iBMPlexSans text-base leading-6 w-fit">mm</p>
+                          <p className="text-[#1A1C1E] font-iBMPlexSans text-base leading-6 w-fit">&#x2F;</p>
+                          <p className="text-[#1A1C1E] font-iBMPlexSans text-base leading-6 w-fit">dd</p>
+                          <p className="text-[#1A1C1E] font-iBMPlexSans text-base leading-6 w-fit">&#x2F;</p>
+                          <p className="text-[#1A1C1E] font-iBMPlexSans text-base leading-6 w-fit">yyyy</p>
                         </>
                       )}
                     </div>
@@ -170,21 +161,11 @@ export default function ReportsToolbar({
                         </p>
                       ) : (
                         <>
-                          <p className="text-[#1A1C1E] font-iBMPlexSans text-base leading-6 w-fit">
-                            mm
-                          </p>
-                          <p className="text-[#1A1C1E] font-iBMPlexSans text-base leading-6 w-fit">
-                            &#x2F;
-                          </p>
-                          <p className="text-[#1A1C1E] font-iBMPlexSans text-base leading-6 w-fit">
-                            dd
-                          </p>
-                          <p className="text-[#1A1C1E] font-iBMPlexSans text-base leading-6 w-fit">
-                            &#x2F;
-                          </p>
-                          <p className="text-[#1A1C1E] font-iBMPlexSans text-base leading-6 w-fit">
-                            yyyy
-                          </p>
+                          <p className="text-[#1A1C1E] font-iBMPlexSans text-base leading-6 w-fit">mm</p>
+                          <p className="text-[#1A1C1E] font-iBMPlexSans text-base leading-6 w-fit">&#x2F;</p>
+                          <p className="text-[#1A1C1E] font-iBMPlexSans text-base leading-6 w-fit">dd</p>
+                          <p className="text-[#1A1C1E] font-iBMPlexSans text-base leading-6 w-fit">&#x2F;</p>
+                          <p className="text-[#1A1C1E] font-iBMPlexSans text-base leading-6 w-fit">yyyy</p>
                         </>
                       )}
                     </div>
@@ -221,6 +202,7 @@ export default function ReportsToolbar({
             </div>
           </div>
         </div>
+
         <div className="flex flex-col items-start gap-2 w-full">
           <div className="flex flex-col items-start w-full">
             <p className="text-[#1A1C1E] font-iBMPlexSans text-base leading-6 w-full tracking-[0.05em]">
@@ -228,7 +210,8 @@ export default function ReportsToolbar({
             </p>
           </div>
           <div className="flex p-3 justify-center items-center rounded border border-[#C3C6D1] bg-[#FFF] w-full relative">
-            <div className="flex pt-[13px] pr-[17px] pb-[13px] flex justify-between items-center flex-col justify-center items-start absolute flex justify-between items-center overflow-hidden">
+            
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none flex items-center justify-center overflow-hidden">
               <svg
                 width="24"
                 height="24"
@@ -246,6 +229,7 @@ export default function ReportsToolbar({
                 />
               </svg>
             </div>
+
             <div className="flex flex-col items-start w-full">
               <p className="text-[#1A1C1E] font-iBMPlexSans text-base leading-6 w-full">
                 {activeStatus || "Semua Status"}
@@ -264,14 +248,16 @@ export default function ReportsToolbar({
             </select>
           </div>
         </div>
+
         <div className="flex p-4 items-start gap-4 border-l-4 border-l-[#001E40] bg-[rgba(213,227,255,0.30)] w-full">
+          
           <svg
             width="20"
             height="71"
             viewBox="0 0 20 71"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
-            className="flex flex-col items-start w-fit h-full "
+            className="flex flex-col items-start shrink-0 w-fit h-full "
           >
             <path
               d="M9 15H11V9H9V15ZM10 7C10.2833 7 10.5208 6.90417 10.7125 6.7125C10.9042 6.52083 11 6.28333 11 6C11 5.71667 10.9042 5.47917 10.7125 5.2875C10.5208 5.09583 10.2833 5 10 5C9.71667 5 9.47917 5.09583 9.2875 5.2875C9.09583 5.47917 9 5.71667 9 6C9 6.28333 9.09583 6.52083 9.2875 6.7125C9.47917 6.90417 9.71667 7 10 7ZM10 20C8.61667 20 7.31667 19.7375 6.1 19.2125C4.88333 18.6875 3.825 17.975 2.925 17.075C2.025 16.175 1.3125 15.1167 0.7875 13.9C0.2625 12.6833 0 11.3833 0 10C0 8.61667 0.2625 7.31667 0.7875 6.1C1.3125 4.88333 2.025 3.825 2.925 2.925C3.825 2.025 4.88333 1.3125 6.1 0.7875C7.31667 0.2625 8.61667 0 10 0C11.3833 0 12.6833 0.2625 13.9 0.7875C15.1167 1.3125 16.175 2.025 17.075 2.925C17.975 3.825 18.6875 4.88333 19.2125 6.1C19.7375 7.31667 20 8.61667 20 10C20 11.3833 19.7375 12.6833 19.2125 13.9C18.6875 15.1167 17.975 16.175 17.075 17.075C16.175 17.975 15.1167 18.6875 13.9 19.2125C12.6833 19.7375 11.3833 20 10 20Z"
@@ -303,7 +289,8 @@ export default function ReportsToolbar({
               opacity: isExporting ? 0.7 : 1 
             }}
           >
-            <div className="absolute -right-0 rounded bg-[rgba(255,255,255,0.00)] shadow-[04px6px-1pxrgba(0,0,0,0.10),02px4px-2pxrgba(0,0,0,0.10)] w-[263px] h-14"></div>
+            <div className="absolute inset-0 rounded bg-[rgba(255,255,255,0.00)] shadow-[04px6px-1pxrgba(0,0,0,0.10),02px4px-2pxrgba(0,0,0,0.10)] w-full h-full"></div>
+            
             <svg
               width="16"
               height="16"
