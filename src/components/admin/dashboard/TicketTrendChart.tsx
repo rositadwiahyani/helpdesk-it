@@ -1,3 +1,5 @@
+"use client";
+
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Cell } from "recharts";
 
 const data = [
