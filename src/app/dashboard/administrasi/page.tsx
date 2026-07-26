@@ -4,44 +4,61 @@ import DepartmentPerformanceTable from "@/components/admin/dashboard/DepartmentP
 import RecentTicketActivityTable from "@/components/admin/dashboard/RecentTicketActivityTable";
 import SlaHealth from "@/components/admin/dashboard/SlaHealth";
 import TopHelpTopicsPieChart from "@/components/admin/dashboard/TopHelpTopicsPieChart";
-import MostBusyDepartments from "@/components/admin/dashboard/MostBusyDepartments";
-import SystemAuditLog from "@/components/admin/dashboard/SystemAuditLog";
 import QuickActions from "@/components/admin/dashboard/QuickActions";
+import { fetchServer } from "@/lib/apiServer";
 
-export default function DashboardAdministrasiPage() {
+export default async function AdministrasiDashboard() {
+  let dashboardData: any = {};
+  
+  try {
+    dashboardData = await fetchServer('/admin/dashboard');
+  } catch (error) {
+    console.error("Gagal mengambil data dashboard administrasi:", error);
+    // Kita bisa mengatur state error atau menampilkan toast, tapi untuk SSR kita lewati sementara
+  }
+
   return (
-    <div className="flex flex-col gap-6 w-full mx-auto animate-in fade-in slide-in-from-bottom-2 duration-300">
-      
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Dashboard Overview</h1>
-          <p className="text-sm font-medium text-slate-500 mt-1">Real-time metrics and system health for UNDIP IT Support.</p>
+    <div className="flex flex-col items-start gap-6 w-full max-w-[1440px] mx-auto pb-10">
+      {/* Page Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end w-full gap-4">
+        <div className="flex flex-col items-start gap-1">
+          <h1 className="text-slate-900 font-extrabold text-2xl tracking-tight">Dashboard Overview</h1>
+          <p className="text-slate-500 font-medium text-sm">Welcome back, Administrator. Here's what's happening today.</p>
         </div>
       </div>
 
-      {/* 1. Summary Cards */}
-      <SummaryCards />
+      {/* Row 1: Summary Cards */}
+      <div className="w-full">
+        <SummaryCards data={dashboardData.summary} />
+      </div>
 
-      {/* 2. Main Content Grid (Left & Right Columns) */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      {/* Main Grid: 2 Columns */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
         
-        {/* Left Column (2/3 width) */}
-        <div className="xl:col-span-2 flex flex-col gap-6">
-          <TicketTrendChart />
-          <DepartmentPerformanceTable />
-          <RecentTicketActivityTable />
+        {/* Left Column (Wider - spans 2 cols on large screens) */}
+        <div className="lg:col-span-2 flex flex-col gap-6 w-full">
+          {/* Ticket Trend Chart */}
+          <TicketTrendChart data={dashboardData.ticketTrend} />
+          
+          {/* Department Performance Table */}
+          <DepartmentPerformanceTable data={dashboardData.departments} />
+          
+          {/* Recent Ticket Activity */}
+          <RecentTicketActivityTable data={dashboardData.recentLogs} />
         </div>
 
-        {/* Right Column (1/3 width) */}
-        <div className="xl:col-span-1 flex flex-col gap-6">
-          <TopHelpTopicsPieChart />
+        {/* Right Column (Narrower - spans 1 col) */}
+        <div className="flex flex-col gap-6 w-full">
+          {/* Top Help Topics (Moved to top of right column) */}
+          <TopHelpTopicsPieChart data={dashboardData.categories} />
+          
+          {/* Quick Actions (Moved below Pie Chart) */}
           <QuickActions />
-          <MostBusyDepartments />
-          <SystemAuditLog />
-          <SlaHealth />
+
+          {/* SLA Health (Moved to bottom of right column) */}
+          <SlaHealth data={dashboardData.slaHealth} />
         </div>
-        
+
       </div>
     </div>
   );

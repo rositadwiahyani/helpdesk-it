@@ -2,17 +2,13 @@
 
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
-const data = [
-  { name: 'Reset Password SSO', value: 45 },
-  { name: 'Koneksi WIFI Eduroam', value: 32 },
-  { name: 'Akses Email Undip', value: 28 },
-  { name: 'Kendala SIAP', value: 18 },
-  { name: 'Lainnya', value: 24 },
-];
+interface TopHelpTopicsPieChartProps {
+  data?: { name: string; value: number; fill?: string }[];
+}
 
-const COLORS = ['#0369a1', '#0ea5e9', '#38bdf8', '#7dd3fc', '#e0f2fe'];
+const DEFAULT_COLORS = ['#0369a1', '#0ea5e9', '#38bdf8', '#7dd3fc', '#e0f2fe'];
 
-export default function TopHelpTopicsPieChart() {
+export default function TopHelpTopicsPieChart({ data = [] }: TopHelpTopicsPieChartProps) {
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col h-[350px]">
       <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Top Help Topics</h3>
@@ -30,7 +26,7 @@ export default function TopHelpTopicsPieChart() {
               dataKey="value"
             >
               {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                <Cell key={`cell-${index}`} fill={entry.fill || DEFAULT_COLORS[index % DEFAULT_COLORS.length]} />
               ))}
             </Pie>
             <Tooltip 

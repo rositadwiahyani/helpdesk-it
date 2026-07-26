@@ -2,17 +2,11 @@
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Cell } from "recharts";
 
-const data = [
-  { name: "Mon", value: 20 },
-  { name: "Tue", value: 31 },
-  { name: "Wed", value: 47, active: true },
-  { name: "Thu", value: 14 },
-  { name: "Fri", value: 26 },
-  { name: "Sat", value: 8 },
-  { name: "Sun", value: 4 },
-];
+interface TicketTrendChartProps {
+  data?: { name: string; value: number; active?: boolean }[];
+}
 
-export default function TicketTrendChart() {
+export default function TicketTrendChart({ data = [] }: TicketTrendChartProps) {
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
       <div className="flex justify-between items-center mb-6">

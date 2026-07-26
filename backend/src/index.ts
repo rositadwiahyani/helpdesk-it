@@ -6,6 +6,7 @@ import authRoutes from './routes/auth.routes';
 import ticketRoutes from './routes/ticket.routes';
 import metadataRoutes from './routes/metadata.routes';
 import operatorRoutes from './routes/operator.routes';
+import adminRoutes from './routes/admin.routes';
 
 const app = express();
 

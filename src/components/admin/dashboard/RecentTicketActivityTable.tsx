@@ -1,12 +1,8 @@
-const activities = [
-  { id: "TKT-4422", status: "Open", message: "Ticket baru dibuat: Gagal login ke SSO", time: "5 mins ago", iconColor: "bg-blue-100 text-blue-600" },
-  { id: "TKT-4418", status: "Resolved", message: "Status diubah menjadi Resolved oleh Budi Santoso", time: "15 mins ago", iconColor: "bg-emerald-100 text-emerald-600" },
-  { id: "TKT-4420", status: "Message", message: "Balasan baru dari user: 'Terima kasih, sudah bisa.'", time: "22 mins ago", iconColor: "bg-slate-100 text-slate-600" },
-  { id: "TKT-4421", status: "Assigned", message: "Ditetapkan kepada Network Team", time: "45 mins ago", iconColor: "bg-indigo-100 text-indigo-600" },
-  { id: "TKT-4390", status: "Overdue", message: "SLA terlampaui untuk penanganan pertama", time: "1 hour ago", iconColor: "bg-red-100 text-red-600" },
-];
+interface RecentTicketActivityTableProps {
+  data?: { id: string; ticketNum: string; status?: string; message: string; time: string; iconColor?: string }[];
+}
 
-export default function RecentTicketActivityTable() {
+export default function RecentTicketActivityTable({ data = [] }: RecentTicketActivityTableProps) {
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
       <div className="flex justify-between items-center p-6 border-b border-slate-100">
@@ -26,18 +22,33 @@ export default function RecentTicketActivityTable() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {activities.map((act, index) => (
-              <tr key={index} className="hover:bg-slate-50/50 transition-colors">
-                <td className="px-6 py-4 font-bold text-slate-900">{act.id}</td>
-                <td className="px-6 py-4">
-                  <span className={`inline-flex items-center justify-center px-2.5 py-1 rounded-md text-xs font-semibold ${act.iconColor}`}>
-                    {act.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-slate-600 text-sm leading-relaxed">{act.message}</td>
-                <td className="px-6 py-4 text-right text-xs text-slate-500 font-medium whitespace-nowrap">{act.time}</td>
+            {data.length === 0 ? (
+              <tr>
+                <td colSpan={4} className="p-4 text-center text-slate-500 text-sm">Belum ada aktivitas.</td>
               </tr>
-            ))}
+            ) : (
+              data.map((activity, index) => (
+                <tr key={index} className="hover:bg-slate-50/50 transition-colors">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${activity.iconColor || 'bg-slate-100 text-slate-600'}`}>
+                        {activity.ticketNum.replace(/[^0-9]/g, '').substring(0, 2) || "T"}
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-blue-600">{activity.ticketNum}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={`inline-flex items-center justify-center px-2.5 py-1 rounded-md text-xs font-semibold ${activity.iconColor}`}>
+                      {activity.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-slate-600 text-sm leading-relaxed">{activity.message}</td>
+                  <td className="px-6 py-4 text-right text-xs text-slate-500 font-medium whitespace-nowrap">{activity.time}</td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
