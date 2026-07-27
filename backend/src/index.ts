@@ -4,6 +4,7 @@ dotenv.config();
 import express from 'express';
 import authRoutes from './routes/auth.routes';
 import ticketRoutes from './routes/ticket.routes';
+import webhookRoutes from './routes/webhook.routes';
 
 const app = express();
 
@@ -21,6 +22,7 @@ app.use((req, res, next) => {
 app.use(express.json());
 
 // Registrasi Routes
+app.use('/webhook', webhookRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/admin/tickets', ticketRoutes);
 
