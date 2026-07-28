@@ -12,7 +12,10 @@ export default async function AdministrasiDashboard() {
   
   try {
     dashboardData = await fetchServer('/admin/dashboard');
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.digest?.startsWith('NEXT_REDIRECT')) {
+      throw error;
+    }
     console.error("Gagal mengambil data dashboard administrasi:", error);
     // Kita bisa mengatur state error atau menampilkan toast, tapi untuk SSR kita lewati sementara
   }

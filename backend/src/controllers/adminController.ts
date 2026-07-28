@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { supabase } from '../config/supabaseClient';
+import { supabase } from '../config/supabase';
 
 export const getAdminDashboard = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -33,25 +33,7 @@ export const getAdminDashboard = async (req: Request, res: Response): Promise<vo
       growth = 100;
     }
 
-    // 2. Open Tickets (NEW or IN PROGRESS)
-    const { count: openTickets, error: errOpen } = await supabase
-      .from('tickets')
-      .select('*', { count: 'exact', head: true })
-      .in('status', ['NEW', 'IN PROGRESS']);
-
-    // 3. Overdue SLA
-    const { count: overdueSla, error: errOverdue } = await supabase
-      .from('tickets')
-      .select('*', { count: 'exact', head: true })
-      .lt('sla_due', nowIso)
-      .not('status', 'in', '("RESOLVED","CLOSED")'); // Use standard not in if needed, or or()
-
-    // Since .not.in can be tricky in JS client, let's use or()
-    const { count: overdueSlaAlt, error: errOverdueAlt } = await supabase
-      .from('tickets')
-      .select('*', { count: 'exact', head: true })
-      .lt('sla_due', nowIso)
-      .in('status', ['NEW', 'IN PROGRESS', 'WAITING VERIFICATION']);
+    // 2 & 3. Open Tickets & Overdue SLA will be computed from allTickets later
 
     // 4. Failed Messages / Webhooks (Mocked for now since table doesn't exist)
     const failedMessages = Math.floor(Math.random() * 5); // 0-4
@@ -71,13 +53,19 @@ export const getAdminDashboard = async (req: Request, res: Response): Promise<vo
       .from('tickets')
       .select('category_id, dept_id, status, sla_due');
       
-    const { data: categories } = await supabase.from('categories').select('id, name, color');
-    const { data: departments } = await supabase.from('departments').select('id, name');
-
+    // Remove color from select, since it might not exist in the DB schema
+    const { data: categories, error: errCats } = await supabase.from('categories').select('id, name');
+    const { data: departments, error: errDepts } = await supabase.from('departments').select('id, name');
+    
     let categoryStats: any[] = [];
     let deptStats: any[] = [];
     let slaStats = { within: 0, near: 0, overdue: 0 };
+    let totalOpen = 0;
+    let totalOverdue = 0;
     
+    // Fallback colors for categories
+    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#6366f1'];
+
     // Aggregate in JS
     if (allTickets && categories && departments) {
       // Categories
@@ -86,10 +74,10 @@ export const getAdminDashboard = async (req: Request, res: Response): Promise<vo
         return acc;
       }, {});
       
-      categoryStats = categories.map(c => ({
+      categoryStats = categories.map((c: any, index: number) => ({
         name: c.name,
         value: catCount[c.id] || 0,
-        fill: c.color || '#cccccc'
+        fill: c.color || colors[index % colors.length]
       })).filter(c => c.value > 0).sort((a, b) => b.value - a.value).slice(0, 5); // Top 5
       
       // Departments
@@ -99,22 +87,31 @@ export const getAdminDashboard = async (req: Request, res: Response): Promise<vo
       });
       
       allTickets.forEach(t => {
+        const stat = (t.status || '').toUpperCase();
+        const isOpen = !['RESOLVED', 'CLOSED', 'DONE'].includes(stat);
+        const isClosed = !isOpen;
+
+        if (isOpen) totalOpen++;
+
         if (deptData[t.dept_id]) {
           const d = deptData[t.dept_id];
           d.total++;
-          if (['NEW', 'IN PROGRESS', 'WAITING VERIFICATION'].includes(t.status)) d.open++;
-          if (['RESOLVED', 'CLOSED'].includes(t.status)) d.closed++;
-          if (t.sla_due && new Date(t.sla_due) < new Date() && ['NEW', 'IN PROGRESS', 'WAITING VERIFICATION'].includes(t.status)) d.overdue++;
+          if (isOpen) d.open++;
+          if (isClosed) d.closed++;
+          if (t.sla_due && new Date(t.sla_due) < new Date() && isOpen) d.overdue++;
         }
         
         // SLA Stats
-        if (['NEW', 'IN PROGRESS', 'WAITING VERIFICATION'].includes(t.status)) {
+        if (isOpen) {
           if (t.sla_due) {
             const due = new Date(t.sla_due).getTime();
             const now = new Date().getTime();
             const diffHours = (due - now) / (1000 * 60 * 60);
             
-            if (diffHours < 0) slaStats.overdue++;
+            if (diffHours < 0) {
+                slaStats.overdue++;
+                totalOverdue++;
+            }
             else if (diffHours < 24) slaStats.near++;
             else slaStats.within++;
           }
@@ -124,20 +121,20 @@ export const getAdminDashboard = async (req: Request, res: Response): Promise<vo
       deptStats = Object.values(deptData).filter((d: any) => d.total > 0).sort((a: any, b: any) => b.total - a.total);
     }
     
-    // Ticket Trends (Last 7 days)
+    // Ticket Trends (Last 30 days)
     const trendData = [];
-    for(let i=6; i>=0; i--) {
+    for(let i=29; i>=0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
       trendData.push({ name: d.toLocaleDateString('id-ID', {day: 'numeric', month: 'short'}), value: 0 });
     }
     
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     const { data: trendTickets } = await supabase
       .from('tickets')
       .select('created_at')
-      .gte('created_at', sevenDaysAgo.toISOString());
+      .gte('created_at', thirtyDaysAgo.toISOString());
       
     if (trendTickets) {
       trendTickets.forEach(t => {
@@ -151,17 +148,33 @@ export const getAdminDashboard = async (req: Request, res: Response): Promise<vo
       summary: {
         today: ticketsToday || 0,
         growth: growth.toFixed(1),
-        open: openTickets || 0,
-        overdue: overdueSlaAlt || 0,
+        open: totalOpen,
+        overdue: totalOverdue,
         failedMessages
       },
-      recentLogs: recentLogs?.map(l => ({
-        id: l.id,
-        ticketNum: l.tickets?.ticket_num || '-',
-        action: l.action,
-        message: l.notes,
-        time: l.created_at
-      })) || [],
+      recentLogs: recentLogs?.map(l => {
+        let status = 'Update';
+        let iconColor = 'bg-slate-100 text-slate-600';
+        if (l.action === 'TICKET_CREATED') {
+            status = 'New Ticket';
+            iconColor = 'bg-blue-100 text-blue-600';
+        } else if (l.action === 'STATUS_CHANGED') {
+            status = 'Status Change';
+            iconColor = 'bg-amber-100 text-amber-600';
+        } else if (l.action === 'RESOLVED' || l.action === 'CLOSED') {
+            status = 'Closed';
+            iconColor = 'bg-emerald-100 text-emerald-600';
+        }
+
+        return {
+          id: l.id,
+          ticketNum: l.tickets?.ticket_num || 'Unknown',
+          status,
+          iconColor,
+          message: l.notes || l.action,
+          time: new Date(l.created_at).toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+        };
+      }) || [],
       categories: categoryStats,
       departments: deptStats,
       slaHealth: [

@@ -31,9 +31,6 @@ export default function RecentTicketActivityTable({ data = [] }: RecentTicketAct
                 <tr key={index} className="hover:bg-slate-50/50 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${activity.iconColor || 'bg-slate-100 text-slate-600'}`}>
-                        {activity.ticketNum.replace(/[^0-9]/g, '').substring(0, 2) || "T"}
-                      </div>
                       <div>
                         <p className="text-sm font-semibold text-blue-600">{activity.ticketNum}</p>
                       </div>

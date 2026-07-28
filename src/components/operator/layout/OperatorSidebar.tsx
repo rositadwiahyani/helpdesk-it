@@ -35,8 +35,10 @@ export default function OperatorSidebar({ isOpen, setIsOpen }: OperatorSidebarPr
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-72 bg-[#0B1B2E] flex flex-col transition-transform duration-300 ease-[var(--ease)] lg:translate-x-0 ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
+        className={`fixed inset-y-0 left-0 z-50 w-72 bg-[#0B1B2E] flex flex-col transition-transform duration-300 ease-[var(--ease)] ${
+          pathname.includes('/tickets') || pathname.includes('/tickets-rejected')
+            ? (isOpen ? 'translate-x-0' : '-translate-x-full')
+            : 'lg:translate-x-0 ' + (isOpen ? 'translate-x-0' : '-translate-x-full')
         }`}
       >
         {/* Header / Logo Area Sidebar */}

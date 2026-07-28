@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import SettingsHeader from "./SettingsHeader";
 import SettingsFormSections from "./SettingsFormSections";
+import { supabase } from "@/lib/supabase";
 
 // Mendefinisikan tipe data state agar sesuai dengan keseluruhan komponen anak
 export interface SettingsData {
@@ -26,17 +27,40 @@ export default function SettingsWorkspace() {
   };
 
   const [settingsData, setSettingsData] = useState<SettingsData>(initialSettings);
+  const [loading, setLoading] = useState(true);
 
-  const handleSave = () => {
-    // Simulasi logic backend
-    console.log("Menyimpan data:", settingsData);
-    alert("Perubahan berhasil disimpan!");
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    setLoading(true);
+    const { data, error } = await supabase.from('bot_templates').select('*').eq('template_key', 'greeting_menu').single();
+    if (data) {
+      setSettingsData(prev => ({
+        ...prev,
+        botMessage: data.message_text
+      }));
+    }
+    setLoading(false);
+  };
+
+  const handleSave = async () => {
+    // Save to supabase
+    const { error } = await supabase.from('bot_templates').update({
+      message_text: settingsData.botMessage,
+      updated_at: new Date().toISOString()
+    }).eq('template_key', 'greeting_menu');
+
+    if (error) {
+      alert("Gagal menyimpan: " + error.message);
+    } else {
+      alert("Perubahan berhasil disimpan!");
+    }
   };
 
   const handleCancel = () => {
-    // Simulasi logic batal: Mengembalikan form ke state awal
-    console.log("Membatalkan perubahan.");
-    setSettingsData(initialSettings);
+    fetchSettings();
   };
 
   return (

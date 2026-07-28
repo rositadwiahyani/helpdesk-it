@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import SLAHeader from "./SLAHeader";
 import SLAToolbar from "./SLAToolbar";
 import SLATableSection from "./SLATableSection";
 import SLAInfoSection from "./SLAInfoSection";
 import SLAHistorySection, { SLAHistoryItem } from "./SLAHistorySection";
+import { supabase } from "@/lib/supabase";
 
 export interface SLAItem {
   id: string;
@@ -51,30 +52,53 @@ const INITIAL_SLA_DATA: SLAItem[] = [
   },
 ];
 
-const INITIAL_HISTORY_DATA: SLAHistoryItem[] = [
-  {
-    id: 1,
-    action: "SLA Kritis diubah oleh Admin A",
-    timestamp: "2 Jam yang lalu",
-  },
-  {
-    id: 2,
-    action: "SLA Rendah diperpanjang",
-    timestamp: "15 Jan 2024",
-  },
-];
+const INITIAL_HISTORY_DATA: SLAHistoryItem[] = [];
 
 export default function SLAWorkspace() {
-  const [slaData, setSlaData] = useState<SLAItem[]>(INITIAL_SLA_DATA);
+  const [slaData, setSlaData] = useState<SLAItem[]>([]);
   const [historyData, setHistoryData] = useState<SLAHistoryItem[]>(INITIAL_HISTORY_DATA);
 
-  const handleUpdateSLA = (updatedItem: SLAItem) => {
-    // 1. Update data SLA
+  useEffect(() => {
+    fetchSlas();
+  }, []);
+
+  const fetchSlas = async () => {
+    const { data } = await supabase.from('slas').select('*').order('response_time', { ascending: true });
+    if (data && data.length > 0) {
+      const formatted: SLAItem[] = data.map(d => ({
+        id: String(d.id),
+        priority: d.priority as any,
+        badgeBg: d.badge_bg,
+        badgeTextColor: d.badge_text_color,
+        responseTime: d.response_time,
+        resolutionTime: d.resolution_time,
+      }));
+      setSlaData(formatted);
+    } else {
+      // Fallback if table is empty (user didn't run the INSERT sql)
+      setSlaData(INITIAL_SLA_DATA);
+    }
+  };
+
+  const handleUpdateSLA = async (updatedItem: SLAItem) => {
+    // 1. Update Supabase
+    const { error } = await supabase.from('slas').update({
+      response_time: updatedItem.responseTime,
+      resolution_time: updatedItem.resolutionTime,
+      updated_at: new Date().toISOString()
+    }).eq('id', updatedItem.id);
+
+    if (error) {
+      alert("Gagal menyimpan SLA: " + error.message);
+      return;
+    }
+
+    // 2. Update data SLA lokal
     setSlaData((prevData) =>
       prevData.map((item) => (item.id === updatedItem.id ? updatedItem : item))
     );
 
-    // 2. Update data riwayat secara realtime
+    // 3. Update data riwayat secara realtime
     const newHistoryItem: SLAHistoryItem = {
       id: Date.now(),
       action: `SLA ${updatedItem.priority} diperbarui`,
@@ -82,12 +106,10 @@ export default function SLAWorkspace() {
     };
     setHistoryData((prevHistory) => [newHistoryItem, ...prevHistory]);
 
-    // 3. Tampilkan alert bawaan browser seperti pada gambar
+    // 4. Tampilkan alert bawaan browser
     setTimeout(() => {
       alert(`Target waktu pada SLA ${updatedItem.priority} berhasil disimpan!`);
     }, 100); 
-    // Menggunakan setTimeout 100ms memberi jeda singkat agar state React 
-    // (seperti indikator loading tombol di SLATableSection) selesai di-render sebelum alert memblokir layar.
   };
 
   return (

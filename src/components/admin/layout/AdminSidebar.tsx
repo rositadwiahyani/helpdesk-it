@@ -23,6 +23,7 @@ export default function AdminSidebar() {
     { name: 'Laporan & Ekspor', path: '/dashboard/administrasi/reports', icon: ReportIcon },
     { name: 'Log API Webhook', path: '/dashboard/administrasi/webhook', icon: WebhookIcon },
     { name: 'Pengaturan Sistem', path: '/dashboard/administrasi/settings', icon: SettingsIcon },
+    { name: 'Profil', path: '/dashboard/administrasi/profile', icon: SettingsIcon },
   ];
 
 
@@ -66,10 +67,10 @@ export default function AdminSidebar() {
               <Link
                 key={item.name}
                 href={item.path}
-                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[14px] transition-all duration-200 ${
-                  isActive
-                    ? 'bg-blue-600 font-bold shadow-md shadow-blue-900/50'
-                    : 'font-medium hover:bg-slate-800'
+                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 ${
+                  isActive 
+                  ? 'bg-white/10 !text-white font-semibold'
+                  : '!text-white font-medium hover:bg-white/5'
                 }`}
                 style={{ color: isActive ? '#ffffff' : '#cbd5e1' }}
               >

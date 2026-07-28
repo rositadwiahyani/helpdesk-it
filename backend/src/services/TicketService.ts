@@ -182,10 +182,10 @@ export const getTicketsForDashboard = async (
     `)
     .order('created_at', { ascending: false });
 
-  // Filter berdasarkan Departemen (Staf Operator/Teknisi hanya melihat unitnya)
-  if (staffDeptId) {
-    query = query.eq('dept_id', staffDeptId);
-  }
+  // Fitur Communal Pool: Semua teknisi melihat semua tiket (tidak lagi difilter by dept_id)
+  // if (staffDeptId) {
+  //   query = query.eq('dept_id', staffDeptId);
+  // }
 
   // Filter Tambahan (Status, Prioritas, Pencarian)
   if (filters?.status) query = query.eq('status', filters.status);

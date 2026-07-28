@@ -1,6 +1,7 @@
 import React from 'react';
 import OperatorStatistics from '@/components/admin/tickets/OperatorStatistics';
 import { fetchServer } from '@/lib/apiServer';
+import AnimatedCounter from '@/components/ui/AnimatedCounter';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,7 +11,10 @@ export default async function OperatorDashboard() {
     try {
         const response = await fetchServer('/operator/dashboard');
         dashboardData = response.data;
-    } catch (error) {
+    } catch (error: any) {
+        if (error?.digest?.startsWith('NEXT_REDIRECT')) {
+            throw error;
+        }
         console.error("Gagal mengambil data dashboard:", error);
         // Fallback jika API gagal
         dashboardData = {
@@ -27,31 +31,37 @@ export default async function OperatorDashboard() {
 
     return (
         <div className="flex flex-col gap-6 p-6 md:p-10">
-            <div>
+            <div className="animate-in fade-in slide-in-from-left-4 duration-500">
                 <h2 className="text-2xl font-bold text-[var(--ink)] mb-1">Beranda Operator</h2>
                 <p className="text-[var(--text-dim)] text-sm">Ringkasan statistik dan aktivitas helpdesk secara real-time.</p>
             </div>
 
             {/* Statistik Hari Ini */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <div className="bg-white border border-[var(--line-dark)] rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 fill-mode-both">
+                <div className="bg-white border border-[var(--line-dark)] rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
                     <div>
                         <div className="text-[11px] font-bold text-[var(--text-dim)] uppercase tracking-wider mb-2">Tiket Dibuat Hari Ini</div>
-                        <div className="text-4xl font-bold text-[var(--ink)]">{todayCount || 0}</div>
+                        <div className="text-4xl font-bold text-[var(--ink)]">
+                            <AnimatedCounter value={todayCount || 0} duration={1200} />
+                        </div>
                     </div>
                     <div className="text-xs text-[var(--text-dim)] mt-4">Total masuk hari ini</div>
                 </div>
-                <div className="bg-white border border-[var(--line-dark)] rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+                <div className="bg-white border border-[var(--line-dark)] rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
                     <div>
                         <div className="text-[11px] font-bold text-[var(--text-dim)] uppercase tracking-wider mb-2">Menunggu Verifikasi</div>
-                        <div className="text-4xl font-bold text-[var(--gold)]">{openCount}</div>
+                        <div className="text-4xl font-bold text-[var(--gold)]">
+                            <AnimatedCounter value={openCount || 0} duration={1500} />
+                        </div>
                     </div>
                     <div className="text-xs text-[var(--text-dim)] mt-4">Status Open</div>
                 </div>
-                <div className="bg-white border border-[var(--line-dark)] rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+                <div className="bg-white border border-[var(--line-dark)] rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
                     <div>
                         <div className="text-[11px] font-bold text-[var(--text-dim)] uppercase tracking-wider mb-2">Diverifikasi Hari Ini</div>
-                        <div className="text-4xl font-bold text-[var(--ink)]">{verifiedCount || 0}</div>
+                        <div className="text-4xl font-bold text-[var(--ink)]">
+                            <AnimatedCounter value={verifiedCount || 0} duration={1800} />
+                        </div>
                     </div>
                     <div className="text-xs text-[var(--text-dim)] mt-4">Diterima / Ditolak</div>
                 </div>
