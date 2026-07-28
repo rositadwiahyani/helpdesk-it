@@ -57,7 +57,7 @@ export default function TicketTable({
       accessorKey: 'id',
       cell: (ticket) => (
         <Link 
-          href={`/admin/tickets/${ticket.id}`} 
+          href={`/dashboard/tickets/${ticket.id}`} 
           className="font-mono font-bold text-[var(--gold-soft)] hover:text-[var(--gold-dim)] hover:underline transition-colors block whitespace-nowrap"
         >
           {ticket.id.startsWith('#') ? ticket.id : `#${ticket.id}`}
@@ -80,7 +80,7 @@ export default function TicketTable({
       accessorKey: 'subject',
       cell: (ticket) => (
         <Link 
-          href={`/admin/tickets/${ticket.id}`} 
+          href={`/dashboard/tickets/${ticket.id}`} 
           className="font-bold text-[var(--ink)] hover:text-[var(--gold-soft)] hover:underline transition-colors block truncate"
           title={ticket.subject}
         >

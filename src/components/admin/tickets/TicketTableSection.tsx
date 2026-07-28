@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 
 export type PriorityLevel = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
 export type TicketStatus = 'NEW' | 'IN PROGRESS' | 'WAITING VERIFICATION' | 'RESOLVED' | 'CLOSED';
@@ -265,15 +266,19 @@ export default function TicketTableSection({ activeTab = 'all', tickets = [], ne
                     />
                   </td>
                   <td className="px-4 py-4 text-[#0059BB] font-liberationSerif text-sm font-semibold whitespace-nowrap">
-                    {ticket.ticket_num || ticket.ticketNumber}
+                    <Link href={`/dashboard/tickets/${ticket.id}`} className="hover:underline">
+                      {ticket.ticket_num || ticket.ticketNumber}
+                    </Link>
                   </td>
                   <td className="px-4 py-4 text-[#43474F] font-iBMPlexSans text-sm whitespace-nowrap">
                     {formatTimeAgo(ticket.updated_at || ticket.created_at)}
                   </td>
                   <td className="px-4 py-4 max-w-xs">
-                    <p className="text-[#1A1C1E] font-iBMPlexSans text-sm font-medium truncate mb-0.5">
-                      {ticket.subject}
-                    </p>
+                    <Link href={`/dashboard/tickets/${ticket.id}`} className="block">
+                      <p className="text-[#1A1C1E] font-iBMPlexSans text-sm font-medium truncate mb-0.5 hover:text-[#0059BB]">
+                        {ticket.subject}
+                      </p>
+                    </Link>
                   </td>
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-2">

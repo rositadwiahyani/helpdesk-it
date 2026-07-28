@@ -494,7 +494,7 @@ export default function TeknisiTicketTable({
                                         </td>
                                     )}
                                     <td className="px-4 py-4 text-[#0059BB] font-liberationSerif text-sm font-semibold whitespace-nowrap">
-                                        <Link href={`/dashboard/teknisi/tickets/${ticket.id}`} className="hover:underline">
+                                        <Link href={`/dashboard/tickets/${ticket.id}`} className="hover:underline">
                                             {tNum}
                                         </Link>
                                     </td>
@@ -502,7 +502,7 @@ export default function TeknisiTicketTable({
                                         {formatTimeAgo(ticket.updated_at || ticket.created_at)}
                                     </td>
                                     <td className="px-4 py-4 max-w-xs">
-                                        <Link href={`/dashboard/teknisi/tickets/${ticket.id}`} className="block">
+                                        <Link href={`/dashboard/tickets/${ticket.id}`} className="block">
                                             <p className="text-[#1A1C1E] font-iBMPlexSans text-sm font-medium truncate mb-0.5 hover:text-[#0059BB]">
                                                 {ticket.subject || ticket.category?.name || 'Tanpa Subjek'}
                                             </p>
