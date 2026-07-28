@@ -61,7 +61,7 @@ export const getOpenTickets = async (req: Request, res: Response) => {
     const { data: tickets, error: ticketsError } = await supabase
       .from('tickets')
       .select('*, category:categories(name), dept:departments(name), tech:staff_profiles!tickets_tech_id_fkey(name)')
-      .in('status', ['Open', 'Diproses'])
+      .in('status', ['Open', 'WAITING VERIFICATION'])
       .order('created_at', { ascending: false });
 
     if (ticketsError) throw ticketsError;

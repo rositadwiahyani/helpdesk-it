@@ -1,77 +1,69 @@
 "use client";
 
-import { useState } from "react";
+import { useState } from 'react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Cell } from "recharts";
 
-// Mempertahankan data asli sebagai data bulanan
-const ticketBarsMonthly = [
-  { date: "Jun 25", height: "h-12", active: false },
-  { date: "Jul 02", height: "h-16", active: false },
-  { date: "Jul 09", height: "h-20", active: false },
-  { date: "Jul 16", height: "h-44", active: true, value: "45" },
-  { date: "Jul 23", height: "h-24", active: false },
-];
+interface TicketTrendChartProps {
+  data?: { name: string; value: number; active?: boolean }[];
+}
 
-// Menambahkan data baru untuk fungsi tombol Weekly
-const ticketBarsWeekly = [
-  { date: "Sen", height: "h-16", active: false, value: "12" },
-  { date: "Sel", height: "h-24", active: false, value: "18" },
-  { date: "Rab", height: "h-20", active: false, value: "15" },
-  { date: "Kam", height: "h-32", active: true, value: "24" },
-  { date: "Jum", height: "h-12", active: false, value: "8" },
-];
+export default function TicketTrendChart({ data = [] }: TicketTrendChartProps) {
+  const [range, setRange] = useState('This Week');
 
-export default function TicketTrendChart() {
-  const [chartPeriod, setChartPeriod] = useState<"Weekly" | "Monthly">("Monthly");
-  const ticketBars = chartPeriod === "Monthly" ? ticketBarsMonthly : ticketBarsWeekly;
+  let displayData = data;
+  if (data.length >= 30) {
+    if (range === 'This Week') {
+      displayData = data.slice(-7);
+    } else if (range === 'Last Week') {
+      displayData = data.slice(-14, -7);
+    } else if (range === 'This Month') {
+      displayData = data.slice(-30);
+    }
+  }
 
   return (
-    // Mempertahankan col-[1_/_3] dan menambah col-span-full untuk layar kecil
-    <article className="col-span-full lg:col-[1_/_3] flex flex-col gap-6 rounded-lg border border-[#c3c6d1] bg-white px-6 pb-[39.5px] pt-6 shadow-sm">
-      <div className="flex w-full flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h2 className="[font-family:'IBM_Plex_Sans-Medium',Helvetica] text-xl font-medium leading-7 text-[#001e40]">
-          Tren Tiket Masuk
-        </h2>
-        <div className="inline-flex items-start rounded bg-[#f3f3f6] p-1 w-fit">
-          {(["Weekly", "Monthly"] as const).map((period) => {
-            const isActive = chartPeriod === period;
-            return (
-              <button
-                key={period}
-                type="button"
-                onClick={() => setChartPeriod(period)}
-                className={`px-4 py-1 rounded-sm transition-colors ${isActive ? "bg-[#001e40] shadow-sm" : "bg-transparent hover:bg-gray-200"}`}
-              >
-                <span className={`text-[11px] font-bold ${isActive ? "text-white" : "text-[#43474f]"}`}>
-                  {period}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+    <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-lg font-bold text-slate-800">Tren Tiket Masuk</h3>
+        <select 
+          className="bg-slate-50 border border-slate-200 text-slate-600 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block px-3 py-1.5 outline-none cursor-pointer"
+          value={range}
+          onChange={(e) => setRange(e.target.value)}
+        >
+          <option value="This Week">This Week</option>
+          <option value="Last Week">Last Week</option>
+          <option value="This Month">This Month</option>
+        </select>
       </div>
-      
-      {/* Container dibuat overflow-x-auto agar bar tidak tergencet di layar HP */}
-      <div className="relative flex h-64 w-full items-end justify-between sm:justify-center gap-3 px-4 pt-10 overflow-x-auto">
-        {/* Lebar min-w ditambahkan agar garis putus-putus tetap panjang meski di-scroll */}
-        <div className="absolute left-0 top-10 h-px w-full min-w-[500px] border-t border-[#c3c6d14c]" />
-        <div className="absolute left-0 top-[50%] h-0 w-full min-w-[500px] border-t border-[#c3c6d14c]" />
-        
-        {ticketBars.map((bar) => (
-          <div key={bar.date} className="relative flex w-[100.4px] shrink-0 flex-col items-center gap-2 group cursor-pointer">
-            <div className={`relative w-full ${bar.height} rounded-t-[2px] transition-all duration-300 ${bar.active ? "bg-[#001e40]" : "bg-[#e8e8ea] group-hover:bg-[#c3c6d1]"}`}>
-              {/* Tooltip muncul jika active ATAU jika bar di-hover */}
-              {(bar.active || bar.value) && (
-                <span className={`absolute -top-8 left-[36%] flex flex-col items-start rounded-sm bg-[#001e40] px-2 py-1 transition-opacity ${bar.active ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>
-                  <span className="text-[10px] font-bold text-white">{bar.value || "0"}</span>
-                </span>
-              )}
-            </div>
-            <span className={`text-[10px] transition-colors ${bar.active ? "font-bold text-[#001e40]" : "text-[#43474f] group-hover:text-[#001e40]"}`}>
-              {bar.date}
-            </span>
-          </div>
-        ))}
+      <div className="w-full h-[250px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={displayData} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+            <XAxis 
+              dataKey="name" 
+              axisLine={false} 
+              tickLine={false} 
+              tick={{ fontSize: 11, fill: '#94a3b8' }} 
+              dy={10}
+            />
+            <YAxis 
+              axisLine={false} 
+              tickLine={false} 
+              tick={{ fontSize: 11, fill: '#94a3b8' }}
+              tickCount={3}
+            />
+            <Tooltip 
+              cursor={{ fill: '#f8fafc' }}
+              contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+            />
+            <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={60}>
+              {displayData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.active ? '#0369a1' : '#cbd5e1'} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
       </div>
-    </article>
+    </div>
   );
 }

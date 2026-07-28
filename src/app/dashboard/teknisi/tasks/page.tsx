@@ -15,7 +15,7 @@ export default async function TeknisiMyTasksPage() {
             *,
             category:categories (name)
         `)
-        .eq('status', 'In Progress') // Sedang ditangani
+        .eq('status', 'IN PROGRESS') // Sedang ditangani
         // .eq('tech_id', techId) // Idealnya di-filter berdasarkan tech_id, di-comment untuk testing jika data kurang
         .order('created_at', { ascending: false });
 

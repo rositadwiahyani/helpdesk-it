@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 
 export const API_BASE_URL = 'http://localhost:5000/api';
 
@@ -28,6 +29,9 @@ export async function fetchServer(endpoint: string, options: RequestInit = {}) {
   const data = await res.json();
   
   if (!res.ok) {
+    if (res.status === 401) {
+      redirect('/logout');
+    }
     throw new Error(data.message || data.error || 'Terjadi kesalahan saat memanggil API');
   }
 

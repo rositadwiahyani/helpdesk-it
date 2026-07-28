@@ -28,6 +28,9 @@ export async function fetchClient(endpoint: string, options: RequestInit = {}) {
   const data = await res.json();
   
   if (!res.ok) {
+    if (res.status === 401 && typeof window !== 'undefined') {
+      window.location.href = '/login';
+    }
     throw new Error(data.message || data.error || 'Terjadi kesalahan saat memanggil API');
   }
 

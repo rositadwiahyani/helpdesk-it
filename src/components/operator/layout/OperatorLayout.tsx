@@ -17,18 +17,23 @@ export default function OperatorLayout({ children }: { children: React.ReactNode
     return 'Dashboard Operator';
   };
 
+  const isHideableOnDesktop = pathname?.includes('/tickets') || pathname?.includes('/tickets-rejected') || false;
+
   return (
     <div className="min-h-screen bg-[var(--paper)] flex">
       {/* Sidebar (Kiri) */}
       <OperatorSidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
       {/* Main Content Wrapper (Kanan) */}
-      <div className="flex-1 flex flex-col min-w-0 lg:pl-72">
+      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${
+        isHideableOnDesktop ? (isSidebarOpen ? 'lg:pl-72' : 'lg:pl-0') : 'lg:pl-72'
+      }`}>
         {/* Topbar (Atas) */}
         <AdminTopbar
           onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
           breadcrumbParent="Dashboard"
           pageTitle={getPageTitle()}
+          showMenuButtonOnDesktop={isHideableOnDesktop}
         />
 
         {/* Main Content */}

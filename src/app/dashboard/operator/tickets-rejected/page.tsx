@@ -22,14 +22,22 @@ export default async function OperatorRejectedTicketsPage() {
 
     const { tickets, slaConfigs, departments, categories: rawCategories } = apiData;
 
-    // Format kategori dengan hierarki Parent / Child
+    // Format kategori dengan hierarki Departemen / Kategori / Subkategori (jika ada)
     const formattedCategories = (rawCategories || []).map((cat: any) => {
+        const dept = (departments || []).find((d: any) => d.id === cat.dept_id);
+        const deptName = dept ? dept.name : '';
+        
         const breadcrumb = [];
         let current = cat;
         while (current) {
             breadcrumb.unshift(current.name);
             current = (rawCategories || []).find((c: any) => c.id === current.parent_id);
         }
+        
+        if (deptName) {
+            breadcrumb.unshift(deptName);
+        }
+        
         return {
             ...cat,
             name: breadcrumb.join(' / '),
@@ -42,9 +50,8 @@ export default async function OperatorRejectedTicketsPage() {
         is_overdue: calculateIsOverdue(t, slaConfigs || [])
     }));
 
-    // Kategori utama untuk filter pencarian (parent_id is null)
-    const mainCategoryIds = new Set((rawCategories || []).filter((c: any) => !c.parent_id).map((c: any) => c.id));
-    const mainCategories = formattedCategories.filter((c: any) => mainCategoryIds.has(c.id));
+    // Kategori utama untuk filter pencarian (tampilkan semua kategori)
+    const mainCategories = formattedCategories;
 
     return (
         <div className="w-full h-full text-slate-800 font-sans p-6 md:p-10">

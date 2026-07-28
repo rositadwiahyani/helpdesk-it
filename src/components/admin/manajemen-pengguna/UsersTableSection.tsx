@@ -104,9 +104,7 @@ export default function UsersTableSection({
             <div className="w-[200px] px-4 py-4">
               <p className="text-[#43474F] font-iBMPlexSans text-xs font-bold leading-4 tracking-[0.05em]">FAKULTAS / UNIT KERJA</p>
             </div>
-            <div className="w-[120px] px-4 py-4">
-              <p className="text-[#43474F] font-iBMPlexSans text-xs font-bold leading-4 tracking-[0.05em]">STATUS</p>
-            </div>
+
             <div className="w-[150px] px-4 py-4">
               <p className="text-[#43474F] font-iBMPlexSans text-xs font-bold leading-4 tracking-[0.05em]">CREATED</p>
             </div>
@@ -151,44 +149,22 @@ export default function UsersTableSection({
                       <p className="text-[#43474F] font-iBMPlexSans text-[12px] font-medium leading-5 w-fit truncate bg-gray-100 px-2 py-0.5 rounded">{user.fakultasUnit}</p>
                     </div>
 
-                    <div className="w-[120px] px-4 py-4 flex items-center gap-2">
-                      <div className={`shrink-0 rounded-full ${isBlocked ? 'bg-[#BA1A1A]' : 'bg-[#10B981]'} w-2 h-2`}></div>
-                      <p className="text-[#1A1C1E] font-iBMPlexSans text-sm leading-5">{user.status}</p>
-                    </div>
+
 
                     <div className="w-[150px] px-4 py-4">
                       <p className="text-[#43474F] font-iBMPlexSans text-sm leading-5">{user.createdDate}</p>
                     </div>
                     
-                    <div className="flex-1 min-w-[80px] px-4 py-4 flex justify-end pr-8 relative">
-                      <button
-                        onClick={() => setOpenActionId(openActionId === user.id ? null : user.id)}
-                        className="flex p-2 justify-center items-center rounded cursor-pointer hover:bg-gray-200/60 transition-colors"
+                    <div className="w-[120px] px-4 py-4 flex justify-center relative">
+                      <button 
+                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+                        onClick={() => onEditUser?.(user)}
                       >
-                        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M1.66667 13.3333H2.85417L11 5.1875L9.8125 4L1.66667 12.1458V13.3333ZM0 15V11.4583L11 0.479167C11.1667 0.326389 11.3507 0.208333 11.5521 0.125C11.7535 0.0416667 11.9653 0 12.1875 0C12.4097 0 12.625 0.0416667 12.8333 0.125C13.0417 0.208333 13.2222 0.333333 13.375 0.5L14.5208 1.66667C14.6875 1.81944 14.809 2 14.8854 2.20833C14.9618 2.41667 15 2.625 15 2.83333C15 3.05556 14.9618 3.26736 14.8854 3.46875C14.809 3.67014 14.6875 3.85417 14.5208 4.02083L3.54167 15H0ZM13.3333 2.83333L12.1667 1.66667L13.3333 2.83333ZM10.3958 4.60417L9.8125 4L11 5.1875L10.3958 4.60417Z" fill="#1A1C1E"/>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M12 20H21" stroke="#43474F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M16.5 3.50023C16.8978 3.1024 17.4374 2.87891 18 2.87891C18.2786 2.87891 18.5544 2.93378 18.8118 3.04038C19.0692 3.14699 19.303 3.30324 19.5 3.50023C19.697 3.69721 19.8532 3.93106 19.9598 4.18843C20.0665 4.4458 20.1213 4.72165 20.1213 5.00023C20.1213 5.2788 20.0665 5.55465 19.9598 5.81202C19.8532 6.06939 19.697 6.30324 19.5 6.50023L7 19.0002L3 20.0002L4 16.0002L16.5 3.50023Z" stroke="#43474F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
                       </button>
-
-                      {openActionId === user.id && (
-                        <>
-                          <div className="fixed inset-0 z-10" onClick={() => setOpenActionId(null)}></div>
-                          <div className="absolute right-8 top-10 w-32 bg-white border border-[#C3C6D1] rounded shadow-lg z-20 flex flex-col py-1">
-                            <button
-                              onClick={() => { onEditUser?.(user); setOpenActionId(null); }}
-                              className="text-left px-4 py-2 hover:bg-gray-100 text-sm font-iBMPlexSans text-[#1A1C1E]"
-                            >
-                              Edit Data
-                            </button>
-                            <button
-                              onClick={() => { onDeleteUser?.(user.id); setOpenActionId(null); }}
-                              className="text-left px-4 py-2 hover:bg-gray-100 text-sm font-iBMPlexSans text-red-600"
-                            >
-                              Hapus
-                            </button>
-                          </div>
-                        </>
-                      )}
                     </div>
                   </div>
                 );

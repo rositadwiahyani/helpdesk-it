@@ -21,6 +21,7 @@ export default function TeknisiStatistics({ tickets, categories }: TeknisiStatis
   });
   
   const [deptId, setDeptId] = useState<number | null>(null);
+  const [showAll, setShowAll] = useState(false);
 
   React.useEffect(() => {
     const userStr = localStorage.getItem('user');
@@ -86,14 +87,14 @@ export default function TeknisiStatistics({ tickets, categories }: TeknisiStatis
 
   return (
     <div className="bg-white border border-[var(--line-dark)] rounded-2xl p-6 shadow-sm flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col gap-4">
         <div>
           <h3 className="text-lg font-bold text-[var(--ink)]">Distribusi Kategori</h3>
           <p className="text-sm text-[var(--text-dim)]">Berdasarkan tiket yang ditugaskan ke departemen Anda.</p>
         </div>
         
         {/* Filter Tanggal */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-end gap-3 mt-1">
           <div className="flex items-center gap-2">
             <div className="flex flex-col">
               <label className="text-[10px] font-bold text-[var(--text-dim)] uppercase tracking-wider mb-1 ml-1">Mulai Tanggal</label>
@@ -118,7 +119,7 @@ export default function TeknisiStatistics({ tickets, categories }: TeknisiStatis
           
           <button 
             onClick={handleReset}
-            className="mt-5 py-1.5 px-4 bg-white border border-[var(--line-dark)] rounded-lg text-sm font-medium text-[var(--ink)] hover:bg-[var(--paper-2)] transition-colors"
+            className="py-1.5 px-4 h-[34px] bg-white border border-[var(--line-dark)] rounded text-sm font-medium text-[var(--ink)] hover:bg-[var(--paper-2)] transition-colors"
           >
             Reset
           </button>
@@ -143,7 +144,7 @@ export default function TeknisiStatistics({ tickets, categories }: TeknisiStatis
                 </td>
               </tr>
             ) : (
-              statsTable.map((item: any) => {
+              (showAll ? statsTable : statsTable.slice(0, 5)).map((item: any) => {
                 const rate = item.opened === 0 ? 0 : Math.round((item.resolved / item.opened) * 100);
                 return (
                   <tr key={item.name} className="hover:bg-slate-50/50 transition-colors">
@@ -164,6 +165,23 @@ export default function TeknisiStatistics({ tickets, categories }: TeknisiStatis
             )}
           </tbody>
         </table>
+        
+        {!showAll && statsTable.length > 5 && (
+          <button
+            onClick={() => setShowAll(true)}
+            className="w-full py-3 bg-slate-50 hover:bg-slate-100 text-[#0059BB] text-sm font-bold border-t border-slate-200 transition-colors"
+          >
+            See More ({statsTable.length - 5})
+          </button>
+        )}
+        {showAll && statsTable.length > 5 && (
+          <button
+            onClick={() => setShowAll(false)}
+            className="w-full py-3 bg-slate-50 hover:bg-slate-100 text-[#0059BB] text-sm font-bold border-t border-slate-200 transition-colors"
+          >
+            Show Less
+          </button>
+        )}
       </div>
     </div>
   );

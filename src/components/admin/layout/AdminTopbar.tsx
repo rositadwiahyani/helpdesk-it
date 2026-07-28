@@ -10,6 +10,7 @@ interface AdminTopbarProps {
   userName?: string;
   userRole?: string;
   avatarSrc?: string;
+  showMenuButtonOnDesktop?: boolean;
 }
 
 const routeMapping: Record<string, string> = {
@@ -22,6 +23,7 @@ const routeMapping: Record<string, string> = {
   '/dashboard/administrasi/staff': 'Manajemen Staff',
   '/dashboard/administrasi/webhook': 'API Logs & Webhooks',
   '/dashboard/administrasi/settings': 'Pengaturan Sistem',
+  '/dashboard/administrasi/profile': 'Profil Saya',
 };
 
 export default function AdminTopbar({
@@ -31,6 +33,7 @@ export default function AdminTopbar({
   userName = 'Admin User',
   userRole = 'Super Administrator',
   avatarSrc = '/avatar-admin.jpg',
+  showMenuButtonOnDesktop = false,
 }: AdminTopbarProps) {
   const [currentUser, setCurrentUser] = useState<any>({});
   const [showNotifications, setShowNotifications] = useState(false);
@@ -92,7 +95,7 @@ export default function AdminTopbar({
         <div className="flex items-center gap-4">
           <button
             onClick={onMenuClick}
-            className="lg:hidden p-2 -ml-2 rounded-xl text-[var(--text-dim)] hover:bg-[var(--paper-2)] hover:text-[var(--ink)] transition-colors"
+            className={`${showMenuButtonOnDesktop ? 'block' : 'lg:opacity-0 lg:pointer-events-none'} p-2 -ml-2 rounded-xl text-[var(--text-dim)] hover:bg-[var(--paper-2)] hover:text-[var(--ink)] transition-colors`}
             aria-label="Buka menu"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">

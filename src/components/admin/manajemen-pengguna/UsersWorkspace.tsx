@@ -1,56 +1,109 @@
 'use client';
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import UsersHeader from './UsersHeader';
 import UsersStatistics from './UsersStatistics';
 import UsersToolbar from './UsersToolbar';
 import UsersTableSection from './UsersTableSection';
+import UsersFilterModal, { UsersFilterData } from './UsersFilterModal';
+import { fetchClient } from '@/lib/apiClient';
 
 export interface UserItem {
   id: string;
+  phone: string;
   name: string;
   nimNip: string;
   fakultasUnit: string;
   status: 'Aktif' | 'Terblokir';
   createdDate: string;
+  rawDate: string;
 }
 
-const INITIAL_USERS: UserItem[] = [
-  { id: '1', name: 'Indra', nimNip: '2401992019', fakultasUnit: 'Fakultas Teknik', status: 'Aktif', createdDate: '21 Juli 2026' },
-  { id: '2', name: 'Budi', nimNip: '1982039201', fakultasUnit: 'Fakultas Hukum', status: 'Aktif', createdDate: '20 Juli 2026' },
-  { id: '3', name: 'Irfan', nimNip: '1970102001', fakultasUnit: 'UPT TI', status: 'Aktif', createdDate: '20 Juli 2026' },
-  { id: '4', name: 'Rey', nimNip: '2401993022', fakultasUnit: 'Fakultas Kedokteran', status: 'Terblokir', createdDate: '19 Juli 2026' },
-  { id: '5', name: 'Siti Aminah', nimNip: '2401998822', fakultasUnit: 'Fakultas Ilmu Komputer', status: 'Aktif', createdDate: '18 Juli 2026' },
-];
-
 export default function UserWorkspace() {
-  const [users, setUsers] = useState<UserItem[]>(INITIAL_USERS);
+  const [users, setUsers] = useState<UserItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [filters, setFilters] = useState<UsersFilterData | null>(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<UserItem | null>(null);
   const [formData, setFormData] = useState({
+    phone: '',
     name: '',
     nimNip: '',
     fakultasUnit: '',
     status: 'Aktif' as 'Aktif' | 'Terblokir'
   });
 
-  const itemsPerPage = 4;
+  const itemsPerPage = 10;
+
+  const fetchUsers = async () => {
+    setIsLoading(true);
+    try {
+      const { data } = await fetchClient('/admin/reporters');
+      const mapped = (data || []).map((r: any) => ({
+        id: r.id,
+        phone: r.phone,
+        name: r.name,
+        nimNip: r.nim_nip,
+        fakultasUnit: r.unit,
+        status: r.status,
+        createdDate: new Date(r.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }),
+        rawDate: r.created_at
+      }));
+      setUsers(mapped);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const uniqueFakultas = useMemo(() => {
+    const set = new Set<string>();
+    users.forEach(u => {
+      if (u.fakultasUnit) set.add(u.fakultasUnit);
+    });
+    return Array.from(set).sort();
+  }, [users]);
 
   const filteredUsers = useMemo(() => {
     return users.filter((user) => {
       const matchesSearch =
         user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.nimNip.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesStatus = selectedStatus === 'ALL' || user.status === selectedStatus;
-      return matchesSearch && matchesStatus;
+        user.nimNip.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.phone.includes(searchQuery);
+      
+      let matchesFakultas = true;
+      let matchesDate = true;
+      
+      if (filters) {
+        if (filters.fakultas !== 'ALL' && user.fakultasUnit !== filters.fakultas) matchesFakultas = false;
+        
+        if (filters.startDate) {
+          const d = new Date(user.rawDate);
+          if (d < new Date(filters.startDate)) matchesDate = false;
+        }
+        
+        if (filters.endDate) {
+          const d = new Date(user.rawDate);
+          d.setHours(23, 59, 59, 999);
+          if (d > new Date(filters.endDate)) matchesDate = false;
+        }
+      }
+      
+      return matchesSearch && matchesFakultas && matchesDate;
     });
-  }, [users, searchQuery, selectedStatus]);
+  }, [users, searchQuery, filters]);
 
   const totalItems = filteredUsers.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
@@ -75,38 +128,59 @@ export default function UserWorkspace() {
 
   const handleAddClick = useCallback(() => {
     setEditingUser(null);
-    setFormData({ name: '', nimNip: '', fakultasUnit: '', status: 'Aktif' });
+    setFormData({ phone: '', name: '', nimNip: '', fakultasUnit: '', status: 'Aktif' });
     setIsModalOpen(true);
   }, []);
 
   const handleEditClick = useCallback((user: UserItem) => {
     setEditingUser(user);
-    setFormData({ name: user.name, nimNip: user.nimNip, fakultasUnit: user.fakultasUnit, status: user.status });
+    setFormData({ phone: user.phone, name: user.name, nimNip: user.nimNip, fakultasUnit: user.fakultasUnit, status: user.status });
     setIsModalOpen(true);
   }, []);
 
-  const handleDeleteClick = useCallback((id: string) => {
-    if (confirm('Apakah Anda yakin ingin menghapus pelapor ini?')) {
-      setUsers((prev) => prev.filter(u => u.id !== id));
+  const handleDeleteClick = async (id: string) => {
+    if (confirm('Apakah Anda yakin ingin menghapus pelapor ini? Data riwayat tiketnya mungkin akan terdampak.')) {
+      try {
+        await fetchClient(`/admin/reporters/${id}`, { method: 'DELETE' });
+        fetchUsers();
+      } catch (error: any) {
+        alert("Gagal menghapus data: " + error.message);
+      }
     }
-  }, []);
+  };
 
-  const handleSaveForm = (e: React.FormEvent) => {
+  const handleSaveForm = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingUser) {
-      setUsers(users.map((u) => u.id === editingUser.id ? { ...u, ...formData } : u));
-    } else {
-      const newUser: UserItem = {
-        id: Date.now().toString(),
-        name: formData.name,
-        nimNip: formData.nimNip,
-        fakultasUnit: formData.fakultasUnit,
-        status: formData.status,
-        createdDate: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }),
-      };
-      setUsers([newUser, ...users]);
+    try {
+      if (editingUser) {
+        await fetchClient(`/admin/reporters/${editingUser.id}`, {
+          method: 'PATCH',
+          body: JSON.stringify({
+            phone: formData.phone,
+            name: formData.name,
+            nim_nip: formData.nimNip,
+            unit: formData.fakultasUnit,
+            status: formData.status
+          })
+        });
+      } else {
+        await fetchClient('/admin/reporters', {
+          method: 'POST',
+          body: JSON.stringify({
+            phone: formData.phone,
+            name: formData.name,
+            nim_nip: formData.nimNip,
+            unit: formData.fakultasUnit,
+            reporter_type: 'Umum',
+            status: formData.status
+          })
+        });
+      }
+      setIsModalOpen(false);
+      fetchUsers();
+    } catch (error: any) {
+      alert("Gagal menyimpan data: " + error.message);
     }
-    setIsModalOpen(false);
   };
 
   const stats = useMemo(() => {
@@ -117,6 +191,22 @@ export default function UserWorkspace() {
     };
   }, [users]);
 
+  const handleBulkDelete = async () => {
+    if (!window.confirm(`Apakah Anda yakin ingin menghapus ${selectedUserIds.length} pelapor?`)) return;
+    try {
+      setIsLoading(true);
+      for (const id of selectedUserIds) {
+        await fetchClient(`/admin/reporters/${id}`, { method: 'DELETE' });
+      }
+      setSelectedUserIds([]);
+      await fetchUsers();
+    } catch (e) {
+      console.error(e);
+      alert('Gagal menghapus pelapor masal');
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="flex flex-col items-start gap-6 w-full p-6 bg-[#F9FAFB] min-h-screen relative">
       <UsersHeader />
@@ -124,9 +214,11 @@ export default function UserWorkspace() {
       <UsersToolbar
         searchQuery={searchQuery}
         onSearchChange={(query) => { setSearchQuery(query); setCurrentPage(1); }}
-        onFilterClick={() => alert('Filter Popover Action')}
+        onFilterClick={() => setIsFilterModalOpen(true)}
         onExportClick={() => alert('Exporting...')}
         onAddClick={handleAddClick}
+        selectedCount={selectedUserIds.length}
+        onBulkDeleteClick={handleBulkDelete}
       />
       <UsersTableSection
         users={paginatedUsers}
@@ -144,8 +236,8 @@ export default function UserWorkspace() {
       />
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
               <h3 className="text-lg font-bold text-[#001E40] font-iBMPlexSans">
                 {editingUser ? 'Edit Data Pelapor' : 'Tambah Pelapor Baru'}
@@ -155,6 +247,11 @@ export default function UserWorkspace() {
               </button>
             </div>
             <form onSubmit={handleSaveForm} className="p-6 flex flex-col gap-4">
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-semibold text-gray-700 font-iBMPlexSans">Nomor WA / Telepon</label>
+                <input required type="text" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="border border-gray-300 rounded p-2 text-sm focus:outline-none focus:border-[#0059BB]" placeholder="6281234..." disabled={!!editingUser} />
+                {editingUser && <span className="text-xs text-gray-500">Nomor WA tidak bisa diubah karena terikat riwayat percakapan.</span>}
+              </div>
               <div className="flex flex-col gap-1">
                 <label className="text-sm font-semibold text-gray-700 font-iBMPlexSans">Nama Lengkap</label>
                 <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="border border-gray-300 rounded p-2 text-sm focus:outline-none focus:border-[#0059BB]" placeholder="Masukkan nama..." />
@@ -181,6 +278,14 @@ export default function UserWorkspace() {
             </form>
           </div>
         </div>
+      )}
+
+      {isFilterModalOpen && (
+        <UsersFilterModal
+          uniqueFakultas={uniqueFakultas}
+          onClose={() => setIsFilterModalOpen(false)}
+          onApply={(newFilters) => setFilters(newFilters)}
+        />
       )}
     </div>
   );

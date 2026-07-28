@@ -15,7 +15,7 @@ export default async function TeknisiResolvedTicketsPage() {
             *,
             category:categories (name)
         `)
-        .in('status', ['Resolved', 'Closed'])
+        .in('status', ['RESOLVED', 'CLOSED'])
         // .eq('tech_id', techId)
         .order('updated_at', { ascending: false });
 

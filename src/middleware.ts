@@ -15,19 +15,35 @@ export async function middleware(request: NextRequest) {
 
   // B. Role-Based Access Control (RBAC) untuk Dashboard
   if (isLoggedIn && url.pathname.startsWith('/dashboard')) {
-    if (url.pathname.startsWith('/dashboard/teknisi') && userRole !== 'teknisi') {
-      url.pathname = '/dashboard/operator';
+    // Tangani root /dashboard redirect sesuai role
+    if (url.pathname === '/dashboard') {
+      if (userRole === 'admin' || userRole === 'administrasi') url.pathname = '/dashboard/administrasi';
+      else if (userRole === 'pimpinan') url.pathname = '/dashboard/pimpinan';
+      else if (userRole === 'teknisi' || userRole === 'agent') url.pathname = '/dashboard/teknisi';
+      else url.pathname = '/dashboard/operator';
       return NextResponse.redirect(url);
     }
-    if (url.pathname.startsWith('/dashboard/operator') && userRole === 'teknisi') {
-      url.pathname = '/dashboard/teknisi';
+
+    // Proteksi dashboard teknisi
+    if (url.pathname.startsWith('/dashboard/teknisi') && (userRole !== 'teknisi' && userRole !== 'agent')) {
+      url.pathname = userRole === 'admin' || userRole === 'administrasi' ? '/dashboard/administrasi' : '/dashboard/operator';
+      return NextResponse.redirect(url);
+    }
+    
+    // Proteksi dashboard admin
+    if (url.pathname.startsWith('/dashboard/administrasi') && (userRole !== 'admin' && userRole !== 'administrasi')) {
+      url.pathname = userRole === 'teknisi' || userRole === 'agent' ? '/dashboard/teknisi' : '/dashboard/operator';
       return NextResponse.redirect(url);
     }
   }
 
   // C. Jika user SUDAH login tapi mencoba kembali ke halaman login/register
   if ((url.pathname.startsWith('/login') || url.pathname.startsWith('/register')) && isLoggedIn) {
-    url.pathname = userRole === 'teknisi' ? '/dashboard/teknisi' : '/dashboard/operator';
+    if (userRole === 'admin' || userRole === 'administrasi') url.pathname = '/dashboard/administrasi';
+    else if (userRole === 'pimpinan') url.pathname = '/dashboard/pimpinan';
+    else if (userRole === 'teknisi' || userRole === 'agent') url.pathname = '/dashboard/teknisi';
+    else url.pathname = '/dashboard/operator';
+    
     return NextResponse.redirect(url);
   }
 
