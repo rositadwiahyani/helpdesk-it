@@ -11,13 +11,16 @@ export default function OperatorLayout({ children }: { children: React.ReactNode
   const getPageTitle = () => {
     if (!pathname) return 'Dashboard Operator';
     if (pathname.includes('/dashboard/operator/tickets-rejected')) return 'Tiket Ditolak';
+    if (pathname.includes('/dashboard/operator/tickets-unhandled')) return 'Tiket Belum Ditangani';
+    if (pathname.includes('/dashboard/operator/tickets-inprogress')) return 'Tiket In Progress';
+    if (pathname.includes('/dashboard/operator/tickets-resolved')) return 'Tiket Selesai';
     if (pathname.includes('/dashboard/operator/tickets')) return 'Tiket Masuk';
     if (pathname.includes('/dashboard/operator/profile')) return 'Profil';
     if (pathname.includes('/dashboard/operator')) return 'Dashboard Operator';
     return 'Dashboard Operator';
   };
 
-  const isHideableOnDesktop = pathname?.includes('/tickets') || pathname?.includes('/tickets-rejected') || false;
+  const isHideableOnDesktop = pathname?.includes('/tickets') || false;
 
   return (
     <div className="min-h-screen bg-[var(--paper)] flex">

@@ -120,14 +120,37 @@ export default function Workspace() {
   const handleReorder = async (newTreeData: any[]) => {
     setTreeData(newTreeData); // Optimistic UI update
 
-    const updates = newTreeData.map((item, index) => ({
-      id: item.realId,
-      sort_order: index + 1
-    }));
+    const updates: { id: number; sort_order: number }[] = [];
+    
+    newTreeData.forEach((parent, pIndex) => {
+      if (parent.realId) {
+        updates.push({ id: parent.realId, sort_order: pIndex + 1 });
+      }
+      if (parent.children && parent.children.length > 0) {
+        parent.children.forEach((child: any, cIndex: number) => {
+          if (child.realId) {
+            updates.push({ id: child.realId, sort_order: cIndex + 1 });
+          }
+        });
+      }
+    });
 
-    await Promise.all(
-      updates.map(u => supabase.from('categories').update({ sort_order: u.sort_order }).eq('id', u.id))
-    );
+    const { fetchClient } = await import('@/lib/apiClient');
+    try {
+      const res = await fetchClient('/admin/categories/reorder', {
+        method: 'PUT',
+        body: JSON.stringify({ updates }),
+      });
+      if (!res.success) {
+        console.error("Failed to update sort_order", res.message);
+        alert('Gagal menyimpan urutan ke server.');
+        fetchData(); // revert UI if failed
+      }
+    } catch (err: any) {
+      console.error("Error updating sort_order", err);
+      alert('Terjadi kesalahan saat menyimpan urutan.');
+      fetchData(); // revert UI if failed
+    }
   };
 
   return (

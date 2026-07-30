@@ -19,6 +19,8 @@ interface TicketToolbarProps {
   activeTab?: TabFilter;
   onTabChange?: (tab: TabFilter) => void;
   counts?: TicketCounts;
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
   onExportCsv?: () => void;
   onOpenFilters?: () => void;
   onNewTicket?: () => void;
@@ -40,6 +42,8 @@ export default function TicketToolbar({
   activeTab = 'all',
   onTabChange,
   counts = DEFAULT_COUNTS,
+  searchQuery = '',
+  onSearchChange,
   onExportCsv,
   onOpenFilters,
   onNewTicket,
@@ -83,6 +87,8 @@ export default function TicketToolbar({
             <input 
               type="text" 
               placeholder="Search tickets..." 
+              value={searchQuery}
+              onChange={(e) => onSearchChange?.(e.target.value)}
               className="pl-9 pr-4 py-2 text-sm border border-[#C3C6D1] rounded focus:outline-none focus:border-[#0059BB] w-full md:w-64"
             />
             <svg className="w-4 h-4 absolute left-3 top-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>

@@ -1,10 +1,63 @@
-import React from 'react';
+import SummaryCards from "@/components/admin/dashboard/SummaryCards";
+import TicketTrendChart from "@/components/admin/dashboard/TicketTrendChart";
+import DepartmentPerformanceTable from "@/components/admin/dashboard/DepartmentPerformanceTable";
+import RecentTicketActivityTable from "@/components/admin/dashboard/RecentTicketActivityTable";
+import SlaHealth from "@/components/admin/dashboard/SlaHealth";
+import TopHelpTopicsPieChart from "@/components/admin/dashboard/TopHelpTopicsPieChart";
+import { fetchServer } from "@/lib/apiServer";
 
-export default function PimpinanDashboard() {
+export default async function PimpinanDashboard() {
+  let dashboardData: any = {};
+  
+  try {
+    dashboardData = await fetchServer('/admin/dashboard');
+  } catch (error: any) {
+    if (error?.digest?.startsWith('NEXT_REDIRECT')) {
+      throw error;
+    }
+    console.error("Gagal mengambil data dashboard pimpinan:", error);
+  }
+
   return (
-    <div className="w-full h-full text-slate-800 font-sans p-6 md:p-10 flex flex-col items-center justify-center min-h-[60vh]">
-      <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-2">Dashboard Pimpinan</h1>
-      <p className="text-slate-500">Halaman ini masih kosong dan sedang dalam tahap pengembangan.</p>
+    <div className="flex flex-col items-start gap-6 w-full max-w-[1440px] mx-auto pb-10">
+      {/* Page Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end w-full gap-4">
+        <div className="flex flex-col items-start gap-1">
+          <h1 className="text-slate-900 font-extrabold text-2xl tracking-tight">Executive Summary</h1>
+          <p className="text-slate-500 font-medium text-sm">Ringkasan analitik dan performa layanan IT Helpdesk.</p>
+        </div>
+      </div>
+
+      {/* Row 1: Summary Cards */}
+      <div className="w-full">
+        <SummaryCards data={dashboardData.summary} />
+      </div>
+
+      {/* Main Grid: 2 Columns */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
+        
+        {/* Left Column (Wider - spans 2 cols on large screens) */}
+        <div className="lg:col-span-2 flex flex-col gap-6 w-full">
+          {/* Ticket Trend Chart */}
+          <TicketTrendChart data={dashboardData.ticketTrend} />
+          
+          {/* Department Performance Table */}
+          <DepartmentPerformanceTable data={dashboardData.departments} />
+          
+          {/* Recent Ticket Activity */}
+          <RecentTicketActivityTable data={dashboardData.recentLogs} />
+        </div>
+
+        {/* Right Column (Narrower - spans 1 col) */}
+        <div className="flex flex-col gap-6 w-full">
+          {/* Top Help Topics */}
+          <TopHelpTopicsPieChart data={dashboardData.categories} />
+          
+          {/* SLA Health */}
+          <SlaHealth data={dashboardData.slaHealth} />
+        </div>
+
+      </div>
     </div>
   );
 }

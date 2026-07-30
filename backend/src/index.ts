@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import express from 'express';
+import { supabase } from './config/supabase';
 import authRoutes from './routes/auth.routes';
 import ticketRoutes from './routes/ticket.routes';
 import metadataRoutes from './routes/metadata.routes';
@@ -31,7 +32,7 @@ app.use('/api/simulator', simulatorRoutes); // Rute untuk simulasi testing
 app.use('/api/auth', authRoutes);
 app.use('/api/admin/tickets', ticketRoutes);
 app.use('/api/admin/reporters', reporterRoutes);
-app.use('/api/admin/dashboard', adminRoutes); // specific path so it doesn't conflict with metadataRoutes
+app.use('/api/admin', adminRoutes);
 app.use('/api/admin', metadataRoutes);
 app.use('/api/operator', operatorRoutes);
 
@@ -42,4 +43,30 @@ app.get('/', (req, res) => {
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server Helpdesk berjalan di http://localhost:${PORT}`);
+
+  // Auto-Resolve Background Job (Check every hour)
+  setInterval(async () => {
+    try {
+      const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+      const { data, error } = await supabase
+        .from('tickets')
+        .select('id')
+        .eq('status', 'WAITING CONFIRMATION')
+        .lt('updated_at', fortyEightHoursAgo);
+
+      if (!error && data && data.length > 0) {
+        for (const ticket of data) {
+          await supabase.from('tickets').update({ status: 'RESOLVED' }).eq('id', ticket.id);
+          await supabase.from('ticket_messages').insert({
+            ticket_id: ticket.id,
+            sender_type: 'SYSTEM',
+            message: `[AUTO-RESOLVE] Tiket otomatis diselesaikan karena tidak ada konfirmasi pelapor selama 2x24 jam.`
+          });
+        }
+        console.log(`Auto-resolved ${data.length} tickets.`);
+      }
+    } catch (err) {
+      console.error('Error running auto-resolve cron:', err);
+    }
+  }, 60 * 60 * 1000);
 });

@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
+import { fetchClient } from '@/lib/apiClient';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
@@ -68,21 +69,20 @@ export default function TeknisiTicketTable({
                 actionLog = 'TECH_ASSIGNED';
                 if (techId) updates.tech_id = techId;
             } else if (actionType === 'resolve') {
-                newStatus = 'RESOLVED';
+                newStatus = 'WAITING CONFIRMATION';
                 actionLog = 'RESOLVED_TICKET';
             } else if (actionType === 'reopen') {
-                newStatus = 'NEW';
+                newStatus = 'Open';
+                updates.isReopen = true;
                 actionLog = 'REOPEN_TICKET';
             }
 
             updates.status = newStatus;
 
-            const { error } = await supabase
-                .from('tickets')
-                .update(updates)
-                .eq('id', ticketId);
-
-            if (error) throw error;
+            await fetchClient(`/admin/tickets/${ticketId}`, {
+                method: 'PATCH',
+                body: JSON.stringify(updates)
+            });
 
             await supabase.from('ticket_logs').insert({
                 ticket_id: ticketId,
@@ -143,10 +143,10 @@ export default function TeknisiTicketTable({
                 newStatus = 'IN PROGRESS';
                 actionLog = 'TECH_ASSIGNED';
             } else if (actionType === 'resolve') {
-                newStatus = 'RESOLVED';
+                newStatus = 'WAITING CONFIRMATION';
                 actionLog = 'RESOLVED_TICKET';
             } else if (actionType === 'reopen') {
-                newStatus = 'NEW';
+                newStatus = 'Open';
                 actionLog = 'REOPEN_TICKET';
             }
             
@@ -156,9 +156,12 @@ export default function TeknisiTicketTable({
 
                 const updates: any = { status: newStatus };
                 if (actionType === 'assign' && techId) updates.tech_id = techId;
+                if (actionType === 'reopen') updates.isReopen = true;
 
-                const { error } = await supabase.from('tickets').update(updates).eq('id', ticketId);
-                if (error) throw error;
+                await fetchClient(`/admin/tickets/${ticketId}`, {
+                    method: 'PATCH',
+                    body: JSON.stringify(updates)
+                });
 
                 await supabase.from('ticket_logs').insert({
                     ticket_id: ticketId,
@@ -494,7 +497,7 @@ export default function TeknisiTicketTable({
                                         </td>
                                     )}
                                     <td className="px-4 py-4 text-[#0059BB] font-liberationSerif text-sm font-semibold whitespace-nowrap">
-                                        <Link href={`/dashboard/tickets/${ticket.id}`} className="hover:underline">
+                                        <Link href={`/dashboard/teknisi/tickets/${ticket.id}`} className="hover:underline">
                                             {tNum}
                                         </Link>
                                     </td>
@@ -502,7 +505,7 @@ export default function TeknisiTicketTable({
                                         {formatTimeAgo(ticket.updated_at || ticket.created_at)}
                                     </td>
                                     <td className="px-4 py-4 max-w-xs">
-                                        <Link href={`/dashboard/tickets/${ticket.id}`} className="block">
+                                        <Link href={`/dashboard/teknisi/tickets/${ticket.id}`} className="block">
                                             <p className="text-[#1A1C1E] font-iBMPlexSans text-sm font-medium truncate mb-0.5 hover:text-[#0059BB]">
                                                 {ticket.subject || ticket.category?.name || 'Tanpa Subjek'}
                                             </p>

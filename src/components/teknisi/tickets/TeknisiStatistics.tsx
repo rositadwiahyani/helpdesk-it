@@ -67,7 +67,8 @@ export default function TeknisiStatistics({ tickets, categories }: TeknisiStatis
       if (topicMap[catId]) {
           topicMap[catId].opened += 1;
           
-          if (t.status === 'Resolved' || t.status === 'Closed') {
+          const s = t.status.toUpperCase();
+          if (s === 'RESOLVED' || s === 'CLOSED' || s === 'WAITING CONFIRMATION') {
             topicMap[catId].resolved += 1;
           }
       }

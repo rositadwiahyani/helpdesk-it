@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Link from 'next/link';
 
 export interface UserItem {
   id: string;
@@ -138,7 +139,9 @@ export default function UsersTableSection({
                     </div>
                     
                     <div className="w-[200px] px-4 py-4 overflow-hidden text-ellipsis">
-                      <p className="text-[#1A1C1E] font-iBMPlexSans text-sm font-bold leading-5 w-full truncate">{user.name}</p>
+                      <Link href={`/dashboard/administrasi/users/${user.id}`} className="text-[#1A1C1E] font-iBMPlexSans text-sm font-bold leading-5 w-full truncate hover:text-[#0059BB] hover:underline block">
+                        {user.name}
+                      </Link>
                     </div>
                     
                     <div className="w-[180px] px-4 py-4 overflow-hidden text-ellipsis">

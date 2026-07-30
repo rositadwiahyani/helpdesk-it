@@ -10,7 +10,7 @@ interface SendMessageResponse {
 }
 
 // Memory untuk Simulator
-export const simulatorLogs: { phone: string; message: string; timestamp: string; sender: 'bot' | 'user' }[] = [];
+export const simulatorLogs: { phone: string; message: string; timestamp: string; sender: 'bot' | 'user'; mediaUrl?: string; mediaType?: string; }[] = [];
 
 export async function sendMessage(to: string, text: string): Promise<SendMessageResponse | undefined> {
   // 💡 TARUH LOG TESTING-NYA DI SINI (Sebelum try-catch)

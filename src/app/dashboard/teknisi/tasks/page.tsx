@@ -2,11 +2,22 @@ import React from 'react';
 import TeknisiTicketTable from '@/components/teknisi/tickets/TeknisiTicketTable';
 import { supabase } from '@/lib/supabase';
 
+import { fetchServer } from '@/lib/apiServer';
+import { redirect } from 'next/navigation';
+
 export const dynamic = 'force-dynamic';
 
 export default async function TeknisiMyTasksPage() {
-    // Auth check dilewati sementara
-    const techId = "3"; // Dummy tech ID for "My Tasks"
+    let techId = "";
+    try {
+        const response = await fetchServer('/auth/me');
+        if (!response.data?.user) {
+            redirect('/login');
+        }
+        techId = response.data.user.id;
+    } catch (e) {
+        redirect('/login');
+    }
 
     // Ambil tiket yang ditugaskan ke teknisi ini dan statusnya In Progress
     const { data: tickets, error } = await supabase
@@ -15,8 +26,8 @@ export default async function TeknisiMyTasksPage() {
             *,
             category:categories (name)
         `)
-        .eq('status', 'IN PROGRESS') // Sedang ditangani
-        // .eq('tech_id', techId) // Idealnya di-filter berdasarkan tech_id, di-comment untuk testing jika data kurang
+        .ilike('status', 'IN PROGRESS') // Sedang ditangani
+        .eq('tech_id', techId) // Di-filter berdasarkan tech_id
         .order('created_at', { ascending: false });
 
     // Ambil kategori untuk filter dropdown

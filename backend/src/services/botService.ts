@@ -32,6 +32,31 @@ export async function handleIncomingMessage(sender: string, messageText: string)
     return sendMessage(sender, "⚠️ Maaf, nomor Anda saat ini diblokir dari sistem IT Helpdesk karena pelanggaran ketentuan layanan.");
   }
 
+  // 0.5. Cek Tiket Menunggu Konfirmasi (Auto-Confirm)
+  const { data: waitingTickets } = await supabase
+    .from('tickets')
+    .select('*')
+    .eq('phone', sender)
+    .eq('status', 'WAITING CONFIRMATION');
+
+  if (waitingTickets && waitingTickets.length > 0) {
+    const isConfirmWord = ['selesai', 'ok', 'oke', 'sudah', 'thanks', 'terima kasih', 'mantap', 'ya'].some(w => cleanInput.toLowerCase().includes(w));
+    if (isConfirmWord) {
+      const ticketToConfirm = waitingTickets[0];
+      await supabase.from('tickets').update({ status: 'RESOLVED', updated_at: new Date().toISOString() }).eq('id', ticketToConfirm.id);
+      await supabase.from('ticket_logs').insert({ ticket_id: ticketToConfirm.id, action: 'RESOLVED_TICKET' });
+
+      await supabase.from('wa_sessions').upsert({
+        phone: sender,
+        step: 'WAITING_RATING',
+        data: { ticket_id: ticketToConfirm.id },
+        updated_at: new Date().toISOString()
+      });
+
+      return sendMessage(sender, `✅ Terima kasih atas konfirmasinya. Tiket *${ticketToConfirm.ticket_num || ticketToConfirm.id}* telah ditutup secara otomatis.\n\nBantu kami meningkatkan layanan dengan memberikan *RATING (1-5)* beserta ulasan Anda dalam 1 pesan.\n\nContoh balasan:\n_5 Pelayanan sangat cepat dan teknisi ramah_`);
+    }
+  }
+
   // 1. GLOBAL TRIGGER: HaloDesk / MENU / BATAL
   if (['halodesk', 'batal', 'menu'].includes(cleanInput.toLowerCase())) {
     await supabase.from('wa_sessions').upsert({
@@ -88,6 +113,10 @@ export async function handleIncomingMessage(sender: string, messageText: string)
       await handleCheckTicketStatus(sender, cleanInput);
       break;
 
+    case 'WAITING_RATING':
+      await handleWaitingRating(sender, cleanInput, currentData);
+      break;
+
     default:
       await sendMessage(sender, "Ketik *HaloDesk* untuk kembali ke menu utama.");
       break;
@@ -101,46 +130,91 @@ async function showMainMenu(sender: string) {
   const { data: reporter } = await supabase.from('reporters').select('name').eq('phone', sender).single();
   const greetingName = reporter?.name ? ` ${reporter.name}` : '';
   
-  // Ambil template pesan
-  const { data: template } = await supabase.from('bot_templates').select('message_text').eq('template_key', 'greeting_menu').single();
-  
-  let text = '';
-  if (template && template.message_text) {
-    // Replace placeholder {{name}}
-    text = template.message_text.replace('{{name}}', greetingName);
+  // 1. Ambil menu utama yang aktif dari database
+  const { data: menus } = await supabase
+    .from('bot_menus')
+    .select('*')
+    .is('parent_id', null)
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true });
+
+  let text = `👋 *Halo${greetingName}, Selamat datang di IT Helpdesk!*\n\n`;
+  text += `Silakan pilih menu layanan di bawah ini:\n`;
+
+  if (menus && menus.length > 0) {
+    menus.forEach((menu: any, index: number) => {
+      text += `${index + 1}. ${menu.title}\n`;
+    });
   } else {
-    // Fallback if template doesn't exist
-    text = `👋 *Halo${greetingName}, Selamat datang di IT Helpdesk!*\n\n`;
-    text += `Silakan pilih menu layanan di bawah ini:\n`;
+    // Fallback jika kosong
     text += `1. 📝 Buat Tiket Pengaduan\n`;
-    text += `2. 🔍 Cek Status Tiket\n\n`;
-    text += `_Balas angka pilihan Anda (Contoh: 1)_`;
+    text += `2. 🔍 Cek Status Tiket\n`;
   }
+  
+  text += `\n_Balas angka pilihan Anda (Contoh: 1)_`;
 
   await sendMessage(sender, text);
 }
 
 async function handleMainMenu(sender: string, input: string) {
-  if (input === '1') {
-    await supabase.from('wa_sessions').update({
-      step: 'SELECT_CATEGORY',
-      data: {},
-      updated_at: new Date().toISOString()
-    }).eq('phone', sender);
+  // 1. Ambil menu utama yang aktif dari database
+  const { data: menus } = await supabase
+    .from('bot_menus')
+    .select('*')
+    .is('parent_id', null)
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true });
 
-    await showDynamicCategoryMenu(sender, null, null, {});
+  const selectedIndex = parseInt(input) - 1;
+  const useFallback = !menus || menus.length === 0;
 
-  } else if (input === '2') {
-    // 💡 UPDATE STEP DI SINI KE 'CHECK_TICKET_STATUS'
-    await supabase.from('wa_sessions').update({
-      step: 'CHECK_TICKET_STATUS',
-      data: {},
-      updated_at: new Date().toISOString()
-    }).eq('phone', sender);
+  if (!useFallback) {
+    if (isNaN(selectedIndex) || !menus[selectedIndex]) {
+      return sendMessage(sender, "❌ Pilihan tidak valid. Balas dengan angka yang sesuai dari menu. Ketik *HaloDesk* untuk reset.");
+    }
+    
+    const selectedMenu = menus[selectedIndex];
 
-    await sendMessage(sender, "🔍 Silakan ketikkan *Nomor Tiket* Anda (Contoh: TKT-123456):");
+    if (selectedMenu.action_type === 'CREATE_TICKET') {
+      await supabase.from('wa_sessions').update({
+        step: 'SELECT_CATEGORY',
+        data: {},
+        updated_at: new Date().toISOString()
+      }).eq('phone', sender);
+      return showDynamicCategoryMenu(sender, null, null, {});
+    } else if (selectedMenu.action_type === 'CHECK_STATUS') {
+      await supabase.from('wa_sessions').update({
+        step: 'CHECK_TICKET_STATUS',
+        data: {},
+        updated_at: new Date().toISOString()
+      }).eq('phone', sender);
+      return sendMessage(sender, "🔍 Silakan ketikkan *Nomor Tiket* Anda (Contoh: TKT-123456):");
+    } else if (selectedMenu.action_type === 'TEXT_REPLY') {
+      // Langsung balas teks, dan tetapkan step tetap di MAIN_MENU (atau bisa reset ke HaloDesk)
+      await sendMessage(sender, selectedMenu.content || "Tidak ada isi konten.");
+      return;
+    } else {
+      return sendMessage(sender, "Aksi tidak dikenal.");
+    }
   } else {
-    await sendMessage(sender, "❌ Pilihan tidak valid. Balas angka *1* (Buat Tiket) atau *2* (Cek Status). Ketik *HaloDesk* untuk reset.");
+    // Fallback manual lama
+    if (input === '1') {
+      await supabase.from('wa_sessions').update({
+        step: 'SELECT_CATEGORY',
+        data: {},
+        updated_at: new Date().toISOString()
+      }).eq('phone', sender);
+      return showDynamicCategoryMenu(sender, null, null, {});
+    } else if (input === '2') {
+      await supabase.from('wa_sessions').update({
+        step: 'CHECK_TICKET_STATUS',
+        data: {},
+        updated_at: new Date().toISOString()
+      }).eq('phone', sender);
+      return sendMessage(sender, "🔍 Silakan ketikkan *Nomor Tiket* Anda (Contoh: TKT-123456):");
+    } else {
+      return sendMessage(sender, "❌ Pilihan tidak valid. Balas angka *1* (Buat Tiket) atau *2* (Cek Status). Ketik *HaloDesk* untuk reset.");
+    }
   }
 }
 
@@ -149,7 +223,7 @@ async function handleMainMenu(sender: string, input: string) {
 // ==========================================
 async function showDynamicCategoryMenu(sender: string, parentId: number | null, parentName: string | null, currentData: any) {
   let query = supabase.from('categories').select('id, name').eq('is_active', true).order('sort_order', { ascending: true }).order('name', { ascending: true });
-  
+
   if (parentId === null) {
     query = query.is('parent_id', null);
   } else {
@@ -182,7 +256,7 @@ async function showDynamicCategoryMenu(sender: string, parentId: number | null, 
 
 async function handleDynamicCategorySelect(sender: string, input: string, parentId: number | null, parentName: string | null, currentData: any) {
   let query = supabase.from('categories').select('id, name').eq('is_active', true).order('sort_order', { ascending: true }).order('name', { ascending: true });
-  
+
   if (parentId === null) {
     query = query.is('parent_id', null);
   } else {
@@ -283,7 +357,7 @@ async function handleAskReuseInfo(sender: string, input: string, currentData: an
       .select('name, nim_nip, unit, reporter_type')
       .eq('phone', sender)
       .single();
-      
+
     if (reporter) {
       const updatedData = {
         ...currentData,
@@ -293,13 +367,13 @@ async function handleAskReuseInfo(sender: string, input: string, currentData: an
         unit: reporter.unit,
         reporter_type: reporter.reporter_type
       };
-      
+
       await supabase.from('wa_sessions').update({
         step: 'CONFIRM_TICKET',
         data: updatedData,
         updated_at: new Date().toISOString()
       }).eq('phone', sender);
-      
+
       await showConfirmTicketSummary(sender, updatedData);
     }
   } else if (input === '2') {
@@ -357,11 +431,11 @@ async function handleInputUserInfo(sender: string, input: string, currentData: a
     reporter_type = 'Dosen / Tendik';
   } else if (cleanId !== '-' && cleanId !== '0') {
     // Jika mengisi angka/identitas tapi panjangnya beda, default ke Mahasiswa/Umum sesuai kebutuhan
-    reporter_type = 'Umum'; 
+    reporter_type = 'Umum';
   }
 
-  const updatedData = { 
-    ...currentData, 
+  const updatedData = {
+    ...currentData,
     user_info: input,
     reporter_name,
     nim_nip,
@@ -385,7 +459,7 @@ async function handleConfirmTicket(sender: string, input: string, currentData: a
       const { data: tickets } = await supabase
         .from('tickets')
         .select('ticket_num');
-        
+
       if (tickets && tickets.length > 0) {
         let maxNum = 0;
         tickets.forEach(t => {
@@ -418,7 +492,7 @@ async function handleConfirmTicket(sender: string, input: string, currentData: a
       reporter_type: currentData.reporter_type || 'Umum', // <-- Dinamis sesuai hasil parsing
       nim_nip: currentData.nim_nip,
       unit: currentData.unit,
-      status: 'Open'
+      status: 'WAITING VERIFICATION'
     }]);
 
     if (error) {
@@ -444,8 +518,8 @@ async function handleConfirmTicket(sender: string, input: string, currentData: a
       let successText = `🎉 *TIKET BERHASIL DIBUAT!*\n\n`;
       successText += `• *Nomor Tiket:* *${ticketNumber}*\n`;
       successText += `• *Tipe Pelapor:* ${currentData.reporter_type}\n`;
-      successText += `• *Status:* Open\n\n`;
-      successText += `Tiket Anda telah masuk ke dalam antrean operator. Mohon menunggu update status selanjutnya via WhatsApp. Terima kasih! 🙏`;
+      successText += `• *Status:* WAITING VERIFICATION\n\n`;
+      successText += `Tiket Anda telah masuk ke dalam antrean operator untuk diverifikasi. Mohon menunggu update status selanjutnya via WhatsApp. Terima kasih! 🙏`;
 
       await sendMessage(sender, successText);
     }
@@ -507,4 +581,45 @@ async function handleCheckTicketStatus(sender: string, inputNumber: string) {
   }).eq('phone', sender);
 
   await sendMessage(sender, text);
+}
+
+// ==========================================
+// RATING & FEEDBACK
+// ==========================================
+async function handleWaitingRating(sender: string, input: string, currentData: any) {
+  const ticketId = currentData.ticket_id;
+  if (!ticketId) {
+    await supabase.from('wa_sessions').update({ step: 'MAIN_MENU', data: {} }).eq('phone', sender);
+    return sendMessage(sender, "⚠️ Sesi penilaian tidak valid. Ketik *HaloDesk* untuk kembali ke menu utama.");
+  }
+
+  // Coba parse rating (digit pertama yang ditemukan)
+  const ratingMatch = input.match(/[1-5]/);
+  const rating = ratingMatch ? parseInt(ratingMatch[0]) : null;
+
+  if (!rating) {
+    return sendMessage(sender, "⚠️ Format tidak valid. Silakan berikan rating berupa angka 1 sampai 5. Contoh: *5 Pelayanan sangat baik*");
+  }
+
+  // Teks ulasan adalah sisa dari string setelah menghapus angka rating
+  let feedback = input.replace(/[1-5]/, '').trim();
+  if (!feedback) {
+    feedback = '-'; // Opsional jika kosong
+  }
+
+  // Simpan ke DB
+  await supabase.from('tickets').update({
+    rating: rating,
+    feedback: feedback,
+    updated_at: new Date().toISOString()
+  }).eq('id', ticketId);
+
+  // Reset sesi
+  await supabase.from('wa_sessions').update({
+    step: 'MAIN_MENU',
+    data: {},
+    updated_at: new Date().toISOString()
+  }).eq('phone', sender);
+
+  await sendMessage(sender, `⭐ *Terima Kasih!*\n\nPenilaian Anda (Rating: ${rating}/5) dan ulasan telah kami simpan. Masukan Anda sangat berarti bagi peningkatan layanan IT Helpdesk kami.\n\nKetik *HaloDesk* jika Anda membutuhkan bantuan lain.`);
 }
