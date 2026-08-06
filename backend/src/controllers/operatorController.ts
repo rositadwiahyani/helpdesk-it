@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { supabase } from '../config/supabase';
+import { sendMessage } from '../services/wasender';
 
 export const getOperatorDashboard = async (req: Request, res: Response) => {
   try {
@@ -61,7 +62,7 @@ export const getOpenTickets = async (req: Request, res: Response) => {
     const { data: tickets, error: ticketsError } = await supabase
       .from('tickets')
       .select('*, category:categories(name), dept:departments(name), tech:staff_profiles!tickets_tech_id_fkey(name)')
-      .in('status', ['Open', 'WAITING VERIFICATION'])
+      .in('status', ['WAITING VERIFICATION'])
       .order('created_at', { ascending: false });
 
     if (ticketsError) throw ticketsError;
@@ -160,14 +161,121 @@ export const updateTicket = async (req: Request, res: Response) => {
 
     if (Object.keys(updates).length > 0) {
       updates.updated_at = new Date().toISOString();
-      const { error } = await supabase.from('tickets').update(updates).eq('id', id);
+      const { data: updatedTicket, error } = await supabase.from('tickets').update(updates).eq('id', id).select('id, ticket_num, phone, reporter_name').single();
       if (error) throw error;
       if (updates.status) {
         await supabase.from('ticket_logs').insert({ ticket_id: id, action: 'CHANGE_STATUS', notes: 'Status changed to ' + updates.status });
+        
+        // Auto WA Notif
+        if (updatedTicket?.phone) {
+          let msg = `Halo ${updatedTicket.reporter_name || 'Pelapor'},\n\nStatus tiket pengaduan Anda (*${updatedTicket.ticket_num || updatedTicket.id}*) telah diperbarui menjadi: *${updates.status}*.`;
+          if (updates.status === 'WAITING VERIFICATION') {
+            msg += '\n\nTiket Anda telah berhasil diverifikasi oleh operator dan akan segera diteruskan ke teknisi terkait.';
+          } else if (updates.status === 'REJECTED') {
+            msg += '\n\nMohon maaf, tiket Anda ditolak karena alasan tertentu. Silakan cek detail tiket atau hubungi Helpdesk.';
+          }
+          sendMessage(updatedTicket.phone, msg).catch(e => console.error('Gagal kirim WA auto notif operator:', e));
+        }
       }
     }
 
     return res.status(200).json({ success: true, message: 'Ticket updated' });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getUnhandledTickets = async (req: Request, res: Response) => {
+  try {
+    const { data: tickets, error: ticketsError } = await supabase
+      .from('tickets')
+      .select('*, category:categories(name), dept:departments(name), tech:staff_profiles!tickets_tech_id_fkey(name)')
+      .in('status', ['Open', 'NEW'])
+      .not('dept_id', 'is', null)
+      .is('tech_id', null)
+      .order('created_at', { ascending: false });
+
+    if (ticketsError) throw ticketsError;
+
+    const { data: categories } = await supabase.from('categories').select('*');
+    const { data: slaConfigs } = await supabase.from('sla_configs').select('*');
+    const { data: departments } = await supabase.from('departments').select('*');
+    const { data: technicians } = await supabase.from('staff_profiles').select('id, name, role').in('role', ['teknisi', 'agent']);
+
+    const formattedCategories = (categories || []).map(cat => ({
+      ...cat,
+      slaData: (slaConfigs || []).find(sla => sla.category_id === cat.id)
+    }));
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        tickets,
+        categories: formattedCategories,
+        departments,
+        technicians
+      }
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getResolvedTickets = async (req: Request, res: Response) => {
+  try {
+    const { data: tickets, error: ticketsError } = await supabase
+      .from('tickets')
+      .select('*, category:categories(name), dept:departments(name), tech:staff_profiles!tickets_tech_id_fkey(name)')
+      .in('status', ['RESOLVED', 'CLOSED'])
+      .order('created_at', { ascending: false });
+
+    if (ticketsError) throw ticketsError;
+    
+    const { data: categories } = await supabase.from('categories').select('*');
+    const { data: departments } = await supabase.from('departments').select('*');
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        tickets,
+        categories: categories || [],
+        departments: departments || []
+      }
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getInProgressTickets = async (req: Request, res: Response) => {
+  try {
+    const { data: tickets, error: ticketsError } = await supabase
+      .from('tickets')
+      .select('*, category:categories(name), dept:departments(name), tech:staff_profiles!tickets_tech_id_fkey(name)')
+      .in('status', ['IN PROGRESS', 'Diproses'])
+      .order('created_at', { ascending: false });
+
+    if (ticketsError) throw ticketsError;
+
+    const { data: categories } = await supabase.from('categories').select('*');
+    const { data: slaConfigs } = await supabase.from('sla_configs').select('*');
+    const { data: departments } = await supabase.from('departments').select('*');
+    const { data: technicians } = await supabase.from('staff_profiles').select('id, name, role').in('role', ['teknisi', 'agent']);
+
+    const formattedCategories = (categories || []).map(cat => ({
+      ...cat,
+      slaData: (slaConfigs || []).find(sla => sla.category_id === cat.id)
+    }));
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        tickets,
+        categories: formattedCategories,
+        departments,
+        technicians
+      }
+    });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });
   }

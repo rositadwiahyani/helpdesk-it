@@ -20,8 +20,11 @@ export default function OperatorSidebar({ isOpen, setIsOpen }: OperatorSidebarPr
 
   const MENU_ITEMS = [
     { name: 'Dashboard', path: '/dashboard/operator', icon: HomeIcon },
-    { name: 'Tiket Masuk', path: '/dashboard/operator/tickets', icon: TicketsIcon },
-    { name: 'Tiket Ditolak', path: '/dashboard/operator/tickets-rejected', icon: TicketsIcon },
+    { name: 'Tiket Masuk', path: '/dashboard/operator/tickets', icon: InboxIcon },
+    { name: 'Tiket Ditolak', path: '/dashboard/operator/tickets-rejected', icon: XCircleIcon },
+    { name: 'Tiket Belum Ditangani', path: '/dashboard/operator/tickets-unhandled', icon: ClockIcon },
+    { name: 'Tiket In Progress', path: '/dashboard/operator/tickets-inprogress', icon: ActivityIcon },
+    { name: 'Tiket Selesai', path: '/dashboard/operator/tickets-resolved', icon: CheckCircleIcon },
     { name: 'Profil', path: '/dashboard/operator/profile', icon: StaffIcon },
   ];
 
@@ -122,6 +125,50 @@ function TicketsIcon({ isActive }: { isActive: boolean }) {
     <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
       <path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1.5a1.5 1.5 0 0 0 0 3V15a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1.5a1.5 1.5 0 0 0 0-3V9Z" />
       <path d="M9 7v10" strokeDasharray="2 2" />
+    </svg>
+  );
+}
+
+function InboxIcon({ isActive }: { isActive: boolean }) {
+  return (
+    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+      <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
+      <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
+    </svg>
+  );
+}
+
+function XCircleIcon({ isActive }: { isActive: boolean }) {
+  return (
+    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="10" />
+      <path d="m15 9-6 6M9 9l6 6" />
+    </svg>
+  );
+}
+
+function ClockIcon({ isActive }: { isActive: boolean }) {
+  return (
+    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
+    </svg>
+  );
+}
+
+function ActivityIcon({ isActive }: { isActive: boolean }) {
+  return (
+    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+    </svg>
+  );
+}
+
+function CheckCircleIcon({ isActive }: { isActive: boolean }) {
+  return (
+    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+      <polyline points="22 4 12 14.01 9 11.01" />
     </svg>
   );
 }

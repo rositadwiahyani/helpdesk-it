@@ -5,11 +5,12 @@ const router = Router();
 
 router.post('/whatsapp', async (req: Request, res: Response) => {
   try {
-    const { sender, message } = req.body;
+    const { sender, message, url, media } = req.body;
+    const mediaUrl = url || media || undefined;
 
     if (sender && message) {
       // Jalankan logika bot secara async (tidak menahan response HTTP)
-      handleIncomingMessage(sender, message);
+      handleIncomingMessage(sender, message, mediaUrl);
     }
 
     // Selalu kembalikan 200 OK dengan cepat ke WASender

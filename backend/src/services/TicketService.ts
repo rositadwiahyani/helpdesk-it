@@ -120,7 +120,7 @@ export const createTicketFromWA = async (input: CreateTicketWAInput) => {
           description: input.description,
           attachment: input.attachment || null,
           priority: input.priority || 'Sedang',
-          status: 'OPEN'
+          status: 'WAITING VERIFICATION'
         }
       ])
       .select()

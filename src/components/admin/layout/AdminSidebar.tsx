@@ -10,7 +10,7 @@ export default function AdminSidebar() {
   const handleLogout = () => {
     document.cookie = 'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
     localStorage.removeItem('isLoggedIn');
-    router.push('/login');
+    window.location.href = '/login';
   };
 
   let MENU_ITEMS = [
@@ -21,6 +21,9 @@ export default function AdminSidebar() {
     { name: 'Manajemen SLA', path: '/dashboard/administrasi/sla', icon: SlaIcon },
     { name: 'Manajemen Staff', path: '/dashboard/administrasi/staff', icon: StaffIcon },
     { name: 'Laporan & Ekspor', path: '/dashboard/administrasi/reports', icon: ReportIcon },
+    { name: 'Jawaban Cepat', path: '/dashboard/administrasi/quick-replies', icon: ChatIcon },
+    { name: 'Pengaturan Menu Bot', path: '/dashboard/administrasi/bot-menus', icon: BotIcon },
+    { name: 'Basis Pengetahuan', path: '/dashboard/administrasi/knowledge-base', icon: BookIcon },
     { name: 'Log API Webhook', path: '/dashboard/administrasi/webhook', icon: WebhookIcon },
     { name: 'Pengaturan Sistem', path: '/dashboard/administrasi/settings', icon: SettingsIcon },
     { name: 'Profil', path: '/dashboard/administrasi/profile', icon: SettingsIcon },
@@ -197,6 +200,35 @@ function LogoutIcon({ isActive }: { isActive: boolean }) {
       <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
       <path d="m16 17 5-5-5-5" />
       <path d="M21 12H9" />
+    </svg>
+  );
+}
+
+function ChatIcon({ isActive }: { isActive: boolean }) {
+  return (
+    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+    </svg>
+  );
+}
+
+function BotIcon({ isActive }: { isActive: boolean }) {
+  return (
+    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+      <path d="M12 8V4H8" />
+      <rect width="16" height="12" x="4" y="8" rx="2" />
+      <path d="M2 14h2" />
+      <path d="M20 14h2" />
+      <path d="M15 13v2" />
+      <path d="M9 13v2" />
+    </svg>
+  );
+}
+
+function BookIcon({ isActive }: { isActive: boolean }) {
+  return (
+    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+      <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
     </svg>
   );
 }

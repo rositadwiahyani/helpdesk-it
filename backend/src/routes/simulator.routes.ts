@@ -16,18 +16,30 @@ router.get('/messages/:phone', (req: Request, res: Response) => {
 // Mengirim pesan dari "pengguna" (user) ke bot
 router.post('/send', async (req: Request, res: Response) => {
   try {
-    const { phone, message } = req.body;
+    const { phone, message, mediaUrl, mediaType } = req.body;
 
-    if (!phone || !message) {
-      return res.status(400).json({ error: 'Phone dan message wajib diisi' });
+    if (!phone) {
+      return res.status(400).json({ error: 'Phone wajib diisi' });
     }
 
     // Simpan pesan user ke memory agar muncul di UI simulator
-    simulatorLogs.push({ phone, message, timestamp: new Date().toISOString(), sender: 'user' });
+    simulatorLogs.push({ 
+      phone, 
+      message: message || '', 
+      timestamp: new Date().toISOString(), 
+      sender: 'user',
+      mediaUrl,
+      mediaType
+    });
     if (simulatorLogs.length > 100) simulatorLogs.shift();
 
-    // Trigger logika bot secara async
-    handleIncomingMessage(phone, message);
+    // Trigger logika bot secara async (gabungkan mediaUrl ke text jika ada, agar botService sederhana)
+    let combinedMessage = message || '';
+    if (mediaUrl) {
+      combinedMessage += `\n\n[Lampiran: ${mediaUrl}]`;
+    }
+    // Panggil botService
+    handleIncomingMessage(phone, combinedMessage.trim(), mediaUrl);
 
     res.json({ success: true });
   } catch (error) {

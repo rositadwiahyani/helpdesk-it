@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { supabase } from '../config/supabase';
+import { sendMessage } from '../services/wasender';
 
 /**
  * 1. Mengambil semua tiket untuk Dashboard (Admin/Staf)
@@ -53,7 +54,7 @@ export const getTicketByNum = async (req: Request, res: Response) => {
 export const updateTicketByStaff = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { status, tech_id, dept_id, priority, category_id } = req.body;
+    const { status, tech_id, dept_id, priority, category_id, isReopen } = req.body;
 
     const updatePayload: any = {
       updated_at: new Date().toISOString()
@@ -74,6 +75,31 @@ export const updateTicketByStaff = async (req: Request, res: Response) => {
 
     if (error) {
       return res.status(400).json({ success: false, message: error.message });
+    }
+
+    // Auto send WhatsApp for status changes
+    if (status && data.phone) {
+      if (status === 'WAITING CONFIRMATION') {
+        const confirmLink = `http://localhost:3000/ticket/confirm/${data.id}`;
+        const msg = `Halo ${data.reporter_name || 'Pelapor'},\n\nTiket pengaduan Anda dengan nomor *${data.ticket_num || data.id}* telah selesai ditangani oleh teknisi kami.\n\nMohon konfirmasi apakah masalah sudah benar-benar teratasi melalui tautan berikut:\n${confirmLink}\n\n*ATAU balas pesan ini* dengan mengetik kata _selesai_, _ok_, atau _thanks_.\n\nTerima kasih.`;
+        sendMessage(data.phone, msg).catch(e => console.error('Gagal kirim WA konfirmasi:', e));
+      } else {
+        let msg = `Halo ${data.reporter_name || 'Pelapor'},\n\nStatus tiket pengaduan Anda (*${data.ticket_num || data.id}*) telah diperbarui menjadi: *${status}*.`;
+        if (status === 'Open' || status === 'OPEN') {
+           if (isReopen) {
+               msg += '\n\nTiket Anda telah dibuka kembali dan akan segera ditangani ulang oleh teknisi kami.';
+           } else {
+               msg += '\n\nTiket Anda telah berhasil diverifikasi oleh operator dan akan segera diteruskan ke departemen/teknisi terkait.';
+           }
+        } else if (status === 'IN PROGRESS' || status === 'Diproses') {
+           msg += '\n\nTeknisi kami saat ini sedang mengerjakan dan menangani kendala Anda.';
+        } else if (status === 'RESOLVED' || status === 'CLOSED') {
+           msg += '\n\nTiket Anda telah ditutup secara resmi. Terima kasih telah menggunakan layanan IT Helpdesk.';
+        } else if (status === 'REJECTED' || status === 'Ditolak') {
+           msg += '\n\nMohon maaf, tiket Anda ditolak karena alasan tertentu. Silakan cek detail tiket atau hubungi Helpdesk.';
+        }
+        sendMessage(data.phone, msg).catch(e => console.error('Gagal kirim WA notif status:', e));
+      }
     }
 
     return res.status(200).json({ success: true, data });
@@ -113,7 +139,13 @@ export const getTicketMessages = async (req: Request, res: Response) => {
 export const sendStaffResponse = async (req: Request, res: Response) => {
   try {
     const { ticketId } = req.params;
-    const { sender_id, message } = req.body;
+    const { message } = req.body;
+    
+    // Gunakan user ID dari token JWT (AuthRequest)
+    const sender_id = (req as any).user?.id;
+    if (!sender_id) {
+      return res.status(401).json({ success: false, message: 'Unauthorized' });
+    }
 
     const { data, error } = await supabase
       .from('ticket_messages')
@@ -133,6 +165,49 @@ export const sendStaffResponse = async (req: Request, res: Response) => {
     }
 
     return res.status(201).json({ success: true, data });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const sendWaMessage = async (req: Request, res: Response) => {
+  try {
+    const { message, phone } = req.body;
+    if (!message || !phone) {
+      return res.status(400).json({ success: false, message: 'Message and phone are required' });
+    }
+
+    await sendMessage(phone, message);
+    return res.status(200).json({ success: true, message: 'WA message sent' });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const confirmTicketPublic = async (req: Request, res: Response) => {
+  try {
+    const { ticketId } = req.params;
+    const { action } = req.body;
+
+    if (!ticketId || !action) {
+      return res.status(400).json({ success: false, message: 'Invalid data' });
+    }
+
+    const { error: updateError } = await supabase
+      .from('tickets')
+      .update({ status: action })
+      .eq('id', ticketId);
+
+    if (updateError) throw updateError;
+
+    // Tambah pesan internal
+    await supabase.from('ticket_messages').insert({
+      ticket_id: ticketId,
+      sender_type: 'USER',
+      message: `[KONFIRMASI PELAPOR] Pelapor menyatakan tiket ini: ${action === 'RESOLVED' ? 'SUDAH SELESAI' : 'BELUM SELESAI'}`
+    });
+
+    return res.status(200).json({ success: true });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });
   }

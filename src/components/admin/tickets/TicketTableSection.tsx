@@ -18,10 +18,11 @@ interface TicketTableSectionProps {
     endDate: string;
     priority: string;
   };
+  searchQuery?: string;
   onEditTicket?: (ticketId: string) => void;
 }
 
-export default function TicketTableSection({ activeTab = 'all', tickets = [], newlyAddedTicket, selectedTickets = [], onSelectionChange, filters, onEditTicket }: TicketTableSectionProps) {
+export default function TicketTableSection({ activeTab = 'all', tickets = [], newlyAddedTicket, selectedTickets = [], onSelectionChange, filters, searchQuery = '', onEditTicket }: TicketTableSectionProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [displayTickets, setDisplayTickets] = useState<any[]>([]);
   
@@ -36,7 +37,7 @@ export default function TicketTableSection({ activeTab = 'all', tickets = [], ne
     // 1. Filter by Status
     if (activeTab !== 'all') {
       const statusMap: Record<string, string> = {
-        'open': 'NEW',
+        'open': 'OPEN',
         'in_progress': 'IN PROGRESS',
         'waiting_verification': 'WAITING VERIFICATION',
         'resolved': 'RESOLVED',
@@ -67,6 +68,17 @@ export default function TicketTableSection({ activeTab = 'all', tickets = [], ne
         end.setHours(23, 59, 59, 999);
         filteredData = filteredData.filter(t => new Date(t.created_at) <= end);
       }
+    }
+    
+    // 1.8 Filter by Search Query
+    if (searchQuery.trim() !== '') {
+      const lowerQuery = searchQuery.toLowerCase();
+      filteredData = filteredData.filter(t => 
+        (t.ticket_num && t.ticket_num.toLowerCase().includes(lowerQuery)) ||
+        (t.ticketNumber && t.ticketNumber.toLowerCase().includes(lowerQuery)) ||
+        (t.subject && t.subject.toLowerCase().includes(lowerQuery)) ||
+        (t.reporter_name && t.reporter_name.toLowerCase().includes(lowerQuery))
+      );
     }
     
     // 2. Terapkan data baru jika ada di sesi lokal (opsional untuk efek instan)

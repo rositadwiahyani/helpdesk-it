@@ -96,6 +96,20 @@ export default function Tree() {
           count={node.count}
           status={node.status}
           childrenWrapperClassName={node.childrenWrapperClassName}
+          onMoveUp={index > 0 ? () => {
+            const updatedData = [...treeData];
+            const temp = updatedData[index];
+            updatedData[index] = updatedData[index - 1];
+            updatedData[index - 1] = temp;
+            ctx?.handleReorder?.(updatedData);
+          } : undefined}
+          onMoveDown={index < treeData.length - 1 ? () => {
+            const updatedData = [...treeData];
+            const temp = updatedData[index];
+            updatedData[index] = updatedData[index + 1];
+            updatedData[index + 1] = temp;
+            ctx?.handleReorder?.(updatedData);
+          } : undefined}
         >
           {node.children?.map((subChild: any, scIndex: number) => renderNode(subChild, scIndex, false))}
         </SubRow>
@@ -107,7 +121,36 @@ export default function Tree() {
         key={node.id}
         variant={node.type as any}
         title={node.title}
+        nodeId={node.id}
         hasDivider={node.type === "leaf-bordered" ? true : undefined}
+        onMoveUp={index > 0 ? () => {
+          const updatedData = [...treeData];
+          const parentIndex = updatedData.findIndex(p => p.children?.some((c: any) => c.id === node.id));
+          if (parentIndex !== -1) {
+            const parent = { ...updatedData[parentIndex] };
+            const children = [...parent.children];
+            const temp = children[index];
+            children[index] = children[index - 1];
+            children[index - 1] = temp;
+            parent.children = children;
+            updatedData[parentIndex] = parent;
+            ctx?.handleReorder?.(updatedData);
+          }
+        } : undefined}
+        onMoveDown={index < (treeData.find((p: any) => p.children?.some((c: any) => c.id === node.id))?.children?.length || 0) - 1 ? () => {
+          const updatedData = [...treeData];
+          const parentIndex = updatedData.findIndex(p => p.children?.some((c: any) => c.id === node.id));
+          if (parentIndex !== -1) {
+            const parent = { ...updatedData[parentIndex] };
+            const children = [...parent.children];
+            const temp = children[index];
+            children[index] = children[index + 1];
+            children[index + 1] = temp;
+            parent.children = children;
+            updatedData[parentIndex] = parent;
+            ctx?.handleReorder?.(updatedData);
+          }
+        } : undefined}
       />
     );
   };

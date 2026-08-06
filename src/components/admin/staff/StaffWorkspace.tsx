@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import StaffHeader from "./StaffHeader";
 import AgentModal from "./AgentModal";
@@ -82,7 +83,11 @@ export default function StaffWorkspace() {
                 <tbody>
                   {agents.map((agent) => (
                     <tr key={agent.id} className="border-b border-[#E5E7EB] hover:bg-gray-50">
-                      <td className="px-4 py-3 text-sm text-[#1A1C1E]">{agent.name}</td>
+                      <td className="px-4 py-3 text-sm text-[#1A1C1E]">
+                        <Link href={`/dashboard/administrasi/staff/${agent.id}`} className="hover:text-blue-600 hover:underline font-bold">
+                          {agent.name}
+                        </Link>
+                      </td>
                       <td className="px-4 py-3 text-sm text-[#43474F]">{agent.email}</td>
                       <td className="px-4 py-3 text-sm text-[#43474F] uppercase">{agent.role}</td>
                       <td className="px-4 py-3 text-sm text-[#43474F]">{agent.dept?.name || '-'}</td>

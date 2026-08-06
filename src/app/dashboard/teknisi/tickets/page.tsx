@@ -16,7 +16,7 @@ export default async function TeknisiOpenTicketsPage() {
             category:categories (name),
             dept:departments (name)
         `)
-        .eq('status', 'NEW') // Tiket yang diteruskan oleh operator
+        .in('status', ['NEW', 'Open']) // Tiket yang diteruskan oleh operator
         .order('created_at', { ascending: false });
 
     // Ambil kategori untuk filter dropdown

@@ -5,10 +5,15 @@ import {
   getTicketByNum,
   updateTicketByStaff,
   getTicketMessages,
-  sendStaffResponse
+  sendStaffResponse,
+  sendWaMessage,
+  confirmTicketPublic
 } from '../controllers/ticketController';
 
 const router = Router();
+
+// Public Endpoint: Konfirmasi Penyelesaian Tiket (Tanpa Auth)
+router.post('/public/:ticketId/confirm', confirmTicketPublic);
 
 // Semua endpoint tiket di bawah mewajibkan header "Authorization: Bearer <token>"
 router.use(requireAuth);
@@ -47,5 +52,8 @@ router.post(
   requireRole(['admin', 'operator', 'teknisi']),
   sendStaffResponse
 );
+
+// 6. POST /api/admin/tickets/:ticketId/messages/wa - Kirim WA langsung
+router.post('/:ticketId/messages/wa', requireRole(['admin', 'operator', 'teknisi']), sendWaMessage);
 
 export default router;

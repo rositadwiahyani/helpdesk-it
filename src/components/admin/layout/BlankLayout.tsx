@@ -11,9 +11,14 @@ export default function BlankLayout({ children }: { children: React.ReactNode })
 
   // Helper to determine page title from pathname
   const getPageTitle = () => {
-    if (!pathname) return 'Dashboard';
-    if (pathname.includes('/dashboard/pimpinan')) return 'Dashboard Pimpinan';
-    if (pathname.includes('/dashboard/teknisi')) return 'Dashboard Teknisi';
+    if (!pathname) return 'Dashboard Administrasi';
+    if (pathname.includes('/dashboard/administrasi/sla')) return 'Manajemen SLA';
+    if (pathname.includes('/dashboard/administrasi/staff')) return 'Manajemen Staff';
+    if (pathname.includes('/dashboard/administrasi/reports')) return 'Laporan & Ekspor';
+    if (pathname.includes('/dashboard/administrasi/quick-replies')) return 'Template Jawaban Cepat';
+    if (pathname.includes('/dashboard/administrasi/webhook')) return 'Log API Webhook';
+    if (pathname.includes('/dashboard/administrasi/settings')) return 'Pengaturan Sistem';
+    if (pathname.includes('/dashboard/administrasi/profile')) return 'Profil Administrator';
     if (pathname.includes('/dashboard/administrasi')) return 'Dashboard Administrasi';
     return 'Dashboard';
   };

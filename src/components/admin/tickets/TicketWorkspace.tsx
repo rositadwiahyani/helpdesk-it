@@ -30,6 +30,7 @@ export default function TicketWorkspace() {
   const [selectedTicketToEdit, setSelectedTicketToEdit] = useState<string | null>(null);
   
   const [filters, setFilters] = useState<any>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [categories, setCategories] = useState<any[]>([]);
 
   const fetchTicketsData = async () => {
@@ -108,7 +109,7 @@ export default function TicketWorkspace() {
   // Kalkulasi counts
   const counts = {
     all: tickets.length,
-    open: tickets.filter(t => (t.status || '').toUpperCase() === 'NEW').length,
+    open: tickets.filter(t => (t.status || '').toUpperCase() === 'OPEN').length,
     inProgress: tickets.filter(t => (t.status || '').toUpperCase() === 'IN PROGRESS').length,
     waitingVerification: tickets.filter(t => (t.status || '').toUpperCase() === 'WAITING VERIFICATION').length,
     resolved: tickets.filter(t => (t.status || '').toUpperCase() === 'RESOLVED').length,
@@ -125,6 +126,8 @@ export default function TicketWorkspace() {
         activeTab={activeTab}
         onTabChange={setActiveTab}
         counts={counts}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
         onNewTicket={handleNewTicket} 
         onExportCsv={handleExportCsv}
         onOpenFilters={handleOpenFilters}
@@ -147,6 +150,7 @@ export default function TicketWorkspace() {
           selectedTickets={selectedTickets}
           onSelectionChange={setSelectedTickets}
           filters={filters}
+          searchQuery={searchQuery}
           onEditTicket={(id) => { setSelectedTicketToEdit(id); setIsEditTicketModalOpen(true); }}
         />
       )}

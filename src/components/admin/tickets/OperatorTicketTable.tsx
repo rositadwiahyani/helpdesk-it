@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { fetchClient } from '@/lib/apiClient';
 import { supabase } from '@/lib/supabase';
 
 type Ticket = any; // simplified for this example
@@ -16,14 +17,18 @@ export default function OperatorTicketTable({
     mainCategories,
     departments,
     technicians,
-    actionType = 'verify'
+    actionType = 'verify',
+    assignToHeader,
+    assignToType
 }: {
     initialTickets: Ticket[],
     categories: Category[],
     mainCategories: Category[],
     departments: Department[],
     technicians?: Technician[],
-    actionType?: 'verify' | 'rollback'
+    actionType?: 'verify' | 'rollback' | 'readonly',
+    assignToHeader?: string,
+    assignToType?: 'dept' | 'tech' | 'resolver'
 }) {
     const router = useRouter();
     // Local state for tickets to support optimistic updates
@@ -46,7 +51,7 @@ export default function OperatorTicketTable({
     const [isBulkRejecting, setIsBulkRejecting] = useState(false);
 
     // States for sorting
-    const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
+    const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>({ key: 'priority', direction: 'desc' });
 
     // Toast notification state
     const [toasts, setToasts] = useState<{id: number, message: string, type: 'success' | 'error'}[]>([]);
@@ -74,19 +79,26 @@ export default function OperatorTicketTable({
             // Optimistic update: remove ticket from the current view
             setTickets(prev => prev.filter(t => t.id !== ticketId));
 
-            const newStatus = action === 'accept' ? 'NEW' : action === 'reject' ? 'Ditolak' : 'WAITING VERIFICATION';
+            const newStatus = action === 'accept' ? 'Open' : action === 'reject' ? 'REJECTED' : 'WAITING VERIFICATION';
             
-            // Supabase call
-            const { error } = await supabase
-                .from('tickets')
-                .update({ status: newStatus })
-                .eq('id', ticketId);
+            const payload: any = { status: newStatus };
+            if (action === 'accept') {
+                payload.dept_id = ticket.dept_id;
+                payload.category_id = ticket.category_id;
+            }
 
-            if (error) throw error;
+            // Backend call to ensure auto-notif logic fires
+            await fetchClient(`/admin/tickets/${ticketId}`, {
+                method: 'PATCH',
+                body: JSON.stringify(payload)
+            });
 
+            // Log action is also handled by backend if we use it, but our backend might not log REJECT_TICKET specifically.
+            // But it's fine to keep the manual log here for UI completeness:
             await supabase.from('ticket_logs').insert({
                 ticket_id: ticketId,
-                action: action === 'accept' ? 'CHANGE_STATUS' : action === 'reject' ? 'REJECT_TICKET' : 'ROLLBACK_TICKET'
+                action: action === 'accept' ? 'CHANGE_STATUS' : action === 'reject' ? 'REJECT_TICKET' : 'ROLLBACK_TICKET',
+                notes: `Status changed to ${newStatus}`
             });
 
             const actionText = action === 'accept' ? 'terima' : action === 'reject' ? 'tolak' : 'rollback';
@@ -164,7 +176,7 @@ export default function OperatorTicketTable({
         try {
             const isRollback = actionType === 'rollback' && type === 'default';
             const isDelete = actionType === 'rollback' && type === 'delete';
-            const newStatus = isRollback ? 'WAITING VERIFICATION' : 'Ditolak';
+            const newStatus = isRollback ? 'Open' : 'Ditolak';
             
             const promises = selectedTickets.map(async (ticketId) => {
                 const ticket = tickets.find(t => t.id === ticketId);
@@ -269,6 +281,18 @@ export default function OperatorTicketTable({
         // 4. Sorting
         if (sortConfig !== null) {
             filtered.sort((a, b) => {
+                if (sortConfig.key === 'priority') {
+                    const pVal: Record<string, number> = { 'CRITICAL': 4, 'HIGH': 3, 'MEDIUM': 2, 'LOW': 1 };
+                    const aP = pVal[(a.priority || 'MEDIUM').toUpperCase()] || 2;
+                    const bP = pVal[(b.priority || 'MEDIUM').toUpperCase()] || 2;
+                    
+                    if (aP !== bP) {
+                        return sortConfig.direction === 'asc' ? (aP - bP) : (bP - aP);
+                    }
+                    // Secondary sort by date (newest first)
+                    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+                }
+
                 let aValue = a[sortConfig.key];
                 let bValue = b[sortConfig.key];
 
@@ -285,6 +309,9 @@ export default function OperatorTicketTable({
                 }
                 return 0;
             });
+        } else {
+            // Default sort if no sortConfig (should fallback to date)
+            filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         }
 
         return filtered;
@@ -517,7 +544,7 @@ export default function OperatorTicketTable({
                                 <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">PRIORITY</span>
                             </th>
                             <th className="px-4 py-4 select-none w-44">
-                                <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">ASSIGN TO</span>
+                                <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">{assignToHeader || 'ASSIGN TO'}</span>
                             </th>
                             {actionType !== 'readonly' && (
                                 <th className="px-4 py-4 select-none text-right w-40">
@@ -553,7 +580,7 @@ export default function OperatorTicketTable({
                                         </td>
                                     )}
                                     <td className="px-4 py-4 text-[#0059BB] font-liberationSerif text-sm font-semibold whitespace-nowrap">
-                                        <Link href={`/dashboard/tickets/${ticket.id}`} className="hover:underline">
+                                        <Link href={`/dashboard/operator/tickets/${ticket.id}`} className="hover:underline">
                                             {tNum}
                                         </Link>
                                     </td>
@@ -561,7 +588,7 @@ export default function OperatorTicketTable({
                                         {formatTimeAgo(ticket.updated_at || ticket.created_at)}
                                     </td>
                                     <td className="px-4 py-4 max-w-xs">
-                                        <Link href={`/dashboard/tickets/${ticket.id}`} className="block">
+                                        <Link href={`/dashboard/operator/tickets/${ticket.id}`} className="block">
                                             <p className="text-[#1A1C1E] font-iBMPlexSans text-sm font-medium truncate mb-0.5 hover:text-[#0059BB]">
                                                 {ticket.subject || ticket.category?.name || 'Tanpa Subjek'}
                                             </p>
@@ -618,7 +645,13 @@ export default function OperatorTicketTable({
                                         )}
                                     </td>
                                     <td className="px-4 py-4 whitespace-nowrap">
-                                        {actionType === 'verify' ? (
+                                        {assignToType === 'dept' ? (
+                                            <span className="text-[#43474F] font-iBMPlexSans text-[12px]">{ticket.department?.name || departments?.find(d => String(d.id) === String(ticket.dept_id))?.name || ticket.dept_id || '-'}</span>
+                                        ) : assignToType === 'tech' ? (
+                                            <span className="text-[#43474F] font-iBMPlexSans text-[12px]">{ticket.tech?.name || ticket.tech_id || 'Belum di-assign'}</span>
+                                        ) : assignToType === 'resolver' ? (
+                                            <span className="text-[#43474F] font-iBMPlexSans text-[12px]">{ticket.tech?.name || ticket.tech_id || 'System'}</span>
+                                        ) : actionType === 'verify' ? (
                                             <div className="relative w-[140px]">
                                                 <select 
                                                     value={ticket.dept_id || ''}
