@@ -48,6 +48,7 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
   // Disposisi state
   const [technicians, setTechnicians] = useState<any[]>([]);
   const [departments, setDepartments] = useState<any[]>([]);
+  const [attachments, setAttachments] = useState<any[]>([]);
   const [selectedDeptId, setSelectedDeptId] = useState<string>('');
   const [selectedTechId, setSelectedTechId] = useState<string>('');
   const [isAssigning, setIsAssigning] = useState(false);
@@ -94,13 +95,16 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
           setQuickReplies(qrResponse);
         }
 
-        // Fetch technicians for disposisi
+        // Fetch technicians for disposisi and attachments
         import('@/lib/supabase').then(({ supabase }) => {
           supabase.from('staff_profiles').select('id, name, dept_id').in('role', ['teknisi', 'agent']).then(({ data }) => {
             if (data) setTechnicians(data);
           });
           supabase.from('departments').select('id, name').order('name').then(({ data }) => {
             if (data) setDepartments(data);
+          });
+          supabase.from('ticket_attachments').select('*').eq('ticket_id', foundTicket.id).then(({ data }) => {
+            if (data) setAttachments(data);
           });
         });
       } catch (error) {
@@ -482,6 +486,34 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
                     <span className="font-bold text-gray-700">Deskripsi:</span>
                     <br/>
                     {ticket.description || '-'}
+                    {attachments.length > 0 && (
+                      <div className="mt-4 pt-4 border-t border-gray-100">
+                        <span className="font-bold text-gray-700 text-[13px] mb-2 block">Lampiran:</span>
+                        <div className="flex flex-wrap gap-3">
+                          {attachments.map((att, idx) => (
+                            <a
+                              key={idx}
+                              href={att.file_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="group block relative rounded-xl overflow-hidden border border-gray-200 bg-gray-50 hover:border-blue-300 transition-colors cursor-zoom-in shadow-sm w-[150px] h-[150px]"
+                            >
+                              <img
+                                src={att.file_url}
+                                alt={att.file_name || 'Lampiran'}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                onError={(e) => {
+                                  // Fallback for non-image files
+                                  e.currentTarget.style.display = 'none';
+                                  e.currentTarget.parentElement?.classList.add('flex', 'items-center', 'justify-center');
+                                  e.currentTarget.parentElement?.insertAdjacentHTML('beforeend', '<div class="text-center p-3"><svg class="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg><span class="text-[10px] text-gray-500 break-all line-clamp-2 leading-tight">' + (att.file_name || 'File') + '</span></div>');
+                                }}
+                              />
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <span className="text-[11px] font-semibold text-gray-500 mt-2 px-1.5 py-0.5 bg-white/80 rounded-md backdrop-blur-sm shadow-sm">{formatDate(ticket.created_at)}</span>
                 </div>

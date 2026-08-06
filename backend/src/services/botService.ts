@@ -713,7 +713,7 @@ async function handleConfirmTicket(sender: string, input: string, currentData: a
     }
 
     // Insert ke tabel 'tickets' dengan reporter_type dinamis
-    const { error } = await supabase.from('tickets').insert([{
+    const { data, error } = await supabase.from('tickets').insert([{
       ticket_num: ticketNumber,
       phone: sender,
       dept_id: null,
