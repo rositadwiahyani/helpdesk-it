@@ -51,7 +51,7 @@ export default function OperatorTicketTable({
     const [isBulkRejecting, setIsBulkRejecting] = useState(false);
 
     // States for sorting
-    const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
+    const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>({ key: 'priority', direction: 'desc' });
 
     // Toast notification state
     const [toasts, setToasts] = useState<{id: number, message: string, type: 'success' | 'error'}[]>([]);
@@ -281,6 +281,18 @@ export default function OperatorTicketTable({
         // 4. Sorting
         if (sortConfig !== null) {
             filtered.sort((a, b) => {
+                if (sortConfig.key === 'priority') {
+                    const pVal: Record<string, number> = { 'CRITICAL': 4, 'HIGH': 3, 'MEDIUM': 2, 'LOW': 1 };
+                    const aP = pVal[(a.priority || 'MEDIUM').toUpperCase()] || 2;
+                    const bP = pVal[(b.priority || 'MEDIUM').toUpperCase()] || 2;
+                    
+                    if (aP !== bP) {
+                        return sortConfig.direction === 'asc' ? (aP - bP) : (bP - aP);
+                    }
+                    // Secondary sort by date (newest first)
+                    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+                }
+
                 let aValue = a[sortConfig.key];
                 let bValue = b[sortConfig.key];
 
@@ -297,6 +309,9 @@ export default function OperatorTicketTable({
                 }
                 return 0;
             });
+        } else {
+            // Default sort if no sortConfig (should fallback to date)
+            filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         }
 
         return filtered;

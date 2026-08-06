@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { requireAuth, requireRole } from '../middleware/authMiddleware';
-import { getDepartments, getCategories, getTechnicians, reorderCategories } from '../controllers/metadataController';
+import { getDepartments, getCategories, getTechnicians, reorderCategories, createCategory, updateCategory, deleteCategory } from '../controllers/metadataController';
 
 const router = Router();
 
@@ -8,7 +8,10 @@ router.use(requireAuth);
 
 router.get('/departments', requireRole(['admin', 'pimpinan', 'operator', 'teknisi']), getDepartments);
 router.get('/categories', requireRole(['admin', 'pimpinan', 'operator', 'teknisi']), getCategories);
+router.post('/categories', requireRole(['admin']), createCategory);
 router.put('/categories/reorder', requireRole(['admin']), reorderCategories);
+router.put('/categories/:id', requireRole(['admin']), updateCategory);
+router.delete('/categories/:id', requireRole(['admin']), deleteCategory);
 router.get('/technicians', requireRole(['admin', 'pimpinan', 'operator', 'teknisi']), getTechnicians);
 
 export default router;

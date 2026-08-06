@@ -1,6 +1,30 @@
 import { supabase } from '../config/supabase';
 import { sendMessage } from './wasender';
 
+// Helper: Ambil waktu WIB (UTC+7)
+function getWIBTime(): Date {
+  const now = new Date();
+  const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+  return new Date(utc + (3600000 * 7)); // UTC+7
+}
+
+function getGreeting(): string {
+  const wib = getWIBTime();
+  const hour = wib.getHours();
+  if (hour >= 4 && hour < 10) return 'Pagi ☀️';
+  if (hour >= 10 && hour < 15) return 'Siang 🌞';
+  if (hour >= 15 && hour < 18) return 'Sore 🌥️';
+  return 'Malam 🌙';
+}
+
+function isWorkingHours(): boolean {
+  const wib = getWIBTime();
+  const hour = wib.getHours();
+  const day = wib.getDay();
+  // Senin (1) - Jumat (5), 08:00 - 16:00
+  return day >= 1 && day <= 5 && hour >= 8 && hour < 16;
+}
+
 interface WASession {
   phone: string;
   step: string;
@@ -14,11 +38,12 @@ interface WASession {
     nim_nip?: string;
     unit?: string;
     user_info?: string;
+    attachment_url?: string;
   } | null;
   updated_at?: string;
 }
 
-export async function handleIncomingMessage(sender: string, messageText: string) {
+export async function handleIncomingMessage(sender: string, messageText: string, mediaUrl?: string) {
   const cleanInput = messageText.trim();
 
   // 0. Cek apakah pengguna diblokir
@@ -65,7 +90,38 @@ export async function handleIncomingMessage(sender: string, messageText: string)
       data: {},
       updated_at: new Date().toISOString()
     });
+    const { data: reporter } = await supabase.from('reporters').select('name').eq('phone', sender).single();
+    if (cleanInput.toLowerCase() === 'batal') {
+      return sendMessage(sender, `❌ Sesi dibatalkan. Ketik *HaloDesk* jika ingin memulai lagi.`);
+    }
     return showMainMenu(sender);
+  }
+
+  // 1.5. GLOBAL TRIGGER: KEMBALI (0)
+  if (cleanInput === '0') {
+    // Kita cek jika user mengetik 0, dan session ada
+    let { data: currSession } = await supabase.from('wa_sessions').select('*').eq('phone', sender).single<WASession>();
+    if (currSession) {
+      if (currSession.step === 'SELECT_CATEGORY') {
+        // Mundur ke kategori sebelumnya atau MAIN_MENU
+        if (currSession.data && currSession.data.current_parent_id) {
+          // Untuk simplifikasi, kita reset saja ke MAIN_MENU karena melacak breadcrumb terlalu rumit tanpa struktur stack
+          await supabase.from('wa_sessions').update({ step: 'MAIN_MENU', data: {} }).eq('phone', sender);
+          return showMainMenu(sender);
+        } else {
+          await supabase.from('wa_sessions').update({ step: 'MAIN_MENU', data: {} }).eq('phone', sender);
+          return showMainMenu(sender);
+        }
+      } else if (currSession.step === 'INPUT_TICKET_DETAIL' || currSession.step === 'ASK_ATTACHMENT') {
+        // Kembali ke kategori
+        await supabase.from('wa_sessions').update({ step: 'SELECT_CATEGORY', data: currSession.data }).eq('phone', sender);
+        return showDynamicCategoryMenu(sender, currSession.data?.current_parent_id || null, currSession.data?.current_parent_name || null, currSession.data);
+      } else {
+        // Default: kembali ke main menu
+        await supabase.from('wa_sessions').update({ step: 'MAIN_MENU', data: {} }).eq('phone', sender);
+        return showMainMenu(sender);
+      }
+    }
   }
 
   // 2. Ambil Session User dari Supabase
@@ -77,8 +133,9 @@ export async function handleIncomingMessage(sender: string, messageText: string)
 
   // 3. Jika User Baru & BELUM ketik "HaloDesk"
   if (!session) {
-    const greetingName = reporter?.name ? `, ${reporter.name}` : '';
-    return sendMessage(sender, `👋 Halo${greetingName}! Silakan ketik *HaloDesk* untuk memulai layanan IT Helpdesk.`);
+    const greetingName = reporter?.name ? `, Kak ${reporter.name}` : '';
+    const greeting = getGreeting();
+    return sendMessage(sender, `👋 Selamat ${greeting}${greetingName}! Silakan ketik *HaloDesk* untuk memulai layanan IT Helpdesk.`);
   }
 
   const currentData = session.data || {};
@@ -97,6 +154,10 @@ export async function handleIncomingMessage(sender: string, messageText: string)
       await handleInputTicketDetail(sender, cleanInput, currentData);
       break;
 
+    case 'ASK_ATTACHMENT':
+      await handleAskAttachment(sender, cleanInput, currentData, mediaUrl);
+      break;
+
     case 'ASK_REUSE_INFO':
       await handleAskReuseInfo(sender, cleanInput, currentData);
       break;
@@ -111,6 +172,10 @@ export async function handleIncomingMessage(sender: string, messageText: string)
 
     case 'CHECK_TICKET_STATUS':
       await handleCheckTicketStatus(sender, cleanInput);
+      break;
+
+    case 'CONFIRM_RESOLUTION':
+      await handleConfirmResolution(sender, cleanInput, currentData);
       break;
 
     case 'WAITING_RATING':
@@ -138,7 +203,7 @@ async function showMainMenu(sender: string) {
     .eq('is_active', true)
     .order('sort_order', { ascending: true });
 
-  let text = `👋 *Halo${greetingName}, Selamat datang di IT Helpdesk!*\n\n`;
+  let text = `👋 *Selamat ${getGreeting()}${greetingName}!* Selamat datang di IT Helpdesk.\n\n`;
   text += `Silakan pilih menu layanan di bawah ini:\n`;
 
   if (menus && menus.length > 0) {
@@ -151,7 +216,7 @@ async function showMainMenu(sender: string) {
     text += `2. 🔍 Cek Status Tiket\n`;
   }
   
-  text += `\n_Balas angka pilihan Anda (Contoh: 1)_`;
+  text += `\n_Balas angka pilihan Anda (Contoh: 1)_\n_Atau, ketik kata kunci kendala Anda secara langsung (contoh: "Wifi putus")._`;
 
   await sendMessage(sender, text);
 }
@@ -170,7 +235,24 @@ async function handleMainMenu(sender: string, input: string) {
 
   if (!useFallback) {
     if (isNaN(selectedIndex) || !menus[selectedIndex]) {
-      return sendMessage(sender, "❌ Pilihan tidak valid. Balas dengan angka yang sesuai dari menu. Ketik *HaloDesk* untuk reset.");
+      // Smart Keyword Search (Fallback jika bukan angka)
+      const { data: kbArticles } = await supabase
+        .from('knowledge_base')
+        .select('title, slug')
+        .ilike('title', `%${input}%`)
+        .limit(3);
+
+      if (kbArticles && kbArticles.length > 0) {
+        let text = `🔍 Kami menemukan beberapa panduan yang mungkin relevan dengan "${input}":\n\n`;
+        kbArticles.forEach((article, idx) => {
+          text += `${idx + 1}. *${article.title}*\n`;
+          text += `🔗 http://localhost:3000/knowledgebase/article/${article.slug}\n\n`;
+        });
+        text += `_Ketik *HaloDesk* untuk melihat menu layanan lainnya._`;
+        return sendMessage(sender, text);
+      }
+
+      return sendMessage(sender, "❌ Pilihan tidak valid atau artikel tidak ditemukan. Balas dengan angka yang sesuai dari menu. Ketik *HaloDesk* untuk reset.");
     }
     
     const selectedMenu = menus[selectedIndex];
@@ -222,7 +304,7 @@ async function handleMainMenu(sender: string, input: string) {
 // KATEGORI (DINAMIS N-LEVEL)
 // ==========================================
 async function showDynamicCategoryMenu(sender: string, parentId: number | null, parentName: string | null, currentData: any) {
-  let query = supabase.from('categories').select('id, name').eq('is_active', true).order('sort_order', { ascending: true }).order('name', { ascending: true });
+  let query = supabase.from('categories').select('id, name, bot_content, default_priority').eq('is_active', true).order('sort_order', { ascending: true }).order('name', { ascending: true });
 
   if (parentId === null) {
     query = query.is('parent_id', null);
@@ -233,11 +315,10 @@ async function showDynamicCategoryMenu(sender: string, parentId: number | null, 
   const { data: categories, error } = await query;
 
   if (error || !categories || categories.length === 0) {
-    // Kategori tidak punya anak, artinya ini adalah LEAF NODE
-    // Langsung pindah ke INPUT_TICKET_DETAIL
+    // If no categories found, directly ask for details using current parent
     await supabase.from('wa_sessions').update({
       step: 'INPUT_TICKET_DETAIL',
-      data: { ...currentData, category_id: parentId, category_path: currentData.category_path || parentName },
+      data: { ...currentData, category_id: parentId, category_path: currentData.category_path || parentName || 'Umum' },
       updated_at: new Date().toISOString()
     }).eq('phone', sender);
 
@@ -249,13 +330,14 @@ async function showDynamicCategoryMenu(sender: string, parentId: number | null, 
   categories.forEach((cat: any, index: number) => {
     text += `${index + 1}. ${cat.name}\n`;
   });
-  text += "\n_Balas angka pilihan Anda, atau ketik *HaloDesk* untuk kembali._";
+  text += `${categories.length + 1}. 📝 Lainnya (Buat Tiket)\n`;
+  text += "\n_Balas angka pilihan Anda_\n_Ketik *0* untuk kembali, atau *Batal* untuk mengakhiri._";
 
   await sendMessage(sender, text);
 }
 
 async function handleDynamicCategorySelect(sender: string, input: string, parentId: number | null, parentName: string | null, currentData: any) {
-  let query = supabase.from('categories').select('id, name').eq('is_active', true).order('sort_order', { ascending: true }).order('name', { ascending: true });
+  let query = supabase.from('categories').select('id, name, bot_content, default_priority').eq('is_active', true).order('sort_order', { ascending: true }).order('name', { ascending: true });
 
   if (parentId === null) {
     query = query.is('parent_id', null);
@@ -266,23 +348,140 @@ async function handleDynamicCategorySelect(sender: string, input: string, parent
   const { data: categories } = await query;
 
   const selectedIndex = parseInt(input) - 1;
+  
+  if (categories && selectedIndex === categories.length) {
+    // Chose "Lainnya"
+    const newData = { ...currentData, category_id: parentId, category_path: currentData.category_path || parentName || 'Umum', default_priority: currentData.default_priority || 'MEDIUM' };
+    await supabase.from('wa_sessions').update({
+      step: 'INPUT_TICKET_DETAIL',
+      data: newData,
+      updated_at: new Date().toISOString()
+    }).eq('phone', sender);
+    
+    return promptTicketDetail(sender);
+  }
 
   if (!categories || isNaN(selectedIndex) || !categories[selectedIndex]) {
-    return sendMessage(sender, "❌ Pilihan tidak valid. Silakan jawab dengan nomor angka yang ada.");
+    return sendMessage(sender, "❌ Pilihan tidak valid. Silakan jawab dengan nomor angka yang ada.\n_Ketik *0* untuk kembali._");
   }
 
   const selectedCat = categories[selectedIndex];
   const newPath = currentData.category_path ? `${currentData.category_path} > ${selectedCat.name}` : selectedCat.name;
+  
+  // Cek apakah ada child
+  const { data: children } = await supabase.from('categories').select('id').eq('parent_id', selectedCat.id).eq('is_active', true);
+  
+  if (children && children.length > 0) {
+    // Ada subkategori
+    const newData = { ...currentData, current_parent_id: selectedCat.id, current_parent_name: selectedCat.name, category_path: newPath, default_priority: selectedCat.default_priority || currentData.default_priority };
+    await supabase.from('wa_sessions').update({
+      step: 'SELECT_CATEGORY',
+      data: newData,
+      updated_at: new Date().toISOString()
+    }).eq('phone', sender);
 
-  const newData = { ...currentData, current_parent_id: selectedCat.id, current_parent_name: selectedCat.name, category_path: newPath };
+    await showDynamicCategoryMenu(sender, selectedCat.id, selectedCat.name, newData);
+  } else {
+    // Leaf node
+    const newData = { ...currentData, category_id: selectedCat.id, category_path: newPath, default_priority: selectedCat.default_priority || currentData.default_priority };
+    
+    const { data: kbData } = await supabase.from('knowledge_base').select('slug').eq('category_id', selectedCat.id).single();
+    
+    if (kbData && kbData.slug) {
+      // Ada tutorial di knowledge_base
+      await supabase.from('wa_sessions').update({
+        step: 'CONFIRM_RESOLUTION',
+        data: newData,
+        updated_at: new Date().toISOString()
+      }).eq('phone', sender);
+      
+      let text = `*Panduan untuk: ${selectedCat.name}*\n\n`;
+      text += `Untuk melihat langkah-langkah penyelesaiannya, silakan kunjungi halaman Basis Pengetahuan kami pada tautan berikut:\n`;
+      text += `🔗 http://localhost:3000/knowledgebase/article/${kbData.slug}\n\n`;
+      text += `Apakah panduan pada tautan di atas berhasil mengatasi masalah Anda?\n`;
+      text += `1. ✅ Ya, masalah teratasi\n`;
+      text += `2. ❌ Tidak, masalah belum teratasi (Buat Tiket)\n\n`;
+      text += `_Balas 1 atau 2_\n_Ketik *0* untuk kembali._`;
+      
+      await sendMessage(sender, text);
+    } else {
+      // Tidak ada tutorial, langsung buat tiket
+      await supabase.from('wa_sessions').update({
+        step: 'INPUT_TICKET_DETAIL',
+        data: newData,
+        updated_at: new Date().toISOString()
+      }).eq('phone', sender);
+      
+      await promptTicketDetail(sender);
+    }
+  }
+}
 
-  await supabase.from('wa_sessions').update({
-    step: 'SELECT_CATEGORY',
-    data: newData,
-    updated_at: new Date().toISOString()
-  }).eq('phone', sender);
+async function handleConfirmResolution(sender: string, input: string, currentData: any) {
+  if (input === '1') {
+    // Masalah teratasi, buat tiket dengan status RESOLVED_BY_SYSTEM
+    let ticketNumber = '#000001';
+    try {
+      const { data: tickets } = await supabase.from('tickets').select('ticket_num');
+      if (tickets && tickets.length > 0) {
+        let maxNum = 0;
+        tickets.forEach(t => {
+          if (t.ticket_num) {
+            const match = t.ticket_num.match(/\d+/);
+            if (match) {
+              const num = parseInt(match[0], 10);
+              if (num > maxNum) maxNum = num;
+            }
+          }
+        });
+        const nextNum = maxNum + 1;
+        ticketNumber = `#${nextNum.toString().padStart(6, '0')}`;
+      }
+    } catch (e) {
+      console.error("Gagal mendapatkan tiket terakhir:", e);
+      ticketNumber = `#${Date.now().toString().slice(-6)}`; // Fallback
+    }
+    
+    const { data: reporter } = await supabase.from('reporters').select('*').eq('phone', sender).single();
+    
+    const ticketData = {
+      ticket_num: ticketNumber,
+      phone: sender,
+      dept_id: null,
+      category_id: currentData.category_id || null,
+      subcategory_id: null,
+      subject: `[Self-Resolved] ${currentData.category_path || 'Umum'}`,
+      description: 'Masalah berhasil diselesaikan sendiri oleh pelapor melalui panduan Bot WA.',
+      reporter_name: reporter?.name || 'Pelapor Anonim',
+      reporter_type: reporter?.reporter_type || 'Umum',
+      nim_nip: reporter?.nim_nip || '-',
+      unit: reporter?.unit || '-',
+      priority: currentData.default_priority || 'MEDIUM',
+      status: 'RESOLVED_BY_SYSTEM'
+    };
 
-  await showDynamicCategoryMenu(sender, selectedCat.id, selectedCat.name, newData);
+    const { error } = await supabase.from('tickets').insert([ticketData]);
+    
+    await supabase.from('wa_sessions').delete().eq('phone', sender);
+    
+    if (error) {
+      console.error("Error creating auto-resolved ticket:", error);
+      return sendMessage(sender, "Terjadi kesalahan saat memproses data. Silakan coba lagi nanti.");
+    }
+    
+    return sendMessage(sender, `🎉 Syukurlah masalah Anda sudah teratasi!\nSistem telah mencatat interaksi ini dengan nomor referensi: *${ticketNumber}*.\n\nKetik *HaloDesk* jika Anda butuh bantuan lainnya.`);
+  } else if (input === '2') {
+    // Belum teratasi, eskalasi ke pimpinan/buat tiket escalated
+    await supabase.from('wa_sessions').update({
+      step: 'INPUT_TICKET_DETAIL',
+      data: { ...currentData, is_escalated: true },
+      updated_at: new Date().toISOString()
+    }).eq('phone', sender);
+    
+    return promptTicketDetail(sender);
+  } else {
+    return sendMessage(sender, "❌ Pilihan tidak valid. Balas angka *1* (Ya) atau *2* (Tidak).\n_Ketik *0* untuk kembali._");
+  }
 }
 
 // ==========================================
@@ -295,7 +494,8 @@ async function promptTicketDetail(sender: string) {
   text += `- Baris kedua dst: Detail Kendala\n\n`;
   text += `*Contoh:*\n`;
   text += `Gagal Login SSO\n`;
-  text += `Halo, saya tidak bisa login ke SSO meskipun password sudah benar...`;
+  text += `Halo, saya tidak bisa login ke SSO meskipun password sudah benar...\n\n`;
+  text += `_Ketik *0* untuk kembali_`;
 
   await sendMessage(sender, text);
 }
@@ -310,6 +510,34 @@ async function handleInputTicketDetail(sender: string, input: string, currentDat
     subject_input: subjectInput,
     subject_description: descriptionInput
   };
+
+  await supabase.from('wa_sessions').update({
+    step: 'ASK_ATTACHMENT',
+    data: updatedData,
+    updated_at: new Date().toISOString()
+  }).eq('phone', sender);
+
+  let text = `📸 *LAMPIRAN / SCREENSHOT*\n\n`;
+  text += `Apakah Anda memiliki bukti foto/screenshot terkait kendala ini?\n`;
+  text += `Silakan kirimkan gambarnya sekarang.\n\n`;
+  text += `_Jika tidak ada, balas dengan kata *Tidak*_\n`;
+  text += `_Ketik *Batal* untuk mengakhiri._`;
+
+  await sendMessage(sender, text);
+}
+
+async function handleAskAttachment(sender: string, input: string, currentData: any, mediaUrl?: string) {
+  let updatedData = { ...currentData };
+  
+  if (mediaUrl) {
+    // Media diterima
+    updatedData.attachment_url = mediaUrl;
+  } else {
+    // Tidak ada media
+    if (input.toLowerCase() !== 'tidak' && input.toLowerCase() !== 'tdk' && input !== '-') {
+      // Boleh jadi pesan salah atau mencoba menjelaskan. Biarkan saja anggap no attachment.
+    }
+  }
 
   const { data: reporter } = await supabase
     .from('reporters')
@@ -331,7 +559,7 @@ async function handleInputTicketDetail(sender: string, input: string, currentDat
     text += `Apakah Anda ingin menggunakan data diri ini untuk tiket Anda?\n`;
     text += `1. ✅ Ya, gunakan data ini\n`;
     text += `2. 🔄 Tidak, isi data baru\n\n`;
-    text += `_Balas angka 1 atau 2_`;
+    text += `_Balas angka 1 atau 2_\n_Ketik *Batal* untuk mengakhiri._`;
 
     await sendMessage(sender, text);
   } else {
@@ -344,7 +572,8 @@ async function handleInputTicketDetail(sender: string, input: string, currentDat
     let text = `👤 *INPUT DATA DIRI*\n\n`;
     text += `Silakan masukkan Data Diri Anda.\n`;
     text += `*Format:* Nama - NIP/NIM - Unit Kerja/Fakultas\n\n`;
-    text += `_Contoh: Budi - 19901234 - Bagian Keuangan_`;
+    text += `_Contoh: Budi - 19901234 - Bagian Keuangan_\n`;
+    text += `_Ketik *Batal* untuk mengakhiri._`;
 
     await sendMessage(sender, text);
   }
@@ -386,7 +615,8 @@ async function handleAskReuseInfo(sender: string, input: string, currentData: an
     let text = `👤 *INPUT DATA DIRI*\n\n`;
     text += `Silakan masukkan Data Diri Anda.\n`;
     text += `*Format:* Nama - NIP/NIM - Unit Kerja/Fakultas\n\n`;
-    text += `_Contoh: Budi - 19901234 - Bagian Keuangan_`;
+    text += `_Contoh: Budi - 19901234 - Bagian Keuangan_\n`;
+    text += `_Ketik *Batal* untuk mengakhiri._`;
 
     await sendMessage(sender, text);
   } else {
@@ -404,11 +634,14 @@ async function showConfirmTicketSummary(sender: string, updatedData: any) {
   summaryText += `• *Tipe Pelapor:* ${updatedData.reporter_type}\n`;
   summaryText += `• *NIM/NIP:* ${updatedData.nim_nip}\n`;
   summaryText += `• *Unit/Fakultas:* ${updatedData.unit}\n`;
+  if (updatedData.attachment_url) {
+    summaryText += `• *Lampiran:* Ada (Tersimpan)\n`;
+  }
   summaryText += `-----------------------------------\n\n`;
   summaryText += `Apakah data tiket di atas sudah benar?\n`;
   summaryText += `1. ✅ Ya, Kirim Tiket\n`;
   summaryText += `2. ❌ Batal Kirim\n\n`;
-  summaryText += `_Balas dengan angka 1 atau 2_`;
+  summaryText += `_Balas dengan angka 1 atau 2_\n_Ketik *0* untuk mengulang input data diri._`;
 
   await sendMessage(sender, summaryText);
 }
@@ -492,13 +725,25 @@ async function handleConfirmTicket(sender: string, input: string, currentData: a
       reporter_type: currentData.reporter_type || 'Umum', // <-- Dinamis sesuai hasil parsing
       nim_nip: currentData.nim_nip,
       unit: currentData.unit,
-      status: 'WAITING VERIFICATION'
-    }]);
+      priority: currentData.default_priority || 'MEDIUM',
+      status: currentData.is_escalated ? 'ESCALATED' : 'WAITING VERIFICATION'
+    }]).select('id').single();
 
     if (error) {
       console.error("❌ ERROR INSERT TICKET:", error);
       await sendMessage(sender, "⚠️ Mohon maaf, terjadi kesalahan sistem saat membuat tiket. Silakan coba beberapa saat lagi.");
     } else {
+      const ticketId = data.id;
+
+      // Handle Lampiran
+      if (currentData.attachment_url) {
+        await supabase.from('ticket_attachments').insert({
+          ticket_id: ticketId,
+          file_url: currentData.attachment_url,
+          file_name: 'wa_attachment.jpg'
+        });
+      }
+
       // Upsert data pelapor
       await supabase.from('reporters').upsert({
         phone: sender,
@@ -520,6 +765,10 @@ async function handleConfirmTicket(sender: string, input: string, currentData: a
       successText += `• *Tipe Pelapor:* ${currentData.reporter_type}\n`;
       successText += `• *Status:* WAITING VERIFICATION\n\n`;
       successText += `Tiket Anda telah masuk ke dalam antrean operator untuk diverifikasi. Mohon menunggu update status selanjutnya via WhatsApp. Terima kasih! 🙏`;
+
+      if (!isWorkingHours()) {
+        successText += `\n\n⚠️ *Informasi:* Laporan Anda kami terima di luar jam kerja operasional. Tim kami akan memverifikasi tiket Anda pada jam kerja berikutnya.`;
+      }
 
       await sendMessage(sender, successText);
     }

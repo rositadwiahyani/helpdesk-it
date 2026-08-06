@@ -79,3 +79,46 @@ export const getTechnicians = async (req: Request, res: Response) => {
     res.status(400).json({ success: false, message: error.message });
   }
 };
+
+/**
+ * POST /api/admin/categories
+ */
+export const createCategory = async (req: Request, res: Response) => {
+  try {
+    const payload = req.body;
+    const { data, error } = await supabaseAdmin.from('categories').insert([payload]).select();
+    if (error) throw error;
+    res.status(200).json({ success: true, data });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * PUT /api/admin/categories/:id
+ */
+export const updateCategory = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const payload = req.body;
+    const { data, error } = await supabaseAdmin.from('categories').update(payload).eq('id', id).select();
+    if (error) throw error;
+    res.status(200).json({ success: true, data });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * DELETE /api/admin/categories/:id
+ */
+export const deleteCategory = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { error } = await supabaseAdmin.from('categories').delete().eq('id', id);
+    if (error) throw error;
+    res.status(200).json({ success: true, message: 'Data berhasil dihapus' });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

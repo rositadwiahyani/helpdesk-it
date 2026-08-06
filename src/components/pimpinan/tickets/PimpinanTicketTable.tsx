@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { format, parseISO } from 'date-fns';
 import { id } from 'date-fns/locale';
 
-export default function PimpinanTicketTable({ tickets }: { tickets: any[] }) {
+export default function PimpinanTicketTable({ tickets, isEscalatedTab = false, onAction }: { tickets: any[], isEscalatedTab?: boolean, onAction?: (id: string, action: 'CLOSE' | 'RETURN') => void }) {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const totalPages = Math.ceil(tickets.length / itemsPerPage);
@@ -19,6 +19,8 @@ export default function PimpinanTicketTable({ tickets }: { tickets: any[] }) {
       case 'IN_PROGRESS': return 'bg-blue-100 text-blue-800';
       case 'RESOLVED': return 'bg-green-100 text-green-800';
       case 'CLOSED': return 'bg-slate-100 text-slate-800';
+      case 'ESCALATED': return 'bg-red-100 text-red-800';
+      case 'RESOLVED_BY_SYSTEM': return 'bg-emerald-100 text-emerald-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -46,12 +48,13 @@ export default function PimpinanTicketTable({ tickets }: { tickets: any[] }) {
               <th className="p-4">Prioritas</th>
               <th className="p-4">Status</th>
               <th className="p-4">Teknisi</th>
+              {isEscalatedTab && <th className="p-4 text-center">Aksi</th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 text-sm">
             {paginatedTickets.length === 0 ? (
               <tr>
-                <td colSpan={7} className="p-8 text-center text-slate-500">
+                <td colSpan={isEscalatedTab ? 8 : 7} className="p-8 text-center text-slate-500">
                   Tidak ada tiket yang ditemukan.
                 </td>
               </tr>
@@ -82,6 +85,24 @@ export default function PimpinanTicketTable({ tickets }: { tickets: any[] }) {
                   <td className="p-4 text-slate-600">
                     {t.technician?.name || '-'}
                   </td>
+                  {isEscalatedTab && (
+                    <td className="p-4 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <button 
+                          onClick={() => onAction && onAction(t.id, 'CLOSE')}
+                          className="px-3 py-1.5 bg-slate-800 text-white text-xs font-semibold rounded-md hover:bg-slate-900 transition-colors shadow-sm"
+                        >
+                          Tutup
+                        </button>
+                        <button 
+                          onClick={() => onAction && onAction(t.id, 'RETURN')}
+                          className="px-3 py-1.5 bg-white border border-slate-300 text-slate-700 text-xs font-semibold rounded-md hover:bg-slate-50 transition-colors shadow-sm"
+                        >
+                          Kembalikan
+                        </button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))
             )}

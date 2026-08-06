@@ -108,12 +108,13 @@ export default function Workspace() {
   const handleDeleteItem = async (id: string, type: 'category' | 'subcategory') => {
     if (!window.confirm(`Apakah Anda yakin ingin menghapus data ini?`)) return;
     
-    // Everything is in 'categories' now
-    const { error } = await supabase.from('categories').delete().eq('id', parseInt(id));
-    if (error) {
-      alert('Gagal menghapus data');
-    } else {
+    const { fetchClient } = await import('@/lib/apiClient');
+    try {
+      await fetchClient(`/admin/categories/${id}`, { method: 'DELETE' });
       fetchData();
+    } catch (err) {
+      console.error(err);
+      alert('Gagal menghapus data');
     }
   };
 

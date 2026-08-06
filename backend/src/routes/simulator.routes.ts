@@ -38,8 +38,8 @@ router.post('/send', async (req: Request, res: Response) => {
     if (mediaUrl) {
       combinedMessage += `\n\n[Lampiran: ${mediaUrl}]`;
     }
-
-    handleIncomingMessage(phone, combinedMessage.trim());
+    // Panggil botService
+    handleIncomingMessage(phone, combinedMessage.trim(), mediaUrl);
 
     res.json({ success: true });
   } catch (error) {

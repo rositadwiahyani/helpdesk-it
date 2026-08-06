@@ -23,6 +23,7 @@ export default function AdminSidebar() {
     { name: 'Laporan & Ekspor', path: '/dashboard/administrasi/reports', icon: ReportIcon },
     { name: 'Jawaban Cepat', path: '/dashboard/administrasi/quick-replies', icon: ChatIcon },
     { name: 'Pengaturan Menu Bot', path: '/dashboard/administrasi/bot-menus', icon: BotIcon },
+    { name: 'Basis Pengetahuan', path: '/dashboard/administrasi/knowledge-base', icon: BookIcon },
     { name: 'Log API Webhook', path: '/dashboard/administrasi/webhook', icon: WebhookIcon },
     { name: 'Pengaturan Sistem', path: '/dashboard/administrasi/settings', icon: SettingsIcon },
     { name: 'Profil', path: '/dashboard/administrasi/profile', icon: SettingsIcon },
@@ -220,6 +221,14 @@ function BotIcon({ isActive }: { isActive: boolean }) {
       <path d="M20 14h2" />
       <path d="M15 13v2" />
       <path d="M9 13v2" />
+    </svg>
+  );
+}
+
+function BookIcon({ isActive }: { isActive: boolean }) {
+  return (
+    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+      <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
     </svg>
   );
 }

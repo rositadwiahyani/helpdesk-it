@@ -7,6 +7,7 @@ export default function PimpinanTicketWorkspace() {
   const [tickets, setTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState<'all' | 'escalated'>('all');
   
   useEffect(() => {
     fetchTicketsData();
@@ -24,11 +25,16 @@ export default function PimpinanTicketWorkspace() {
     }
   };
 
-  const filteredTickets = tickets.filter(ticket => 
-    ticket.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (ticket.reporters?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (ticket.title || '').toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredTickets = tickets.filter(ticket => {
+    const matchesSearch = ticket.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          (ticket.reporters?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          (ticket.title || '').toLowerCase().includes(searchQuery.toLowerCase());
+                          
+    if (activeTab === 'escalated') {
+      return matchesSearch && ticket.status === 'ESCALATED';
+    }
+    return matchesSearch;
+  });
 
   return (
     <div className="flex flex-col gap-6 w-full max-w-[1440px] mx-auto pb-10">
@@ -37,6 +43,34 @@ export default function PimpinanTicketWorkspace() {
           <h1 className="text-slate-900 font-extrabold text-2xl tracking-tight">Laporan Tiket</h1>
           <p className="text-slate-500 font-medium text-sm">Pemantauan seluruh tiket pengaduan IT Helpdesk.</p>
         </div>
+      </div>
+
+      <div className="flex border-b border-slate-200">
+        <button
+          onClick={() => setActiveTab('all')}
+          className={`px-4 py-3 text-sm font-semibold transition-colors border-b-2 ${
+            activeTab === 'all' 
+              ? 'border-[#0059BB] text-[#0059BB]' 
+              : 'border-transparent text-slate-500 hover:text-slate-700'
+          }`}
+        >
+          Semua Tiket
+        </button>
+        <button
+          onClick={() => setActiveTab('escalated')}
+          className={`px-4 py-3 text-sm font-semibold transition-colors border-b-2 flex items-center gap-2 ${
+            activeTab === 'escalated' 
+              ? 'border-red-500 text-red-600' 
+              : 'border-transparent text-slate-500 hover:text-slate-700'
+          }`}
+        >
+          Tiket Eskalasi & Overdue
+          {tickets.filter(t => t.status === 'ESCALATED').length > 0 && (
+            <span className="bg-red-100 text-red-600 text-[10px] font-bold px-2 py-0.5 rounded-full">
+              {tickets.filter(t => t.status === 'ESCALATED').length}
+            </span>
+          )}
+        </button>
       </div>
 
       <div className="w-full bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
@@ -60,16 +94,32 @@ export default function PimpinanTicketWorkspace() {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
             </svg>
-            Cetak PDF
+            Cetak Laporan
           </button>
         </div>
-
+        
         {loading ? (
-          <div className="w-full flex justify-center p-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0059BB]"></div>
+          <div className="p-12 flex justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0059BB]"></div>
           </div>
         ) : (
-          <PimpinanTicketTable tickets={filteredTickets} />
+          <PimpinanTicketTable 
+            tickets={filteredTickets} 
+            isEscalatedTab={activeTab === 'escalated'} 
+            onAction={async (id, action) => {
+              if (action === 'CLOSE') {
+                if (confirm('Tutup tiket ini secara paksa?')) {
+                  await fetchClient(`/admin/tickets/${id}/status`, { method: 'PUT', body: JSON.stringify({ status: 'CLOSED' }) });
+                  fetchTicketsData();
+                }
+              } else if (action === 'RETURN') {
+                if (confirm('Kembalikan tiket ini ke Operator?')) {
+                  await fetchClient(`/admin/tickets/${id}/status`, { method: 'PUT', body: JSON.stringify({ status: 'OPEN' }) });
+                  fetchTicketsData();
+                }
+              }
+            }}
+          />
         )}
       </div>
     </div>
