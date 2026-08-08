@@ -25,6 +25,7 @@ type Ticket = {
   unit?: string;
   created_at?: string;
   updated_at?: string;
+  tech_id?: string;
 };
 
 type Message = {
@@ -33,6 +34,7 @@ type Message = {
   sender_name?: string;
   message?: string;
   created_at?: string;
+  tech?: { name?: string };
 };
 
 export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {

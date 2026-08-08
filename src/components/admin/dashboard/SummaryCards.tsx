@@ -46,12 +46,12 @@ export default function SummaryCards({ data }: SummaryCardsProps) {
       pillBg: "bg-red-50/50 text-red-600",
     },
     {
-      title: "Failed Messages",
+      title: "Solved by Sistem",
       value: defaultData.failedMessages.toString(),
-      growth: "System status",
-      icon: <FiXCircle className="w-5 h-5" />,
-      color: "bg-slate-50 text-slate-400",
-      pillBg: "bg-slate-50/50 text-slate-500",
+      growth: "Auto-resolved",
+      icon: <FiCheckCircle className="w-5 h-5" />,
+      color: "bg-emerald-50 text-emerald-500",
+      pillBg: "bg-emerald-50/50 text-emerald-600",
     },
   ];
 

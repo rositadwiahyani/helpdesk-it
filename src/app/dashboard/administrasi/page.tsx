@@ -2,7 +2,6 @@ import SummaryCards from "@/components/admin/dashboard/SummaryCards";
 import TicketTrendChart from "@/components/admin/dashboard/TicketTrendChart";
 import DepartmentPerformanceTable from "@/components/admin/dashboard/DepartmentPerformanceTable";
 import RecentTicketActivityTable from "@/components/admin/dashboard/RecentTicketActivityTable";
-import SlaHealth from "@/components/admin/dashboard/SlaHealth";
 import TopHelpTopicsPieChart from "@/components/admin/dashboard/TopHelpTopicsPieChart";
 import QuickActions from "@/components/admin/dashboard/QuickActions";
 import { fetchServer } from "@/lib/apiServer";
@@ -57,9 +56,6 @@ export default async function AdministrasiDashboard() {
           
           {/* Quick Actions (Moved below Pie Chart) */}
           <QuickActions />
-
-          {/* SLA Health (Moved to bottom of right column) */}
-          <SlaHealth data={dashboardData.slaHealth} />
         </div>
 
       </div>

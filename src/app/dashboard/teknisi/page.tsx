@@ -72,15 +72,7 @@ export default async function TeknisiDashboard() {
         .filter((t: any) => t.status === 'IN PROGRESS' && t.tech_id === user.id)
         .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
-    // Ambil recent activity (logs) untuk departemen ini atau general (tergantung kebutuhan, di sini kita ambil 5 terbaru)
-    const { data: recentLogs } = await supabase
-        .from('ticket_logs')
-        .select(`
-            *,
-            ticket:tickets(ticket_num, subject)
-        `)
-        .order('created_at', { ascending: false })
-        .limit(5);
+
 
     const renderPriorityBadge = (priority: string) => {
         const p = (priority || 'MEDIUM').toUpperCase();
@@ -167,7 +159,7 @@ export default async function TeknisiDashboard() {
                     <div className="bg-white border border-[var(--line-dark)] rounded-2xl p-6 shadow-sm flex flex-col animate-in fade-in slide-in-from-bottom-3 duration-500">
                         <div className="flex items-center justify-between mb-5">
                             <h3 className="text-[17px] font-bold text-[var(--ink)]">My Active Tasks</h3>
-                            <a href="/dashboard/teknisi/open-tickets" className="text-sm font-semibold text-[#0059BB] hover:underline">View All</a>
+                            <a href="/dashboard/teknisi/tickets" className="text-sm font-semibold text-[#0059BB] hover:underline">View All</a>
                         </div>
                         <div className="flex flex-col gap-3">
                             {myActiveTasks.length > 0 ? myActiveTasks.slice(0, 3).map((task: any) => {
@@ -194,37 +186,7 @@ export default async function TeknisiDashboard() {
                         </div>
                     </div>
 
-                    {/* Recent Activity Widget */}
-                    <div className="bg-white border border-[var(--line-dark)] rounded-2xl p-6 shadow-sm flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-700">
-                        <h3 className="text-[17px] font-bold text-[var(--ink)] mb-5">Recent Activity</h3>
-                        <div className="flex flex-col">
-                            {recentLogs && recentLogs.length > 0 ? recentLogs.map((log: any, index: number) => {
-                                const isLast = index === recentLogs.length - 1;
-                                let color = 'bg-slate-200';
-                                if (log.action === 'RESOLVED' || log.action === 'CLOSED') color = 'bg-emerald-500';
-                                else if (log.action === 'ASSIGNED' || log.action === 'VERIFIED') color = 'bg-[#0059BB]';
-                                else if (log.action === 'REJECTED') color = 'bg-red-500';
-                                else if (log.action === 'CREATED') color = 'bg-amber-500';
 
-                                const ticketName = log.ticket?.ticket_num ? `#${log.ticket.ticket_num}` : 'Ticket';
-                                const ticketSubject = log.ticket?.subject || 'Tanpa subjek';
-                                
-                                return (
-                                    <div key={log.id} className={`flex gap-4 relative ${!isLast ? 'pb-5' : ''}`}>
-                                        {!isLast && <div className="absolute top-2 bottom-0 left-[7px] w-[2px] bg-slate-100"></div>}
-                                        <div className={`relative z-10 w-4 h-4 rounded-full ${color} ring-4 ring-white mt-1 shrink-0`}></div>
-                                        <div className="pb-1">
-                                            <p className="text-[13px] font-bold text-slate-800">{ticketName} {log.action.toLowerCase()}</p>
-                                            <p className="text-[12.5px] text-slate-500 mt-1 leading-snug line-clamp-2">{ticketSubject}</p>
-                                            <p className="text-[10px] font-bold text-slate-400 mt-2 uppercase tracking-wider">{formatTimeAgo(log.created_at)}</p>
-                                        </div>
-                                    </div>
-                                );
-                            }) : (
-                                <div className="p-4 text-center text-sm text-slate-500">Tidak ada aktivitas terbaru.</div>
-                            )}
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>

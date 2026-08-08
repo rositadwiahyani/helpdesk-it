@@ -3,11 +3,13 @@ import Link from 'next/link';
 
 export interface UserItem {
   id: string;
+  phone: string;
   name: string;
   nimNip: string;
   fakultasUnit: string;
   status: 'Aktif' | 'Terblokir';
   createdDate: string;
+  rawDate: string;
 }
 
 interface UsersTableSectionProps {

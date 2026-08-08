@@ -6,36 +6,102 @@ import { TreeContext } from "./Workspace";
 export default function Tree() {
   const ctx = useContext(TreeContext);
   const treeData = ctx?.treeData || [];
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [draggedId, setDraggedId] = useState<string | null>(null);
 
-  const handleDragStart = (index: number) => {
-    setDraggedIndex(index);
+  const handleDragStart = (id: string, e: React.DragEvent) => {
+    e.stopPropagation();
+    setDraggedId(id);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
+    e.stopPropagation();
   };
 
-  const handleDrop = (targetIndex: number) => {
-    if (draggedIndex === null || draggedIndex === targetIndex) return;
-    
-    const updatedData = [...treeData];
-    const [movedItem] = updatedData.splice(draggedIndex, 1);
-    updatedData.splice(targetIndex, 0, movedItem);
-    
-    if (ctx?.handleReorder) {
-      ctx.handleReorder(updatedData);
+  const handleDrop = (targetId: string, e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!draggedId || draggedId === targetId) return;
+
+    let draggedNode: any = null;
+    let draggedParent: any = null;
+    let draggedIndex = -1;
+
+    let targetNode: any = null;
+    let targetParent: any = null;
+    let targetIndex = -1;
+
+    const findNode = (nodes: any[], parent: any = null) => {
+      for (let i = 0; i < nodes.length; i++) {
+        if (nodes[i].id === draggedId) {
+          draggedNode = nodes[i];
+          draggedParent = parent;
+          draggedIndex = i;
+        }
+        if (nodes[i].id === targetId) {
+          targetNode = nodes[i];
+          targetParent = parent;
+          targetIndex = i;
+        }
+        if (nodes[i].children) findNode(nodes[i].children, nodes[i]);
+      }
+    };
+
+    findNode(treeData);
+
+    if (!draggedNode || !targetNode) {
+      setDraggedId(null);
+      return;
     }
-    setDraggedIndex(null);
+
+    // Do not allow Root to become Sub
+    if (draggedParent === null && targetParent !== null) {
+      setDraggedId(null);
+      return;
+    }
+
+    const newTree = JSON.parse(JSON.stringify(treeData)); // Deep clone
+    
+    // Find arrays in newTree
+    const sourceArray = draggedParent === null 
+      ? newTree 
+      : newTree.find((p: any) => p.id === draggedParent.id).children;
+      
+    // Remove dragged node
+    const [movedItem] = sourceArray.splice(draggedIndex, 1);
+
+    // If dragged is SUB and target is ROOT -> Add as child of ROOT
+    if (draggedParent !== null && targetParent === null) {
+      const targetRoot = newTree.find((p: any) => p.id === targetNode.id);
+      if (!targetRoot.children) targetRoot.children = [];
+      targetRoot.children.push(movedItem);
+      // update type visually
+      movedItem.type = "leaf-bordered";
+      movedItem.realId = draggedNode.realId; 
+    } 
+    // If dragged is SUB and target is SUB -> Insert into target's parent array
+    else if (draggedParent !== null && targetParent !== null) {
+      const targetArray = newTree.find((p: any) => p.id === targetParent.id).children;
+      const tIndex = targetArray.findIndex((c: any) => c.id === targetId);
+      targetArray.splice(tIndex, 0, movedItem);
+    }
+    // If dragged is ROOT and target is ROOT -> Reorder
+    else if (draggedParent === null && targetParent === null) {
+      const tIndex = newTree.findIndex((c: any) => c.id === targetId);
+      newTree.splice(tIndex, 0, movedItem);
+    }
+
+    if (ctx?.handleReorder) {
+      ctx.handleReorder(newTree);
+    }
+    setDraggedId(null);
   };
 
   const filteredData = useMemo(() => {
     if (!ctx?.searchQuery) return treeData;
     const lowerQuery = ctx.searchQuery.toLowerCase();
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const filterNodes = (nodes: any[]) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return nodes.reduce((acc: any[], node: any) => {
         const isMatch = node.title.toLowerCase().includes(lowerQuery);
         let filteredChildren = [];
@@ -55,18 +121,18 @@ export default function Tree() {
     return filterNodes(treeData);
   }, [ctx?.searchQuery, treeData]);
 
-  // Recursive component for rendering N-levels
   const renderNode = (node: any, index: number, isRoot: boolean = false) => {
     if (isRoot) {
       return (
         <div
           key={node.id}
           draggable
-          onDragStart={() => handleDragStart(index)}
+          onDragStart={(e) => handleDragStart(node.id, e)}
           onDragOver={handleDragOver}
-          onDrop={() => handleDrop(index)}
-          className={`w-full transition-colors cursor-grab active:cursor-grabbing ${
-            draggedIndex === index ? "opacity-40 bg-blue-50" : "hover:bg-[#FAFAFB]"
+          onDrop={(e) => handleDrop(node.id, e)}
+          onDragEnd={() => setDraggedId(null)}
+          className={`w-full transition-colors ${
+            draggedId === node.id ? "opacity-40 bg-blue-50" : "hover:bg-[#FAFAFB]"
           }`}
         >
           <Row
@@ -85,81 +151,87 @@ export default function Tree() {
       );
     }
 
-    if (node.type === "branch") {
-      return (
-        <SubRow
-          key={node.id}
-          variant="branch"
-          nodeId={node.id}
-          headerClassName={`w-full relative ${index > 0 ? "border-t border-gray-200" : ""}`}
-          title={node.title}
-          count={node.count}
-          status={node.status}
-          childrenWrapperClassName={node.childrenWrapperClassName}
-          onMoveUp={index > 0 ? () => {
-            const updatedData = [...treeData];
-            const temp = updatedData[index];
-            updatedData[index] = updatedData[index - 1];
-            updatedData[index - 1] = temp;
-            ctx?.handleReorder?.(updatedData);
-          } : undefined}
-          onMoveDown={index < treeData.length - 1 ? () => {
-            const updatedData = [...treeData];
-            const temp = updatedData[index];
-            updatedData[index] = updatedData[index + 1];
-            updatedData[index + 1] = temp;
-            ctx?.handleReorder?.(updatedData);
-          } : undefined}
-        >
-          {node.children?.map((subChild: any, scIndex: number) => renderNode(subChild, scIndex, false))}
-        </SubRow>
-      );
-    }
-
     return (
-      <SubRow
+      <div
         key={node.id}
-        variant={node.type as any}
-        title={node.title}
-        nodeId={node.id}
-        hasDivider={node.type === "leaf-bordered" ? true : undefined}
-        onMoveUp={index > 0 ? () => {
-          const updatedData = [...treeData];
-          const parentIndex = updatedData.findIndex(p => p.children?.some((c: any) => c.id === node.id));
-          if (parentIndex !== -1) {
-            const parent = { ...updatedData[parentIndex] };
-            const children = [...parent.children];
-            const temp = children[index];
-            children[index] = children[index - 1];
-            children[index - 1] = temp;
-            parent.children = children;
-            updatedData[parentIndex] = parent;
-            ctx?.handleReorder?.(updatedData);
-          }
-        } : undefined}
-        onMoveDown={index < (treeData.find((p: any) => p.children?.some((c: any) => c.id === node.id))?.children?.length || 0) - 1 ? () => {
-          const updatedData = [...treeData];
-          const parentIndex = updatedData.findIndex(p => p.children?.some((c: any) => c.id === node.id));
-          if (parentIndex !== -1) {
-            const parent = { ...updatedData[parentIndex] };
-            const children = [...parent.children];
-            const temp = children[index];
-            children[index] = children[index + 1];
-            children[index + 1] = temp;
-            parent.children = children;
-            updatedData[parentIndex] = parent;
-            ctx?.handleReorder?.(updatedData);
-          }
-        } : undefined}
-      />
+        draggable
+        onDragStart={(e) => handleDragStart(node.id, e)}
+        onDragOver={handleDragOver}
+        onDrop={(e) => handleDrop(node.id, e)}
+        onDragEnd={() => setDraggedId(null)}
+        className={`w-full ${draggedId === node.id ? "opacity-40 bg-blue-50" : ""}`}
+      >
+        {node.type === "branch" ? (
+          <SubRow
+            variant="branch"
+            nodeId={node.id}
+            headerClassName={`w-full relative ${index > 0 ? "border-t border-gray-200" : ""}`}
+            title={node.title}
+            count={node.count}
+            status={node.status}
+            childrenWrapperClassName={node.childrenWrapperClassName}
+            onMoveUp={index > 0 ? () => {
+              const updatedData = [...treeData];
+              const temp = updatedData[index];
+              updatedData[index] = updatedData[index - 1];
+              updatedData[index - 1] = temp;
+              ctx?.handleReorder?.(updatedData);
+            } : undefined}
+            onMoveDown={index < treeData.length - 1 ? () => {
+              const updatedData = [...treeData];
+              const temp = updatedData[index];
+              updatedData[index] = updatedData[index + 1];
+              updatedData[index + 1] = temp;
+              ctx?.handleReorder?.(updatedData);
+            } : undefined}
+          >
+            {node.children?.map((subChild: any, scIndex: number) => renderNode(subChild, scIndex, false))}
+          </SubRow>
+        ) : (
+          <SubRow
+            variant={node.type as any}
+            title={node.title}
+            nodeId={node.id}
+            hasDivider={node.type === "leaf-bordered" ? true : undefined}
+            onMoveUp={index > 0 ? () => {
+              const updatedData = [...treeData];
+              const parentIndex = updatedData.findIndex(p => p.children?.some((c: any) => c.id === node.id));
+              if (parentIndex !== -1) {
+                const parent = { ...updatedData[parentIndex] };
+                const children = [...parent.children];
+                const temp = children[index];
+                children[index] = children[index - 1];
+                children[index - 1] = temp;
+                parent.children = children;
+                updatedData[parentIndex] = parent;
+                ctx?.handleReorder?.(updatedData);
+              }
+            } : undefined}
+            onMoveDown={index < (treeData.find((p: any) => p.children?.some((c: any) => c.id === node.id))?.children?.length || 0) - 1 ? () => {
+              const updatedData = [...treeData];
+              const parentIndex = updatedData.findIndex(p => p.children?.some((c: any) => c.id === node.id));
+              if (parentIndex !== -1) {
+                const parent = { ...updatedData[parentIndex] };
+                const children = [...parent.children];
+                const temp = children[index];
+                children[index] = children[index + 1];
+                children[index + 1] = temp;
+                parent.children = children;
+                updatedData[parentIndex] = parent;
+                ctx?.handleReorder?.(updatedData);
+              }
+            } : undefined}
+          />
+        )}
+      </div>
     );
   };
 
   return (
-    <div className="w-full flex flex-col bg-white border border-gray-200 rounded-md shadow-sm">
+    <div className="w-full flex flex-col bg-white border border-[#E5E7EB] rounded-xl shadow-sm">
       
       {/* DAFTAR KATEGORI DENGAN FITUR DRAG AND DROP */}
-      <div className="w-full flex flex-col rounded-md overflow-hidden">
+      <div className="w-full flex flex-col">
         {filteredData.map((row, index) => renderNode(row, index, true))}
 
         {filteredData.length === 0 && (

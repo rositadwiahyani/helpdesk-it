@@ -3,7 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import TicketHeader from "./TicketHeader";
 import TicketToolbar, { TabFilter } from "./TicketToolbar";
-import TicketTableSection, { Ticket } from "./TicketTableSection";
+import TicketTableSection from "./TicketTableSection";
+
+type Ticket = any;
 import NewTicketModal from "./NewTicketModal";
 import AdminFilterModal from "./AdminFilterModal";
 import AdminChangeStatusModal from "./AdminChangeStatusModal";
@@ -112,8 +114,7 @@ export default function TicketWorkspace() {
     open: tickets.filter(t => (t.status || '').toUpperCase() === 'OPEN').length,
     inProgress: tickets.filter(t => (t.status || '').toUpperCase() === 'IN PROGRESS').length,
     waitingVerification: tickets.filter(t => (t.status || '').toUpperCase() === 'WAITING VERIFICATION').length,
-    resolved: tickets.filter(t => (t.status || '').toUpperCase() === 'RESOLVED').length,
-    closed: tickets.filter(t => (t.status || '').toUpperCase() === 'CLOSED').length,
+    resolved: tickets.filter(t => ['RESOLVED', 'RESOLVED_BY_SYSTEM'].includes((t.status || '').toUpperCase())).length,
     rejected: tickets.filter(t => (t.status || '').toUpperCase() === 'DITOLAK').length,
     deleted: tickets.filter(t => (t.status || '').toUpperCase() === 'DELETED').length,
   };

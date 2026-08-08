@@ -2,7 +2,7 @@
 
 import React from 'react';
 
-export type TabFilter = 'all' | 'waiting_verification' | 'open' | 'in_progress' | 'resolved' | 'closed' | 'rejected' | 'deleted';
+export type TabFilter = 'all' | 'waiting_verification' | 'open' | 'in_progress' | 'resolved' | 'rejected' | 'deleted';
 
 interface TicketCounts {
   all: number;
@@ -10,7 +10,6 @@ interface TicketCounts {
   inProgress: number;
   waitingVerification: number;
   resolved: number;
-  closed: number;
   rejected: number;
   deleted: number;
 }
@@ -33,7 +32,6 @@ const DEFAULT_COUNTS: TicketCounts = {
   open: 12,
   inProgress: 45,
   resolved: 156,
-  closed: 27,
   rejected: 5,
   deleted: 0,
 };
@@ -146,9 +144,6 @@ export default function TicketToolbar({
         </button>
         <button onClick={() => handleTabClick('resolved')} className={getBtnClass('resolved')}>
           <p className={getTextClass('resolved')}>Resolved ({counts.resolved})</p>
-        </button>
-        <button onClick={() => handleTabClick('closed')} className={getBtnClass('closed')}>
-          <p className={getTextClass('closed')}>Closed ({counts.closed})</p>
         </button>
         <button onClick={() => handleTabClick('rejected')} className={getBtnClass('rejected')}>
           <p className={getTextClass('rejected')}>Rejected ({counts.rejected})</p>

@@ -33,6 +33,16 @@ export const getOperatorDashboard = async (req: Request, res: Response) => {
     );
     const verifiedCount = new Set(verifiedLogs.map(l => l.ticket_id)).size;
 
+    // Diselesaikan oleh Sistem (Self-Service)
+    const systemResolvedCount = (tickets || []).filter(t => 
+      t.status === 'RESOLVED_BY_SYSTEM' && new Date(t.created_at) >= today
+    ).length;
+
+    // Menunggu Verifikasi
+    const waitingVerificationCount = (tickets || []).filter(t => 
+      t.status === 'WAITING VERIFICATION'
+    ).length;
+
     return res.status(200).json({
       success: true,
       data: {
@@ -43,6 +53,8 @@ export const getOperatorDashboard = async (req: Request, res: Response) => {
         counts: {
           todayCount,
           verifiedCount,
+          systemResolvedCount,
+          waitingVerificationCount,
           openCount: (tickets || []).filter(t => t.status === 'Open').length,
           totalTickets: (tickets || []).length,
           process: (tickets || []).filter(t => t.status === 'Diproses').length,
@@ -226,7 +238,7 @@ export const getResolvedTickets = async (req: Request, res: Response) => {
     const { data: tickets, error: ticketsError } = await supabase
       .from('tickets')
       .select('*, category:categories(name), dept:departments(name), tech:staff_profiles!tickets_tech_id_fkey(name)')
-      .in('status', ['RESOLVED', 'CLOSED'])
+      .in('status', ['RESOLVED', 'CLOSED', 'RESOLVED_BY_SYSTEM'])
       .order('created_at', { ascending: false });
 
     if (ticketsError) throw ticketsError;
@@ -247,12 +259,46 @@ export const getResolvedTickets = async (req: Request, res: Response) => {
   }
 };
 
-export const getInProgressTickets = async (req: Request, res: Response) => {
+export const getProcessingTickets = async (req: Request, res: Response) => {
   try {
     const { data: tickets, error: ticketsError } = await supabase
       .from('tickets')
       .select('*, category:categories(name), dept:departments(name), tech:staff_profiles!tickets_tech_id_fkey(name)')
-      .in('status', ['IN PROGRESS', 'Diproses'])
+      .in('status', ['Open', 'NEW', 'IN PROGRESS', 'Diproses'])
+      .not('dept_id', 'is', null)
+      .order('created_at', { ascending: false });
+
+    if (ticketsError) throw ticketsError;
+
+    const { data: categories } = await supabase.from('categories').select('*');
+    const { data: slaConfigs } = await supabase.from('sla_configs').select('*');
+    const { data: departments } = await supabase.from('departments').select('*');
+    const { data: technicians } = await supabase.from('staff_profiles').select('id, name, role').in('role', ['teknisi', 'agent']);
+
+    const formattedCategories = (categories || []).map(cat => ({
+      ...cat,
+      slaData: (slaConfigs || []).find(sla => sla.category_id === cat.id)
+    }));
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        tickets,
+        categories: formattedCategories,
+        departments,
+        technicians
+      }
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getAllOperatorTickets = async (req: Request, res: Response) => {
+  try {
+    const { data: tickets, error: ticketsError } = await supabase
+      .from('tickets')
+      .select('*, category:categories(name), dept:departments(name), tech:staff_profiles!tickets_tech_id_fkey(name)')
       .order('created_at', { ascending: false });
 
     if (ticketsError) throw ticketsError;

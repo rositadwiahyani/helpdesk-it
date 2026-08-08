@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 
 interface AuthCardProps {
-  title: string;
+  title: ReactNode;
   description: string;
   children: ReactNode;
   footer: ReactNode;
@@ -22,7 +22,6 @@ export default function AuthCard({ title, description, children, footer }: AuthC
           {children}
         </div>
         
-<div className="w-full max-w-md my-auto bg-white p-8 rounded-[var(--radius-lg)] shadow-[var(--shadow-soft)] border border-[var(--line)] text-center"></div>
         <div className="text-center text-sm text-[var(--text-dim)] mt-6">
           {footer}
         </div>

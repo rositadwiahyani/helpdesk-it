@@ -4,8 +4,6 @@ import React, { useState, useEffect } from "react";
 import SLAHeader from "./SLAHeader";
 import SLAToolbar from "./SLAToolbar";
 import SLATableSection from "./SLATableSection";
-import SLAInfoSection from "./SLAInfoSection";
-import SLAHistorySection, { SLAHistoryItem } from "./SLAHistorySection";
 import { supabase } from "@/lib/supabase";
 
 export interface SLAItem {
@@ -52,11 +50,8 @@ const INITIAL_SLA_DATA: SLAItem[] = [
   },
 ];
 
-const INITIAL_HISTORY_DATA: SLAHistoryItem[] = [];
-
 export default function SLAWorkspace() {
   const [slaData, setSlaData] = useState<SLAItem[]>([]);
-  const [historyData, setHistoryData] = useState<SLAHistoryItem[]>(INITIAL_HISTORY_DATA);
 
   useEffect(() => {
     fetchSlas();
@@ -98,14 +93,6 @@ export default function SLAWorkspace() {
       prevData.map((item) => (item.id === updatedItem.id ? updatedItem : item))
     );
 
-    // 3. Update data riwayat secara realtime
-    const newHistoryItem: SLAHistoryItem = {
-      id: Date.now(),
-      action: `SLA ${updatedItem.priority} diperbarui`,
-      timestamp: "Baru saja",
-    };
-    setHistoryData((prevHistory) => [newHistoryItem, ...prevHistory]);
-
     // 4. Tampilkan alert bawaan browser
     setTimeout(() => {
       alert(`Target waktu pada SLA ${updatedItem.priority} berhasil disimpan!`);
@@ -119,11 +106,6 @@ export default function SLAWorkspace() {
       <div className="flex flex-col items-start rounded-lg border border-[#C3C6D1] bg-[#FFF] shadow-[01px2px0rgba(0,0,0,0.05)] w-full overflow-hidden">
         <SLAToolbar />
         <SLATableSection slaData={slaData} onUpdateSLA={handleUpdateSLA} />
-      </div>
-
-      <div className="flex justify-center items-start gap-6 w-full">
-        <SLAInfoSection />
-        <SLAHistorySection historyData={historyData} />
       </div>
     </div>
   );

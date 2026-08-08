@@ -1,5 +1,5 @@
 import React from 'react';
-import OperatorStatistics from '@/components/admin/tickets/OperatorStatistics';
+import PriorityTicketList from '@/components/operator/tickets/PriorityTicketList';
 import { fetchServer } from '@/lib/apiServer';
 import AnimatedCounter from '@/components/ui/AnimatedCounter';
 
@@ -22,39 +22,39 @@ export default async function OperatorDashboard() {
             ticketLogs: [],
             categories: [],
             departments: [],
-            counts: { todayCount: 0, verifiedCount: 0, openCount: 0 }
+            counts: { todayCount: 0, verifiedCount: 0, openCount: 0, waitingVerificationCount: 0 }
         };
     }
 
-    const { tickets, ticketLogs, categories: formattedCategories, departments, counts } = dashboardData;
-    const { todayCount, verifiedCount, openCount } = counts;
+    const { tickets, counts } = dashboardData;
+    const { todayCount, verifiedCount, waitingVerificationCount } = counts || {};
 
     return (
         <div className="flex flex-col gap-6 p-6 md:p-10">
             <div className="animate-in fade-in slide-in-from-left-4 duration-500">
                 <h2 className="text-2xl font-bold text-[var(--ink)] mb-1">Beranda Operator</h2>
-                <p className="text-[var(--text-dim)] text-sm">Ringkasan statistik dan aktivitas helpdesk secara real-time.</p>
+                <p className="text-[var(--text-dim)] text-sm">Ringkasan aktivitas tiket yang butuh perhatian Anda.</p>
             </div>
 
-            {/* Statistik Hari Ini */}
+            {/* Statistik Penting */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 fill-mode-both">
                 <div className="bg-white border border-[var(--line-dark)] rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
                     <div>
-                        <div className="text-[11px] font-bold text-[var(--text-dim)] uppercase tracking-wider mb-2">Tiket Dibuat Hari Ini</div>
+                        <div className="text-[11px] font-bold text-[var(--text-dim)] uppercase tracking-wider mb-2">Tiket Masuk Hari Ini</div>
                         <div className="text-4xl font-bold text-[var(--ink)]">
                             <AnimatedCounter value={todayCount || 0} duration={1200} />
                         </div>
                     </div>
-                    <div className="text-xs text-[var(--text-dim)] mt-4">Total masuk hari ini</div>
+                    <div className="text-xs text-[var(--text-dim)] mt-4">Total tiket baru hari ini</div>
                 </div>
-                <div className="bg-white border border-[var(--line-dark)] rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+                <div className="bg-white border border-amber-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow bg-amber-50/30">
                     <div>
-                        <div className="text-[11px] font-bold text-[var(--text-dim)] uppercase tracking-wider mb-2">Menunggu Verifikasi</div>
-                        <div className="text-4xl font-bold text-[var(--gold)]">
-                            <AnimatedCounter value={openCount || 0} duration={1500} />
+                        <div className="text-[11px] font-bold text-amber-700 uppercase tracking-wider mb-2">Menunggu Verifikasi</div>
+                        <div className="text-4xl font-bold text-amber-600">
+                            <AnimatedCounter value={waitingVerificationCount || 0} duration={1500} />
                         </div>
                     </div>
-                    <div className="text-xs text-[var(--text-dim)] mt-4">Status Open</div>
+                    <div className="text-xs text-amber-700 mt-4">Butuh tindakan segera</div>
                 </div>
                 <div className="bg-white border border-[var(--line-dark)] rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
                     <div>
@@ -63,17 +63,14 @@ export default async function OperatorDashboard() {
                             <AnimatedCounter value={verifiedCount || 0} duration={1800} />
                         </div>
                     </div>
-                    <div className="text-xs text-[var(--text-dim)] mt-4">Diterima / Ditolak</div>
+                    <div className="text-xs text-[var(--text-dim)] mt-4">Diteruskan / Ditolak</div>
                 </div>
             </div>
 
-            {/* Komponen Statistik & Grafik */}
-            <OperatorStatistics 
-                tickets={tickets || []}
-                ticketLogs={ticketLogs || []}
-                categories={formattedCategories}
-                departments={departments || []}
-            />
+            {/* Komponen Tabel Prioritas */}
+            <div className="animate-in fade-in slide-in-from-bottom-6 duration-700 delay-300 fill-mode-both">
+                <PriorityTicketList tickets={tickets || []} />
+            </div>
         </div>
     );
 }

@@ -713,7 +713,7 @@ async function handleConfirmTicket(sender: string, input: string, currentData: a
     }
 
     // Insert ke tabel 'tickets' dengan reporter_type dinamis
-    const { error } = await supabase.from('tickets').insert([{
+    const { data: result, error } = await supabase.from('tickets').insert([{
       ticket_num: ticketNumber,
       phone: sender,
       dept_id: null,
@@ -733,7 +733,7 @@ async function handleConfirmTicket(sender: string, input: string, currentData: a
       console.error("❌ ERROR INSERT TICKET:", error);
       await sendMessage(sender, "⚠️ Mohon maaf, terjadi kesalahan sistem saat membuat tiket. Silakan coba beberapa saat lagi.");
     } else {
-      const ticketId = data.id;
+      const ticketId = result.id;
 
       // Handle Lampiran
       if (currentData.attachment_url) {

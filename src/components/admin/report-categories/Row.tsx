@@ -1,4 +1,4 @@
-import { ReactNode, useContext, useState } from "react";
+import { ReactNode, useContext, useState, useRef, useEffect } from "react";
 import CountBadge from "./CountBadge";
 import StatusBadge from "./StatusBadge";
 import ActionMenu from "./ActionMenu";
@@ -29,6 +29,19 @@ export default function Row({
 }: RowProps) {
   const ctx = useContext(TreeContext);
   const [isActionOpen, setIsActionOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsActionOpen(false);
+      }
+    };
+    if (isActionOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isActionOpen]);
 
   // Jika ada fitur pencarian, otomatis expand agar user bisa lihat highlight-nya
   const isExpanded = ctx?.searchQuery 
@@ -42,68 +55,99 @@ export default function Row({
   return (
     <div className={outerWrapperClassName}>
       <div 
-        className="flex py-3 px-4 w-full items-center bg-white border-b border-gray-100 relative z-10 cursor-pointer hover:bg-gray-50 transition-colors"
+        className={`flex py-3.5 px-4 w-full items-center bg-white border-b border-gray-100 relative cursor-pointer hover:bg-gray-50/50 transition-colors ${isActionOpen ? 'z-50' : 'z-10'}`}
         onClick={handleToggle}
       >
         <div className="flex-1 flex items-center gap-3 min-w-0 pr-4">
-          {/* Hamburger Drag Handle */}
-          <div className="cursor-grab text-gray-400 hover:text-gray-600">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="8" x2="20" y2="8"></line><line x1="4" y1="16" x2="20" y2="16"></line></svg>
+          {/* Drag Handle */}
+          <div className="cursor-grab active:cursor-grabbing text-[#D1D5DB] hover:text-gray-400 px-1">
+            <svg className="pointer-events-none" width="12" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="5" r="1.5"></circle><circle cx="15" cy="5" r="1.5"></circle><circle cx="9" cy="12" r="1.5"></circle><circle cx="15" cy="12" r="1.5"></circle><circle cx="9" cy="19" r="1.5"></circle><circle cx="15" cy="19" r="1.5"></circle></svg>
           </div>
+          
           <svg 
-            width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-            className={`shrink-0 text-gray-500 transition-transform duration-200 ${isExpanded ? '' : '-rotate-90'}`}
+            width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+            className={`shrink-0 text-gray-400 hover:text-gray-600 transition-transform duration-200 ${isExpanded ? '' : '-rotate-90'}`}
           >
             <polyline points="6 9 12 15 18 9"></polyline>
           </svg>
-          <p className="text-gray-800 font-medium text-[15px] truncate ml-1">
+
+          {/* Folder Icon */}
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#A3AED0] shrink-0 ml-1">
+            <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"></path>
+          </svg>
+
+          <p className="text-[#1A1C1E] font-semibold text-[15px] truncate ml-1.5">
             {title}
           </p>
         </div>
-        <div className="w-[80px] flex justify-end shrink-0 text-gray-500 text-sm font-medium mr-4">
-          {count}
-        </div>
-        <div className="w-[100px] flex justify-end shrink-0 mr-4">
-          <span className="text-gray-500 text-xs font-semibold">{status}</span>
-        </div>
-        {nodeId !== "root-layanan" ? (
-          <div className="w-[80px] flex justify-end shrink-0 relative" onClick={(e) => { e.stopPropagation(); setIsActionOpen(!isActionOpen); }}>
-            <button className="p-2 rounded hover:bg-gray-200 transition-colors">
-            <svg width="4" height="16" viewBox="0 0 4 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M2 16C1.45 16 0.979167 15.8042 0.5875 15.4125C0.195833 15.0208 0 14.55 0 14C0 13.45 0.195833 12.9792 0.5875 12.5875C0.979167 12.1958 1.45 12 2 12C2.55 12 3.02083 12.1958 3.4125 12.5875C3.80417 12.9792 4 13.45 4 14C4 14.55 3.80417 15.0208 3.4125 15.4125C3.02083 15.8042 2.55 16 2 16ZM2 10C1.45 10 0.979167 9.80417 0.5875 9.4125C0.195833 9.02083 0 8.55 0 8C0 7.45 0.195833 6.97917 0.5875 6.5875C0.979167 6.19583 1.45 6 2 6C2.55 6 3.02083 6.19583 3.4125 6.5875C3.80417 6.97917 4 7.45 4 8C4 8.55 3.80417 9.02083 3.4125 9.4125C3.02083 9.80417 2.55 10 2 10ZM2 4C1.45 4 0.979167 3.80417 0.5875 3.4125C0.195833 3.02083 0 2.55 0 2C0 1.45 0.195833 0.979167 0.5875 0.5875C0.979167 0.195833 1.45 0 2 0C2.55 0 3.02083 0.195833 3.4125 0.5875C3.80417 0.979167 4 1.45 4 2C4 2.55 3.80417 3.02083 3.4125 3.4125C3.02083 3.80417 2.55 4 2 4Z" fill="#43474F"/>
-            </svg>
-          </button>
 
-          {isActionOpen && (
-            <>
-              <div className="fixed inset-0 z-10" onClick={(e) => { e.stopPropagation(); setIsActionOpen(false); }}></div>
-              <div className="absolute right-0 top-10 w-48 bg-white border border-[#C3C6D1] rounded shadow-lg z-20 flex flex-col py-1">
+        {/* Count Badge */}
+        <div className="flex justify-end shrink-0 mr-6">
+          <span className="bg-[#F8F9FA] text-gray-500 border border-[#E5E7EB] px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-wide shadow-sm">
+            {count}
+          </span>
+        </div>
+
+        {/* Status Badge */}
+        <div className="w-[80px] flex justify-end shrink-0 mr-4">
+          {(status === 'AKTIF' || status === 'Aktif') ? (
+            <span className="bg-[#EEF4FF] text-blue-600 px-2.5 py-0.5 rounded-full text-[11px] font-semibold flex items-center gap-1.5 border border-[#D1E0FF] shadow-sm">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+              Aktif
+            </span>
+          ) : (
+             <span className="bg-[#F3F4F6] text-gray-600 px-2.5 py-0.5 rounded-full text-[11px] font-semibold flex items-center gap-1.5 border border-[#E5E7EB] shadow-sm">
+              <span className="w-1.5 h-1.5 rounded-full bg-gray-500"></span>
+              Nonaktif
+            </span>
+          )}
+        </div>
+
+        {nodeId !== "root-layanan" ? (
+          <div 
+            className="w-[40px] flex justify-end shrink-0 relative" 
+            ref={menuRef} 
+            onClick={(e) => { e.stopPropagation(); setIsActionOpen(!isActionOpen); }}
+            onDragStart={(e) => { e.preventDefault(); e.stopPropagation(); }}
+            draggable
+          >
+            <button className="p-1.5 rounded-md hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-700">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="1"></circle>
+                <circle cx="12" cy="5" r="1"></circle>
+                <circle cx="12" cy="19" r="1"></circle>
+              </svg>
+            </button>
+
+            {isActionOpen && (
+              <div className="absolute right-0 bottom-full mb-1 w-48 bg-white border border-[#E5E7EB] rounded-lg shadow-lg z-20 flex flex-col py-1 overflow-hidden">
                 <button
                   onClick={(e) => { e.stopPropagation(); setIsActionOpen(false); ctx?.onAddSubcategory?.(nodeId!); }}
-                  className="px-4 py-2 text-sm text-left hover:bg-gray-50 text-[#1A1C1E]"
+                  className="px-4 py-2 text-sm text-left hover:bg-gray-50 text-[#1A1C1E] transition-colors"
                 >
                   Tambah Subkategori
                 </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); setIsActionOpen(false); ctx?.onEditItem?.({ id: nodeId, title }, 'category'); }}
-                  className="px-4 py-2 text-sm text-left hover:bg-gray-50 text-[#1A1C1E]"
+                  className="px-4 py-2 text-sm text-left hover:bg-gray-50 text-[#1A1C1E] transition-colors"
                 >
                   Edit Data
                 </button>
+                <div className="h-px bg-gray-100 w-full my-1"></div>
                 <button
                   onClick={(e) => { e.stopPropagation(); setIsActionOpen(false); ctx?.onDeleteItem?.(nodeId!, 'category'); }}
-                  className="px-4 py-2 text-sm text-left hover:bg-red-50 text-red-600"
+                  className="px-4 py-2 text-sm text-left hover:bg-red-50 text-red-600 transition-colors"
                 >
                   Hapus
                 </button>
               </div>
-            </>
-          )}
-        </div>
+            )}
+          </div>
         ) : (
-          <div className="w-[80px] flex justify-end shrink-0"></div>
+          <div className="w-[40px] flex justify-end shrink-0"></div>
         )}
       </div>
+      
       {/* Logic untuk hide/show children saat di collapse */}
       {isExpanded && (
         <div className={childrenWrapperClassName}>{children}</div>

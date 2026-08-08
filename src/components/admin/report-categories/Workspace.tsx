@@ -5,8 +5,6 @@ import PageHeader from "./PageHeader";
 import Stats from "./Stats";
 import Toolbar from "./Toolbar";
 import TableSection from "./TableSection";
-import ActivityLog from "./ActivityLog";
-import TipsCard from "./Tipscard";
 import { AddCategoryModal, AddSubcategoryModal, EditItemModal } from "./CategoryModals";
 
 export type TreeContextType = {
@@ -59,7 +57,7 @@ export default function Workspace() {
               count: `${children.length} Items`,
               status: c.is_active ? "AKTIF" : "NONAKTIF",
               type: isBranch ? "branch" : "leaf-bordered",
-              childrenWrapperClassName: "flex flex-col items-end border-l-2 border-l-[rgba(0,89,187,0.20)] w-[calc(100%-56px)]",
+              childrenWrapperClassName: "flex flex-col border-l border-gray-200 ml-10 w-[calc(100%-40px)]",
               children: children.length > 0 ? children : undefined
             };
           });
@@ -121,16 +119,16 @@ export default function Workspace() {
   const handleReorder = async (newTreeData: any[]) => {
     setTreeData(newTreeData); // Optimistic UI update
 
-    const updates: { id: number; sort_order: number }[] = [];
+    const updates: { id: number; sort_order: number; parent_id?: number | null }[] = [];
     
     newTreeData.forEach((parent, pIndex) => {
       if (parent.realId) {
-        updates.push({ id: parent.realId, sort_order: pIndex + 1 });
+        updates.push({ id: parent.realId, sort_order: pIndex + 1, parent_id: null });
       }
       if (parent.children && parent.children.length > 0) {
         parent.children.forEach((child: any, cIndex: number) => {
           if (child.realId) {
-            updates.push({ id: child.realId, sort_order: cIndex + 1 });
+            updates.push({ id: child.realId, sort_order: cIndex + 1, parent_id: parent.realId });
           }
         });
       }
@@ -181,15 +179,6 @@ export default function Workspace() {
         
         {/* Tabel Kategori (Tree) */}
         <TableSection />
-        
-        <div className="flex flex-row items-stretch gap-6 w-full">
-          <div className="flex-[3] min-w-0">
-            <ActivityLog />
-          </div>
-          <div className="flex-[2] min-w-0">
-            <TipsCard />
-          </div>
-        </div>
       </div>
       
       <AddCategoryModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onSuccess={fetchData} />

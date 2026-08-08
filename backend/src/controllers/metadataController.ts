@@ -48,7 +48,11 @@ export const reorderCategories = async (req: Request, res: Response) => {
     }
 
     const results = await Promise.all(
-      updates.map(u => supabaseAdmin.from('categories').update({ sort_order: u.sort_order }).eq('id', u.id))
+      updates.map(u => {
+        const payload: any = { sort_order: u.sort_order };
+        if (u.parent_id !== undefined) payload.parent_id = u.parent_id;
+        return supabaseAdmin.from('categories').update(payload).eq('id', u.id);
+      })
     );
 
     const errors = results.filter(r => r.error);
