@@ -89,13 +89,15 @@ export default function AdminTopbar({
 
   return (
     <div className="sticky top-0 z-40 h-20 w-full bg-white border-b border-[var(--line)]">
-      <div className="flex h-full items-center justify-between px-6 lg:px-10">
+      {/* Padding menyesuaikan dengan p-4 lg:p-8 pada Layout utama */}
+      <div className="flex h-full items-center justify-between px-4 lg:px-8">
 
-        {/* Kiri: Breadcrumb (Tombol Hamburger dihapus) */}
-        <div className="flex items-center gap-4">
+        {/* Kiri: Hamburger & Breadcrumb */}
+        <div className="flex items-center h-full">
+          {/* Hamburger button */}
           <button
             onClick={onMenuClick}
-            className={`${showMenuButtonOnDesktop ? 'block' : 'lg:opacity-0 lg:pointer-events-none'} p-2 -ml-2 rounded-xl text-[var(--text-dim)] hover:bg-[var(--paper-2)] hover:text-[var(--ink)] transition-colors`}
+            className={`${showMenuButtonOnDesktop ? 'block' : 'lg:opacity-0 lg:pointer-events-none'} -ml-2 p-2 rounded-xl text-[var(--text-dim)] hover:bg-[var(--paper-2)] hover:text-[var(--ink)] transition-colors`}
             aria-label="Buka menu"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -103,8 +105,8 @@ export default function AdminTopbar({
             </svg>
           </button>
 
-          {/* Breadcrumb: Menu > Dinamis berdasarkan Pathname */}
-          <div className="flex items-center gap-2 text-[15px]">
+          {/* Breadcrumb. Margin left ditambahkan agar teks selaras dengan page title yang terdorong padding halaman md:p-10 (40px) */}
+          <div className="flex items-center gap-2 text-[15px] ml-4 md:ml-2">
             <span className="text-[var(--text-dim)]">{breadcrumbParent}</span>
             <svg className="w-4 h-4 text-[var(--text-dim)]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />

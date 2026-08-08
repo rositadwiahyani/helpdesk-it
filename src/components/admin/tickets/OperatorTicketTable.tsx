@@ -380,7 +380,7 @@ export default function OperatorTicketTable({
                             placeholder="Search ticket..." 
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-9 pr-4 py-2 text-sm border border-[#C3C6D1] rounded focus:outline-none focus:border-[#0059BB] w-full md:w-64"
+                            className="pl-10 pr-4 py-2 text-[13.5px] border border-slate-200 rounded focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 w-full md:w-72 transition-shadow"
                         />
                         <svg className="w-4 h-4 absolute left-3 top-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                     </div>
@@ -391,7 +391,7 @@ export default function OperatorTicketTable({
                     <div className="relative">
                         <button 
                             onClick={() => setShowCategoryPopup(!showCategoryPopup)}
-                            className={`flex h-[34px] px-3 items-center gap-2 rounded border border-[#C3C6D1] bg-[#FFF] cursor-pointer transition-colors ${showCategoryPopup || selectedCategory ? 'bg-slate-100' : 'hover:bg-gray-50'}`}
+                            className={`flex h-9 px-3.5 items-center gap-2 rounded border border-slate-200 bg-white cursor-pointer transition-colors ${showCategoryPopup || selectedCategory ? "bg-slate-50 border-slate-300" : "hover:bg-slate-50"}`}
                         >
                             <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                             <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 max-w-[120px] truncate">
@@ -427,7 +427,7 @@ export default function OperatorTicketTable({
                                 <button 
                                     onClick={() => handleBulkAction('delete')}
                                     disabled={isBulkRejecting}
-                                    className="py-[7.5px] px-3 border border-[#C3C6D1] rounded text-[13px] font-semibold text-red-600 bg-red-50 hover:bg-red-100 hover:border-red-200 transition-colors disabled:opacity-50"
+                                    className="h-9 px-3.5 border border-red-200 rounded text-[13px] font-medium text-red-600 bg-red-50 hover:bg-red-100 transition-colors disabled:opacity-50"
                                 >
                                     {isBulkRejecting ? 'Memproses...' : `Hapus (${selectedTickets.length})`}
                                 </button>
@@ -435,7 +435,7 @@ export default function OperatorTicketTable({
                             <button 
                                 onClick={() => handleBulkAction('default')}
                                 disabled={isBulkRejecting}
-                                className={`py-[7.5px] px-3 border border-[#C3C6D1] rounded text-[13px] font-semibold transition-colors disabled:opacity-50 ${
+                                className={`h-9 px-3.5 border rounded text-[13px] font-medium transition-colors disabled:opacity-50 ${
                                     actionType === 'rollback' 
                                         ? 'text-orange-600 bg-orange-50 hover:bg-orange-100 hover:border-orange-200' 
                                         : 'text-red-600 bg-red-50 hover:bg-red-100 hover:border-red-200'
@@ -452,7 +452,7 @@ export default function OperatorTicketTable({
                     <div className="relative">
                         <button 
                             onClick={() => setShowAdvanced(!showAdvanced)}
-                            className={`flex h-[34px] px-3 items-center gap-2 rounded border border-[#C3C6D1] bg-[#FFF] cursor-pointer transition-colors ${showAdvanced ? 'bg-slate-100' : 'hover:bg-gray-50'}`}
+                            className={`flex h-9 px-3.5 items-center gap-2 rounded border border-slate-200 bg-white cursor-pointer transition-colors ${showAdvanced ? "bg-slate-50 border-slate-300" : "hover:bg-slate-50"}`}
                         >
                             <svg width="14" height="9" viewBox="0 0 14 9" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.25 9V7.5H8.25V9H5.25ZM2.25 5.25V3.75H11.25V5.25H2.25ZM0 1.5V0H13.5V1.5H0Z" fill="#43474F" /></svg>
                             <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4">Advanced</span>
@@ -485,7 +485,7 @@ export default function OperatorTicketTable({
                     </div>
                     <button 
                         onClick={() => { setStartDate(''); setEndDate(''); setSelectedCategory(''); }}
-                        className="h-[34px] px-3 bg-white text-gray-600 border border-[#C3C6D1] text-[13px] font-semibold rounded hover:bg-gray-50 hover:text-gray-900 transition-colors"
+                        className="h-9 px-4 bg-white text-slate-600 border border-slate-200 text-[13px] font-medium rounded hover:bg-slate-50 hover:text-slate-900 transition-colors"
                     >
                         Reset
                     </button>
@@ -498,7 +498,7 @@ export default function OperatorTicketTable({
             </div>
 
             {/* Table Container */}
-            <div className="flex flex-col rounded-lg border border-[#C3C6D1] bg-[#FFF] shadow-sm w-full overflow-hidden">
+            <div className="flex flex-col rounded-lg border border-slate-200 bg-white shadow-sm w-full overflow-hidden">
                 <div className="w-full overflow-x-auto min-h-[400px]">
                 <table className="w-full text-left table-auto">
                     <thead className="bg-[#F3F3F6] border-b border-[#C3C6D1]">

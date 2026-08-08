@@ -40,12 +40,15 @@ export default function TicketTableSection({ activeTab = 'all', tickets = [], ne
         'open': 'OPEN',
         'in_progress': 'IN PROGRESS',
         'waiting_verification': 'WAITING VERIFICATION',
-        'resolved': 'RESOLVED',
-        'closed': 'CLOSED',
         'rejected': 'DITOLAK',
         'deleted': 'DELETED'
       };
-      filteredData = filteredData.filter(t => (t.status || '').toUpperCase() === statusMap[activeTab]);
+      
+      if (activeTab === 'resolved') {
+        filteredData = filteredData.filter(t => ['RESOLVED', 'RESOLVED_BY_SYSTEM'].includes((t.status || '').toUpperCase()));
+      } else {
+        filteredData = filteredData.filter(t => (t.status || '').toUpperCase() === statusMap[activeTab]);
+      }
     }
 
     // 1.5 Filter by Advanced Filters

@@ -7,6 +7,7 @@ interface UsersToolbarProps {
   onAddClick?: () => void;
   selectedCount?: number;
   onBulkDeleteClick?: () => void;
+  onExportClick?: () => void;
 }
 
 export default function UsersToolbar({

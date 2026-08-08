@@ -1,14 +1,12 @@
 import React from 'react';
-import TeknisiTicketTable from '@/components/teknisi/tickets/TeknisiTicketTable';
+import TeknisiTicketWorkspace from '@/components/teknisi/tickets/TeknisiTicketWorkspace';
 import { supabase } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
-export default async function TeknisiOpenTicketsPage() {
-    // Auth check dilewati sementara
-    const techId = "3"; // Dummy tech ID for "Assign to Me" action
-
-    // Ambil tiket yang ditugaskan (Assigned) dan belum diambil oleh teknisi mana pun
+export default async function TeknisiUnifiedTicketsPage() {
+    // Ambil semua tiket (COMMUNAL POOL - tidak difilter per departemen teknisi)
+    // Tapi kecualikan tiket yang masih 'NEW' (menunggu verifikasi operator)
     const { data: tickets, error } = await supabase
         .from('tickets')
         .select(`
@@ -16,8 +14,12 @@ export default async function TeknisiOpenTicketsPage() {
             category:categories (name),
             dept:departments (name)
         `)
-        .in('status', ['NEW', 'Open']) // Tiket yang diteruskan oleh operator
+        .neq('status', 'NEW')
         .order('created_at', { ascending: false });
+
+    if (error) {
+        console.error("Error fetching tickets for teknisi:", error);
+    }
 
     // Ambil kategori untuk filter dropdown
     const { data: rawCategories } = await supabase
@@ -38,22 +40,22 @@ export default async function TeknisiOpenTicketsPage() {
             dept_id: cat.dept_id
         };
     }).sort((a, b) => a.name.localeCompare(b.name));
-    
-    // Hapus filter ini agar bisa digunakan untuk mencocokkan ID turunan
-    // const mainCategories = formattedCategories.filter(c => !c.parent_id);
 
     return (
         <div className="w-full h-full text-slate-800 font-sans p-6 md:p-10">
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Open Tickets</h1>
-                <p className="text-sm text-slate-500 mt-1">Daftar tiket baru yang diteruskan ke departemen Anda dan siap ditangani.</p>
+            <div className="mb-8 flex items-center justify-between animate-in fade-in slide-in-from-top-4 duration-500">
+                <div>
+                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-1">Manajemen Tiket</h1>
+                    <p className="text-sm text-slate-500">Kelola semua tiket yang siap diambil, sedang dikerjakan, dan telah selesai.</p>
+                </div>
             </div>
 
-            <TeknisiTicketTable 
-                initialTickets={tickets || []} 
-                mainCategories={formattedCategories}
-                actionType="assign"
-            />
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 fill-mode-both">
+                <TeknisiTicketWorkspace 
+                    tickets={tickets || []} 
+                    mainCategories={formattedCategories}
+                />
+            </div>
         </div>
     );
 }

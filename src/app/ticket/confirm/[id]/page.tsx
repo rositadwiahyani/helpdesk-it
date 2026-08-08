@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import fetchClient from '@/lib/apiClient';
+import { fetchClient } from '@/lib/apiClient';
 
 export default function TicketConfirmationPage() {
     const params = useParams();

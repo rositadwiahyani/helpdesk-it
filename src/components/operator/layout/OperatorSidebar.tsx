@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { logoutUser } from '@/lib/AuthService';
+import { LayoutDashboard, Ticket, User, LogOut } from 'lucide-react';
 
 interface OperatorSidebarProps {
   isOpen: boolean;
@@ -19,13 +20,9 @@ export default function OperatorSidebar({ isOpen, setIsOpen }: OperatorSidebarPr
   };
 
   const MENU_ITEMS = [
-    { name: 'Dashboard', path: '/dashboard/operator', icon: HomeIcon },
-    { name: 'Tiket Masuk', path: '/dashboard/operator/tickets', icon: InboxIcon },
-    { name: 'Tiket Ditolak', path: '/dashboard/operator/tickets-rejected', icon: XCircleIcon },
-    { name: 'Tiket Belum Ditangani', path: '/dashboard/operator/tickets-unhandled', icon: ClockIcon },
-    { name: 'Tiket In Progress', path: '/dashboard/operator/tickets-inprogress', icon: ActivityIcon },
-    { name: 'Tiket Selesai', path: '/dashboard/operator/tickets-resolved', icon: CheckCircleIcon },
-    { name: 'Profil', path: '/dashboard/operator/profile', icon: StaffIcon },
+    { name: 'Dashboard', path: '/dashboard/operator', icon: LayoutDashboard },
+    { name: 'Semua Tiket', path: '/dashboard/operator/tickets', icon: Ticket },
+    { name: 'Profil', path: '/dashboard/operator/profile', icon: User },
   ];
 
   return (
@@ -38,22 +35,22 @@ export default function OperatorSidebar({ isOpen, setIsOpen }: OperatorSidebarPr
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-72 bg-[#0B1B2E] flex flex-col transition-transform duration-300 ease-[var(--ease)] ${
-          pathname.includes('/tickets') || pathname.includes('/tickets-rejected')
-            ? (isOpen ? 'translate-x-0' : '-translate-x-full')
-            : 'lg:translate-x-0 ' + (isOpen ? 'translate-x-0' : '-translate-x-full')
+        className={`fixed inset-y-0 left-0 z-50 bg-[#0B1B2E] flex flex-col transition-all duration-300 ease-[var(--ease)] ${
+          isOpen ? 'w-72 translate-x-0' : 'w-[80px] max-lg:-translate-x-full lg:translate-x-0'
         }`}
       >
         {/* Header / Logo Area Sidebar */}
-        <div className="h-[92px] flex items-center gap-3 px-6 border-b border-white/10 flex-none">
-          <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center flex-none">
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-              <path d="M12 3 2 8l10 5 10-5-10-5Z" />
-              <path d="M6 10.3V15c0 1.66 2.69 3 6 3s6-1.34 6-3v-4.7" />
-              <path d="M22 8v6" />
-            </svg>
+        <div className="h-[92px] flex items-center px-4 border-b border-white/10 flex-none overflow-hidden transition-all duration-300">
+          <div className="w-12 h-12 flex items-center justify-center flex-none">
+            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center flex-none">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                <path d="M12 3 2 8l10 5 10-5-10-5Z" />
+                <path d="M6 10.3V15c0 1.66 2.69 3 6 3s6-1.34 6-3v-4.7" />
+                <path d="M22 8v6" />
+              </svg>
+            </div>
           </div>
-          <div className="flex flex-col leading-tight min-w-0">
+          <div className={`flex flex-col leading-tight min-w-0 transition-opacity duration-200 ml-2 ${isOpen ? 'opacity-100' : 'opacity-0 hidden'}`}>
             <span className="font-bold text-[17px] text-white truncate">IT Helpdesk</span>
             <span className="text-[10.5px] font-medium text-white/50 uppercase tracking-wider truncate">
               Universitas Diponegoro
@@ -62,7 +59,7 @@ export default function OperatorSidebar({ isOpen, setIsOpen }: OperatorSidebarPr
         </div>
 
         {/* Menu Navigation */}
-        <nav className="flex-1 overflow-y-auto py-5 px-4 flex flex-col gap-1">
+        <nav className="flex-1 overflow-y-auto py-5 px-4 flex flex-col gap-1 overflow-x-hidden">
           {MENU_ITEMS.map((item) => {
             const Icon = item.icon;
             let isActive = false;
@@ -75,121 +72,58 @@ export default function OperatorSidebar({ isOpen, setIsOpen }: OperatorSidebarPr
             }
 
             return (
-              <Link
-                key={item.name}
-                href={item.path}
-                onClick={() => {
-                  if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-                    setIsOpen(false);
-                  }
-                }}
-                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[14px] transition-all duration-200 ${
-                  isActive
-                    ? 'bg-white/10 !text-white font-semibold'
-                    : '!text-white font-medium hover:bg-white/5'
-                }`}
-              >
-                <Icon isActive={isActive} />
-                <span className="truncate">{item.name}</span>
-              </Link>
+              <div key={item.name} className="relative group w-full">
+                <Link
+                  href={item.path}
+                  onClick={() => {
+                    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+                      setIsOpen(false);
+                    }
+                  }}
+                  className={`flex items-center rounded-xl text-[14px] transition-all duration-200 w-full h-12 px-3 gap-3 overflow-hidden ${
+                    isActive
+                      ? 'bg-white/10 !text-white font-semibold'
+                      : '!text-white font-medium hover:bg-white/5'
+                  }`}
+                >
+                  <div className="flex-none flex items-center justify-center w-6 h-6">
+                    <Icon className="w-5 h-5" strokeWidth={isActive ? 2.2 : 1.8} />
+                  </div>
+                  <span className={`truncate transition-opacity duration-200 ${isOpen ? 'opacity-100' : 'opacity-0 hidden'}`}>{item.name}</span>
+                </Link>
+                {/* Tooltip for collapsed state */}
+                {!isOpen && (
+                  <div className="absolute left-full ml-4 top-1/2 -translate-y-1/2 px-2 py-1.5 bg-gray-900 text-white text-xs font-semibold rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50">
+                    {item.name}
+                    <div className="absolute top-1/2 -left-1 -translate-y-1/2 border-y-4 border-y-transparent border-r-4 border-r-gray-900"></div>
+                  </div>
+                )}
+              </div>
             );
           })}
         </nav>
 
         {/* Footer Area Sidebar - Logout */}
-        <div className="p-4 border-t border-white/10 flex-none">
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[14px] font-semibold text-[#F87171] hover:bg-red-500/10 transition-colors"
-          >
-            <LogoutIcon isActive={false} />
-            Logout
-          </button>
+        <div className="p-4 border-t border-white/10 flex-none flex">
+          <div className="relative group w-full">
+            <button
+              onClick={handleLogout}
+              className="flex items-center rounded-xl text-[14px] font-semibold text-[#F87171] hover:bg-red-500/10 transition-colors w-full h-12 px-3 gap-3 overflow-hidden"
+            >
+              <div className="flex-none flex items-center justify-center w-6 h-6">
+                <LogOut className="w-5 h-5" strokeWidth={1.8} />
+              </div>
+              <span className={`transition-opacity duration-200 ${isOpen ? 'opacity-100' : 'opacity-0 hidden'}`}>Logout</span>
+            </button>
+            {!isOpen && (
+              <div className="absolute left-full ml-4 top-1/2 -translate-y-1/2 px-2 py-1.5 bg-gray-900 text-white text-xs font-semibold rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50">
+                Logout
+                <div className="absolute top-1/2 -left-1 -translate-y-1/2 border-y-4 border-y-transparent border-r-4 border-r-gray-900"></div>
+              </div>
+            )}
+          </div>
         </div>
       </aside>
     </>
-  );
-}
-
-function HomeIcon({ isActive }: { isActive: boolean }) {
-  return (
-    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-      <path d="M3 11.5 12 4l9 7.5" />
-      <path d="M5 10v10h5v-6h4v6h5V10" />
-    </svg>
-  );
-}
-
-function TicketsIcon({ isActive }: { isActive: boolean }) {
-  return (
-    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-      <path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1.5a1.5 1.5 0 0 0 0 3V15a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1.5a1.5 1.5 0 0 0 0-3V9Z" />
-      <path d="M9 7v10" strokeDasharray="2 2" />
-    </svg>
-  );
-}
-
-function InboxIcon({ isActive }: { isActive: boolean }) {
-  return (
-    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-      <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
-      <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
-    </svg>
-  );
-}
-
-function XCircleIcon({ isActive }: { isActive: boolean }) {
-  return (
-    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="10" />
-      <path d="m15 9-6 6M9 9l6 6" />
-    </svg>
-  );
-}
-
-function ClockIcon({ isActive }: { isActive: boolean }) {
-  return (
-    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="10" />
-      <polyline points="12 6 12 12 16 14" />
-    </svg>
-  );
-}
-
-function ActivityIcon({ isActive }: { isActive: boolean }) {
-  return (
-    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-    </svg>
-  );
-}
-
-function CheckCircleIcon({ isActive }: { isActive: boolean }) {
-  return (
-    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-      <polyline points="22 4 12 14.01 9 11.01" />
-    </svg>
-  );
-}
-
-function StaffIcon({ isActive }: { isActive: boolean }) {
-  return (
-    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-      <rect x="3" y="5" width="18" height="14" rx="2" />
-      <circle cx="9" cy="10" r="2" />
-      <path d="M6 16c.5-2 2-3 3-3s2.5 1 3 3" />
-      <path d="M14 9h4M14 13h4" />
-    </svg>
-  );
-}
-
-function LogoutIcon({ isActive }: { isActive: boolean }) {
-  return (
-    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-      <path d="m16 17 5-5-5-5" />
-      <path d="M21 12H9" />
-    </svg>
   );
 }

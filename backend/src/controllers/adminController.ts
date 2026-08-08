@@ -35,27 +35,27 @@ export const getAdminDashboard = async (req: Request, res: Response): Promise<vo
 
     // 2 & 3. Open Tickets & Overdue SLA will be computed from allTickets later
 
-    // 4. Failed Messages / Webhooks (Mocked for now since table doesn't exist)
-    const failedMessages = Math.floor(Math.random() * 5); // 0-4
+    let totalSolvedBySystem = 0;
 
-    // 5. Recent Ticket Activity
-    const { data: recentLogs, error: errLogs } = await supabase
+    // 5. Recent Ticket Activity - fetch latest 5 logs AND latest 5 tickets
+    const { data: recentLogsData } = await supabase
       .from('ticket_logs')
       .select('*, tickets(ticket_num)')
       .order('created_at', { ascending: false })
       .limit(5);
 
-    // 6. Categories for Pie Chart
-    // Supabase JS doesn't support GROUP BY natively unless using RPC or fetching all
-    // Let's fetch categories and then count, or fetch all tickets (if small) and group in JS.
-    // Assuming relatively small dataset for MVP
-    const { data: allTickets, error: errAll } = await supabase
+    const { data: recentTicketsData } = await supabase
+      .from('tickets')
+      .select('id, ticket_num, status, created_at')
+      .order('created_at', { ascending: false })
+      .limit(5);
+
+    const { data: allTickets } = await supabase
       .from('tickets')
       .select('category_id, dept_id, status, sla_due');
 
-    // Remove color from select, since it might not exist in the DB schema
-    const { data: categories, error: errCats } = await supabase.from('categories').select('id, name');
-    const { data: departments, error: errDepts } = await supabase.from('departments').select('id, name');
+    const { data: categories } = await supabase.from('categories').select('id, name');
+    const { data: departments } = await supabase.from('departments').select('id, name');
 
     let categoryStats: any[] = [];
     let deptStats: any[] = [];
@@ -63,12 +63,9 @@ export const getAdminDashboard = async (req: Request, res: Response): Promise<vo
     let totalOpen = 0;
     let totalOverdue = 0;
 
-    // Fallback colors for categories
     const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#6366f1'];
 
-    // Aggregate in JS
     if (allTickets && categories && departments) {
-      // Categories
       const catCount = allTickets.reduce((acc: any, t) => {
         acc[t.category_id] = (acc[t.category_id] || 0) + 1;
         return acc;
@@ -78,9 +75,8 @@ export const getAdminDashboard = async (req: Request, res: Response): Promise<vo
         name: c.name,
         value: catCount[c.id] || 0,
         fill: c.color || colors[index % colors.length]
-      })).filter(c => c.value > 0).sort((a, b) => b.value - a.value).slice(0, 5); // Top 5
+      })).filter(c => c.value > 0).sort((a, b) => b.value - a.value).slice(0, 5);
 
-      // Departments
       const deptData: any = {};
       departments.forEach(d => {
         deptData[d.id] = { name: d.name, total: 0, open: 0, closed: 0, overdue: 0 };
@@ -88,7 +84,11 @@ export const getAdminDashboard = async (req: Request, res: Response): Promise<vo
 
       allTickets.forEach(t => {
         const stat = (t.status || '').toUpperCase();
-        const isOpen = !['RESOLVED', 'CLOSED', 'DONE'].includes(stat);
+        if (stat === 'RESOLVED_BY_SYSTEM') {
+          totalSolvedBySystem++;
+        }
+        
+        const isOpen = !['RESOLVED', 'CLOSED', 'DONE', 'RESOLVED_BY_SYSTEM'].includes(stat);
         const isClosed = !isOpen;
 
         if (isOpen) totalOpen++;
@@ -101,7 +101,6 @@ export const getAdminDashboard = async (req: Request, res: Response): Promise<vo
           if (t.sla_due && new Date(t.sla_due) < new Date() && isOpen) d.overdue++;
         }
 
-        // SLA Stats
         if (isOpen) {
           if (t.sla_due) {
             const due = new Date(t.sla_due).getTime();
@@ -121,8 +120,7 @@ export const getAdminDashboard = async (req: Request, res: Response): Promise<vo
       deptStats = Object.values(deptData).filter((d: any) => d.total > 0).sort((a: any, b: any) => b.total - a.total);
     }
 
-    // Ticket Trends (Last 30 days)
-    const trendData = [];
+    const trendData: { name: string; value: number }[] = [];
     for (let i = 29; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
@@ -144,15 +142,41 @@ export const getAdminDashboard = async (req: Request, res: Response): Promise<vo
       });
     }
 
+    // Process Recent Logs
+    let combinedLogs: any[] = [];
+    if (recentLogsData) {
+      combinedLogs = [...combinedLogs, ...recentLogsData.map((l: any) => ({
+        id: l.id,
+        ticketNum: l.tickets?.ticket_num || 'Unknown',
+        type: 'log',
+        action: l.action,
+        message: l.notes || l.action,
+        created_at: l.created_at
+      }))];
+    }
+    if (recentTicketsData) {
+      combinedLogs = [...combinedLogs, ...recentTicketsData.map((t: any) => ({
+        id: `t_${t.id}`,
+        ticketNum: t.ticket_num || 'Unknown',
+        type: 'ticket',
+        action: 'TICKET_CREATED',
+        message: t.status === 'RESOLVED_BY_SYSTEM' ? 'Ticket auto-resolved by system' : 'New ticket created',
+        created_at: t.created_at
+      }))];
+    }
+
+    // Sort descending by time and take top 5
+    combinedLogs.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    combinedLogs = combinedLogs.slice(0, 5);
+
     res.json({
       summary: {
         today: ticketsToday || 0,
         growth: growth.toFixed(1),
         open: totalOpen,
         overdue: totalOverdue,
-        failedMessages
-      },
-      recentLogs: recentLogs?.map(l => {
+        failedMessages: totalSolvedBySystem      },
+      recentLogs: combinedLogs.map(l => {
         let status = 'Update';
         let iconColor = 'bg-slate-100 text-slate-600';
         if (l.action === 'TICKET_CREATED') {
@@ -168,13 +192,13 @@ export const getAdminDashboard = async (req: Request, res: Response): Promise<vo
 
         return {
           id: l.id,
-          ticketNum: l.tickets?.ticket_num || 'Unknown',
+          ticketNum: l.ticketNum,
           status,
           iconColor,
-          message: l.notes || l.action,
+          message: l.message,
           time: new Date(l.created_at).toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
         };
-      }) || [],
+      }),
       categories: categoryStats,
       departments: deptStats,
       slaHealth: [

@@ -1,5 +1,5 @@
 import React from 'react';
-import OperatorTicketTable from '@/components/admin/tickets/OperatorTicketTable';
+import OperatorTicketWorkspace from '@/components/operator/tickets/OperatorTicketWorkspace';
 import { calculateIsOverdue } from '@/lib/utils/sla';
 import { fetchServer } from '@/lib/apiServer';
 
@@ -8,10 +8,10 @@ export const dynamic = 'force-dynamic';
 export default async function OperatorTicketsPage() {
     let apiData;
     try {
-        const res = await fetchServer('/operator/tickets/open');
+        const res = await fetchServer('/operator/tickets/all');
         apiData = res.data;
     } catch (err) {
-        console.error("Error fetching open tickets:", err);
+        console.error("Error fetching all tickets:", err);
         apiData = {
             tickets: [],
             slaConfigs: [],
@@ -56,22 +56,22 @@ export default async function OperatorTicketsPage() {
 
     return (
         <div className="w-full h-full text-slate-800 font-sans p-6 md:p-10">
-            <div className="mb-8 flex items-center justify-between">
+            <div className="mb-8 flex items-center justify-between animate-in fade-in slide-in-from-top-4 duration-500">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Tiket Masuk</h1>
-                    <p className="text-sm text-slate-500 mt-1">Daftar tiket yang menunggu verifikasi Anda.</p>
+                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-1">Manajemen Tiket</h1>
+                    <p className="text-sm text-slate-500">Kelola semua tiket yang masuk, menunggu verifikasi, dan diproses.</p>
                 </div>
             </div>
 
-            {/* Komponen Tabel Client-Side dengan Filter/Sorting */}
-            <OperatorTicketTable 
-                initialTickets={processedTickets} 
-                departments={departments || []}
-                categories={formattedCategories}
-                mainCategories={mainCategories}
-                technicians={technicians || []}
-                actionType="verify"
-            />
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 fill-mode-both">
+                <OperatorTicketWorkspace 
+                    tickets={processedTickets} 
+                    departments={departments || []}
+                    categories={formattedCategories}
+                    mainCategories={mainCategories}
+                    technicians={technicians || []}
+                />
+            </div>
         </div>
     );
 }

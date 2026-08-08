@@ -2,8 +2,27 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { 
+  LayoutDashboard, 
+  Ticket, 
+  Users, 
+  Layers, 
+  ShieldCheck, 
+  UserCog, 
+  MessageSquare, 
+  BookOpen, 
+  Webhook, 
+  Settings, 
+  User, 
+  LogOut 
+} from 'lucide-react';
 
-export default function AdminSidebar() {
+interface AdminSidebarProps {
+  isOpen?: boolean;
+  setIsOpen?: (isOpen: boolean) => void;
+}
+
+export default function AdminSidebar({ isOpen = true, setIsOpen = () => {} }: AdminSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -13,37 +32,45 @@ export default function AdminSidebar() {
     window.location.href = '/login';
   };
 
-  let MENU_ITEMS = [
-    { name: 'Beranda', path: '/dashboard/administrasi', icon: HomeIcon },
-    { name: 'Tickets', path: '/dashboard/administrasi/tickets', icon: TicketsIcon },
-    { name: 'Manajemen Pengguna', path: '/dashboard/administrasi/users', icon: UsersIcon },
-    { name: 'Kategori Laporan', path: '/dashboard/administrasi/report-categories', icon: CategoryIcon },
-    { name: 'Manajemen SLA', path: '/dashboard/administrasi/sla', icon: SlaIcon },
-    { name: 'Manajemen Staff', path: '/dashboard/administrasi/staff', icon: StaffIcon },
-    { name: 'Laporan & Ekspor', path: '/dashboard/administrasi/reports', icon: ReportIcon },
-    { name: 'Jawaban Cepat', path: '/dashboard/administrasi/quick-replies', icon: ChatIcon },
-    { name: 'Pengaturan Menu Bot', path: '/dashboard/administrasi/bot-menus', icon: BotIcon },
-    { name: 'Basis Pengetahuan', path: '/dashboard/administrasi/knowledge-base', icon: BookIcon },
-    { name: 'Log API Webhook', path: '/dashboard/administrasi/webhook', icon: WebhookIcon },
-    { name: 'Pengaturan Sistem', path: '/dashboard/administrasi/settings', icon: SettingsIcon },
-    { name: 'Profil', path: '/dashboard/administrasi/profile', icon: SettingsIcon },
+  const MENU_ITEMS = [
+    { name: 'Beranda', path: '/dashboard/administrasi', icon: LayoutDashboard },
+    { name: 'Tickets', path: '/dashboard/administrasi/tickets', icon: Ticket },
+    { name: 'Manajemen Pengguna', path: '/dashboard/administrasi/users', icon: Users },
+    { name: 'Kategori Laporan', path: '/dashboard/administrasi/report-categories', icon: Layers },
+    { name: 'Manajemen SLA', path: '/dashboard/administrasi/sla', icon: ShieldCheck },
+    { name: 'Manajemen Staff', path: '/dashboard/administrasi/staff', icon: UserCog },
+    { name: 'Jawaban Cepat', path: '/dashboard/administrasi/quick-replies', icon: MessageSquare },
+    { name: 'Basis Pengetahuan', path: '/dashboard/administrasi/knowledge-base', icon: BookOpen },
+    { name: 'Log API Webhook', path: '/dashboard/administrasi/webhook', icon: Webhook },
+    { name: 'Profil', path: '/dashboard/administrasi/profile', icon: User },
   ];
-
-
 
   return (
     <>
-      <aside className="fixed inset-y-0 left-0 z-50 w-72 bg-[#0B1B2E] flex flex-col">
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden transition-opacity"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 bg-[#0B1B2E] flex flex-col transition-all duration-300 ease-[var(--ease)] ${
+          isOpen ? 'w-72 translate-x-0' : 'w-[80px] max-lg:-translate-x-full lg:translate-x-0'
+        }`}
+      >
         {/* Header / Logo Area Sidebar */}
-        <div className="h-[92px] flex items-center gap-3 px-6 border-b border-white/10 flex-none">
-          <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center flex-none">
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-              <path d="M12 3 2 8l10 5 10-5-10-5Z" />
-              <path d="M6 10.3V15c0 1.66 2.69 3 6 3s6-1.34 6-3v-4.7" />
-              <path d="M22 8v6" />
-            </svg>
+        <div className="h-[92px] flex items-center px-4 border-b border-white/10 flex-none overflow-hidden transition-all duration-300">
+          <div className="w-12 h-12 flex items-center justify-center flex-none">
+            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center flex-none">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                <path d="M12 3 2 8l10 5 10-5-10-5Z" />
+                <path d="M6 10.3V15c0 1.66 2.69 3 6 3s6-1.34 6-3v-4.7" />
+                <path d="M22 8v6" />
+              </svg>
+            </div>
           </div>
-          <div className="flex flex-col leading-tight min-w-0">
+          <div className={`flex flex-col leading-tight min-w-0 transition-opacity duration-200 ml-2 ${isOpen ? 'opacity-100' : 'opacity-0 hidden'}`}>
             <span className="font-bold text-[17px] text-white truncate">IT Helpdesk</span>
             <span className="text-[10.5px] font-medium text-white/50 uppercase tracking-wider truncate">
               Universitas Diponegoro
@@ -52,183 +79,71 @@ export default function AdminSidebar() {
         </div>
 
         {/* Menu Navigation */}
-        <nav className="flex-1 overflow-y-auto py-5 px-4 flex flex-col gap-1">
+        <nav className="flex-1 overflow-y-auto py-5 px-4 flex flex-col gap-1 overflow-x-hidden">
           {MENU_ITEMS.map((item) => {
             const Icon = item.icon;
             let isActive = false;
             
-            // Perbaikan logic active state
-            if (item.path === '/dashboard/administrasi' || item.path === '/dashboard/operator') {
-              // Untuk root dashboard, harus exact match
+            if (item.path === '/dashboard/administrasi') {
               isActive = pathname === item.path;
             } else {
-              // Untuk submenu lainnya, bisa match awalannya (misal untuk sub-halaman detail tiket)
               isActive = pathname === item.path || pathname?.startsWith(item.path + '/') || false;
             }
 
             return (
-              <Link
-                key={item.name}
-                href={item.path}
-                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 ${
-                  isActive 
-                  ? 'bg-white/10 !text-white font-semibold'
-                  : '!text-white font-medium hover:bg-white/5'
-                }`}
-                style={{ color: isActive ? '#ffffff' : '#cbd5e1' }}
-              >
-                <Icon isActive={isActive} />
-                <span className="truncate">{item.name}</span>
-              </Link>
+              <div key={item.name} className="relative group w-full">
+                <Link
+                  href={item.path}
+                  onClick={() => {
+                    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+                      setIsOpen(false);
+                    }
+                  }}
+                  className={`flex items-center rounded-xl text-[14px] transition-all duration-200 w-full h-12 px-3 gap-3 overflow-hidden ${
+                    isActive 
+                    ? 'bg-white/10 !text-white font-semibold'
+                    : '!text-white font-medium hover:bg-white/5'
+                  }`}
+                  style={{ color: isActive ? '#ffffff' : '#cbd5e1' }}
+                >
+                  <div className="flex-none flex items-center justify-center w-6 h-6">
+                    <Icon strokeWidth={isActive ? 2.5 : 2} size={20} />
+                  </div>
+                  <span className={`truncate transition-opacity duration-200 ${isOpen ? 'opacity-100' : 'opacity-0 hidden'}`}>{item.name}</span>
+                </Link>
+                {/* Tooltip for collapsed state */}
+                {!isOpen && (
+                  <div className="absolute left-full ml-4 top-1/2 -translate-y-1/2 px-2 py-1.5 bg-gray-900 text-white text-xs font-semibold rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50">
+                    {item.name}
+                    <div className="absolute top-1/2 -left-1 -translate-y-1/2 border-y-4 border-y-transparent border-r-4 border-r-gray-900"></div>
+                  </div>
+                )}
+              </div>
             );
           })}
         </nav>
 
         {/* Footer Area Sidebar - Logout */}
-        <div className="p-4 border-t border-white/10 flex-none">
-          <button
-            onClick={handleLogout}
-            className="flex items-center w-full gap-3 px-3.5 py-2.5 rounded-xl text-[14px] font-semibold text-[#F87171] hover:bg-red-500/10 transition-colors"
-          >
-            <LogoutIcon isActive={false} />
-            Logout
-          </button>
+        <div className="p-4 border-t border-white/10 flex-none flex">
+          <div className="relative group w-full">
+            <button
+              onClick={handleLogout}
+              className="flex items-center rounded-xl text-[14px] font-semibold text-[#F87171] hover:bg-red-500/10 transition-colors w-full h-12 px-3 gap-3 overflow-hidden"
+            >
+              <div className="flex-none flex items-center justify-center w-6 h-6">
+                <LogOut strokeWidth={2} size={20} />
+              </div>
+              <span className={`transition-opacity duration-200 ${isOpen ? 'opacity-100' : 'opacity-0 hidden'}`}>Logout</span>
+            </button>
+            {!isOpen && (
+              <div className="absolute left-full ml-4 top-1/2 -translate-y-1/2 px-2 py-1.5 bg-gray-900 text-white text-xs font-semibold rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50">
+                Logout
+                <div className="absolute top-1/2 -left-1 -translate-y-1/2 border-y-4 border-y-transparent border-r-4 border-r-gray-900"></div>
+              </div>
+            )}
+          </div>
         </div>
       </aside>
     </>
-  );
-}
-
-// ==========================================
-// KUMPULAN ICON SVG (Stroke modern style)
-// ==========================================
-
-function HomeIcon({ isActive }: { isActive: boolean }) {
-  return (
-    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-      <path d="M3 11.5 12 4l9 7.5" />
-      <path d="M5 10v10h5v-6h4v6h5V10" />
-    </svg>
-  );
-}
-
-function TicketsIcon({ isActive }: { isActive: boolean }) {
-  return (
-    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-      <path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1.5a1.5 1.5 0 0 0 0 3V15a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1.5a1.5 1.5 0 0 0 0-3V9Z" />
-      <path d="M9 7v10" strokeDasharray="2 2" />
-    </svg>
-  );
-}
-
-function UsersIcon({ isActive }: { isActive: boolean }) {
-  return (
-    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-    </svg>
-  );
-}
-
-function CategoryIcon({ isActive }: { isActive: boolean }) {
-  return (
-    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-      <path d="M20.59 13.41 12 22l-9-9V3h10l7.59 7.59a2 2 0 0 1 0 2.82Z" />
-      <circle cx="7.5" cy="7.5" r="1.3" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
-
-function SlaIcon({ isActive }: { isActive: boolean }) {
-  return (
-    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-      <path d="m12 20 9-9-3-3-9 9v3h3Z" />
-      <path d="m14.5 6.5 3 3" />
-      <path d="M2 21h6" />
-    </svg>
-  );
-}
-
-function StaffIcon({ isActive }: { isActive: boolean }) {
-  return (
-    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-      <rect x="3" y="5" width="18" height="14" rx="2" />
-      <circle cx="9" cy="10" r="2" />
-      <path d="M6 16c.5-2 2-3 3-3s2.5 1 3 3" />
-      <path d="M14 9h4M14 13h4" />
-    </svg>
-  );
-}
-
-function ReportIcon({ isActive }: { isActive: boolean }) {
-  return (
-    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-      <path d="M4 20V10" />
-      <path d="M10 20V4" />
-      <path d="M16 20v-7" />
-      <path d="M2 20h20" />
-    </svg>
-  );
-}
-
-function WebhookIcon({ isActive }: { isActive: boolean }) {
-  return (
-    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-      <circle cx="12" cy="4" r="1.8" />
-      <circle cx="4" cy="12" r="1.8" />
-      <circle cx="20" cy="12" r="1.8" />
-      <circle cx="12" cy="20" r="1.8" />
-      <path d="M12 5.8v3.4M6 12h3.4M14.6 12H18M12 14.8v3.4" />
-    </svg>
-  );
-}
-
-function SettingsIcon({ isActive }: { isActive: boolean }) {
-  return (
-    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-    </svg>
-  );
-}
-
-function LogoutIcon({ isActive }: { isActive: boolean }) {
-  return (
-    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-      <path d="m16 17 5-5-5-5" />
-      <path d="M21 12H9" />
-    </svg>
-  );
-}
-
-function ChatIcon({ isActive }: { isActive: boolean }) {
-  return (
-    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-    </svg>
-  );
-}
-
-function BotIcon({ isActive }: { isActive: boolean }) {
-  return (
-    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-      <path d="M12 8V4H8" />
-      <rect width="16" height="12" x="4" y="8" rx="2" />
-      <path d="M2 14h2" />
-      <path d="M20 14h2" />
-      <path d="M15 13v2" />
-      <path d="M9 13v2" />
-    </svg>
-  );
-}
-
-function BookIcon({ isActive }: { isActive: boolean }) {
-  return (
-    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-      <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
-    </svg>
   );
 }

@@ -7,6 +7,7 @@ import AdminTopbar from './AdminTopbar';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -42,18 +43,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="min-h-screen bg-[var(--paper)] flex">
-      {/* Sidebar (Permanen) */}
-      <AdminSidebar />
+      {/* Sidebar */}
+      <AdminSidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-      {/* Wrapper Kanan (Mengikuti Sidebar secara permanen dengan padding kiri 288px) */}
-      <div className="flex-1 flex flex-col min-w-0 pl-[288px]">
+      {/* Main Content Wrapper */}
+      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${
+        isSidebarOpen ? 'lg:pl-72' : 'lg:pl-[80px]'
+      }`}>
         
-        {/* Topbar (Permanen) */}
+        {/* Topbar */}
         <AdminTopbar 
+          onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
           pageTitle={getPageTitle()}
           breadcrumbParent={getBreadcrumbParent()}
           userName={userProfile?.name}
           userRole={userProfile?.role}
+          showMenuButtonOnDesktop={true}
         />
 
         {/* Main Content (Area yang berubah-ubah saat pindah menu) */}
