@@ -340,7 +340,7 @@ nav.main-nav a.active {
   display:inline-flex; align-items:center; gap:7px;
   font-size:13.5px; font-weight:700; color:var(--gold-dim);
 }
-.quick-card:hover .quick-link{color:var(--red);}
+/* .quick-card:hover .quick-link{color:var(--red);} */
 .quick-link svg{width:14px; height:14px;
   transition:transform .25s;}
 .quick-card:hover .quick-link svg{transform:translateX(3px);}

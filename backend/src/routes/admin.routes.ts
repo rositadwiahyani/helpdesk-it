@@ -9,7 +9,7 @@ router.use(requireAuth);
 
 router.get('/dashboard', requireRole(['admin', 'pimpinan']), getAdminDashboard);
 
-router.get('/quick-replies', requireRole(['admin', 'operator']), getQuickReplies);
+router.get('/quick-replies', requireRole(['admin', 'operator', 'teknisi']), getQuickReplies);
 router.post('/quick-replies', requireRole(['admin', 'operator']), createQuickReply);
 router.put('/quick-replies/:id', requireRole(['admin', 'operator']), updateQuickReply);
 router.delete('/quick-replies/:id', requireRole(['admin', 'operator']), deleteQuickReply);

@@ -33,7 +33,7 @@ export const getTicketByNum = async (req: Request, res: Response) => {
 
     const { data, error } = await supabase
       .from('tickets')
-      .select('*, category:categories(name), dept:departments(name), tech:staff_profiles!tickets_tech_id_fkey(name)')
+      .select('*, category:categories(name), dept:departments(name), tech:staff_profiles!tickets_tech_id_fkey(name), attachments:ticket_attachments(*)')
       .eq('ticket_num', ticketNum)
       .single();
 
@@ -208,6 +208,29 @@ export const confirmTicketPublic = async (req: Request, res: Response) => {
     });
 
     return res.status(200).json({ success: true });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteTicketPermanently = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ success: false, message: 'Invalid ticket ID' });
+    }
+
+    const { error } = await supabase
+      .from('tickets')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      return res.status(400).json({ success: false, message: error.message });
+    }
+
+    return res.status(200).json({ success: true, message: 'Ticket permanently deleted' });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });
   }

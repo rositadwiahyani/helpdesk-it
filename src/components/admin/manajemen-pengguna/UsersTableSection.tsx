@@ -18,6 +18,7 @@ interface UsersTableSectionProps {
   currentPage?: number;
   totalPages?: number;
   itemsPerPage?: number;
+  setItemsPerPage?: (val: number) => void;
   selectedUserIds?: string[];
   isLoading?: boolean;
   onSelectUser?: (id: string) => void;
@@ -32,7 +33,8 @@ export default function UsersTableSection({
   totalUsers = 0,
   currentPage = 1,
   totalPages = 1,
-  itemsPerPage = 4,
+  itemsPerPage = 10,
+  setItemsPerPage,
   selectedUserIds = [],
   isLoading = false,
   onSelectUser,
@@ -87,120 +89,147 @@ export default function UsersTableSection({
   };
 
   return (
-    <div className="flex flex-col items-start rounded-lg border border-[#C3C6D1] bg-[#FFF] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] w-full overflow-hidden relative">
-      <div className="flex flex-col items-start w-full overflow-x-auto">
-        <div className="min-w-[900px] w-full flex flex-col">
-          {/* HEADER TABEL */}
-          <div className="flex items-center border-b border-b-[#C3C6D1] bg-[#EEEEF0] w-full text-left">
-            <div className="w-16 py-4 flex justify-center cursor-pointer" onClick={onSelectAll}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="4.5" y="4.5" width="15" height="15" rx="1.5" fill={isAllSelected ? '#0059BB' : 'white'} stroke={isAllSelected ? '#0059BB' : '#C3C6D1'}/>
-                {isAllSelected && <path d="M8 12L10.5 14.5L16 9" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>}
-              </svg>
-            </div>
-            <div className="w-[200px] px-4 py-4">
-              <p className="text-[#43474F] font-iBMPlexSans text-xs font-bold leading-4 tracking-[0.05em]">NAMA</p>
-            </div>
-            <div className="w-[180px] px-4 py-4">
-              <p className="text-[#43474F] font-iBMPlexSans text-xs font-bold leading-4 tracking-[0.05em]">NIM / NIP</p>
-            </div>
-            <div className="w-[200px] px-4 py-4">
-              <p className="text-[#43474F] font-iBMPlexSans text-xs font-bold leading-4 tracking-[0.05em]">FAKULTAS / UNIT KERJA</p>
-            </div>
-
-            <div className="w-[150px] px-4 py-4">
-              <p className="text-[#43474F] font-iBMPlexSans text-xs font-bold leading-4 tracking-[0.05em]">CREATED</p>
-            </div>
-            <div className="flex-1 min-w-[80px] px-4 py-4 text-right pr-8">
-              <p className="text-[#43474F] font-iBMPlexSans text-xs font-bold leading-4 tracking-[0.05em]">AKSI</p>
-            </div>
-          </div>
-
-          {/* ISI BARIS TABEL */}
-          <div className="flex flex-col items-start w-full bg-white relative">
+    <div className="flex flex-col rounded-lg border border-[#C3C6D1] bg-[#FFF] shadow-sm w-full overflow-hidden">
+      <div className="w-full overflow-x-auto min-h-[400px]">
+        <table className="w-full text-left table-auto">
+          <thead className="bg-[#F3F3F6] border-b border-[#C3C6D1]">
+            <tr>
+              <th className="px-4 py-4 w-12 text-center">
+                <input 
+                  type="checkbox" 
+                  className="rounded border-gray-300 w-4 h-4 text-[#1E3A8A] focus:ring-[#1E3A8A]"
+                  checked={isAllSelected}
+                  onChange={onSelectAll}
+                />
+              </th>
+              <th className="px-4 py-4 select-none">
+                <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">NAMA</span>
+              </th>
+              <th className="px-4 py-4 select-none">
+                <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">NIM / NIP</span>
+              </th>
+              <th className="px-4 py-4 select-none">
+                <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">FAKULTAS / UNIT KERJA</span>
+              </th>
+              <th className="px-4 py-4 select-none">
+                <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">CREATED</span>
+              </th>
+              <th className="px-4 py-4 select-none text-center w-24">
+                <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">AKSI</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
             {isLoading ? (
-              <div className="flex justify-center items-center p-8 w-full">
-                <p className="text-[#43474F] font-iBMPlexSans text-sm">Memuat data pelapor...</p>
-              </div>
+              <tr>
+                <td colSpan={6} className="py-16 text-center">
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="w-8 h-8 border-4 border-[#1E3A8A] border-t-transparent rounded-full animate-spin"></div>
+                    <p className="text-[#43474F] font-iBMPlexSans text-sm">Memuat data pelapor...</p>
+                  </div>
+                </td>
+              </tr>
             ) : users.length === 0 ? (
-              <div className="flex justify-center items-center p-8 w-full">
-                <p className="text-[#43474F] font-iBMPlexSans text-sm">Tidak ada data pelapor yang ditemukan.</p>
-              </div>
+              <tr>
+                <td colSpan={6} className="py-16 text-center">
+                  <p className="text-[#43474F] font-iBMPlexSans text-sm">Tidak ada data pelapor yang ditemukan.</p>
+                </td>
+              </tr>
             ) : (
               users.map((user) => {
                 const isSelected = selectedUserIds.includes(user.id);
-                const isBlocked = user.status === 'Terblokir';
-
                 return (
-                  <div key={user.id} className="flex justify-start items-center border-b border-b-[#C3C6D1] w-full hover:bg-gray-50/50 transition-colors text-left relative">
-                    <div className="w-16 py-4 flex justify-center cursor-pointer" onClick={() => onSelectUser?.(user.id)}>
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect x="4.5" y="4.5" width="15" height="15" rx="1.5" fill={isSelected ? '#0059BB' : 'white'} stroke={isSelected ? '#0059BB' : '#C3C6D1'}/>
-                        {isSelected && <path d="M8 12L10.5 14.5L16 9" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>}
-                      </svg>
-                    </div>
-                    
-                    <div className="w-[200px] px-4 py-4 overflow-hidden text-ellipsis">
-                      <Link href={`/dashboard/administrasi/users/${user.id}`} className="text-[#1A1C1E] font-iBMPlexSans text-sm font-bold leading-5 w-full truncate hover:text-[#0059BB] hover:underline block">
-                        {user.name}
+                  <tr key={user.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-4 py-4 text-center">
+                      <input 
+                        type="checkbox" 
+                        className="rounded border-gray-300 w-4 h-4 text-[#1E3A8A] focus:ring-[#1E3A8A]"
+                        checked={isSelected}
+                        onChange={() => onSelectUser?.(user.id)}
+                      />
+                    </td>
+                    <td className="px-4 py-4 max-w-xs">
+                      <Link href={`/dashboard/administrasi/users/${user.id}`} className="block">
+                        <p className="text-[#1A1C1E] font-iBMPlexSans text-sm font-medium truncate mb-0.5 hover:text-[#1E3A8A]">
+                          {user.name}
+                        </p>
                       </Link>
-                    </div>
-                    
-                    <div className="w-[180px] px-4 py-4 overflow-hidden text-ellipsis">
-                       <p className="text-[#43474F] font-iBMPlexSans text-sm leading-5 w-full truncate">{user.nimNip}</p>
-                    </div>
-
-                    <div className="w-[200px] px-4 py-4 overflow-hidden text-ellipsis">
-                      <p className="text-[#43474F] font-iBMPlexSans text-[12px] font-medium leading-5 w-fit truncate bg-gray-100 px-2 py-0.5 rounded">{user.fakultasUnit}</p>
-                    </div>
-
-
-
-                    <div className="w-[150px] px-4 py-4">
-                      <p className="text-[#43474F] font-iBMPlexSans text-sm leading-5">{user.createdDate}</p>
-                    </div>
-                    
-                    <div className="w-[120px] px-4 py-4 flex justify-center relative">
+                    </td>
+                    <td className="px-4 py-4">
+                      <span className="text-[#43474F] font-iBMPlexSans text-sm truncate max-w-[120px]">
+                        {user.nimNip}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4">
+                      <span className="text-[#43474F] font-iBMPlexSans text-[12px] font-medium truncate bg-gray-100 px-2 py-0.5 rounded block w-fit">
+                        {user.fakultasUnit}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <span className="text-[#43474F] font-iBMPlexSans text-sm">
+                        {user.createdDate}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 text-center">
                       <button 
-                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
                         onClick={() => onEditUser?.(user)}
+                        className="p-1.5 text-[#1E3A8A] hover:bg-slate-100 rounded transition-colors inline-flex" 
+                        title="Edit Data"
                       >
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M12 20H21" stroke="#43474F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          <path d="M16.5 3.50023C16.8978 3.1024 17.4374 2.87891 18 2.87891C18.2786 2.87891 18.5544 2.93378 18.8118 3.04038C19.0692 3.14699 19.303 3.30324 19.5 3.50023C19.697 3.69721 19.8532 3.93106 19.9598 4.18843C20.0665 4.4458 20.1213 4.72165 20.1213 5.00023C20.1213 5.2788 20.0665 5.55465 19.9598 5.81202C19.8532 6.06939 19.697 6.30324 19.5 6.50023L7 19.0002L3 20.0002L4 16.0002L16.5 3.50023Z" stroke="#43474F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                       </button>
-                    </div>
-                  </div>
+                    </td>
+                  </tr>
                 );
               })
             )}
-          </div>
-        </div>
+          </tbody>
+        </table>
       </div>
 
-      {/* FOOTER PAGINATION */}
-      <div className="flex py-4 px-6 justify-between items-center border-t border-t-[#C3C6D1] bg-[#F3F3F6] w-full">
-        <div className="flex flex-col items-start w-fit">
-          <p className="text-[#43474F] font-iBMPlexSans text-[13px] leading-[18px] w-fit">
-            Menampilkan {startDisplay}-{endDisplay} dari {totalUsers.toLocaleString('en-US')} pelapor
-          </p>
+      {/* Pagination */}
+      <div className="flex flex-col sm:flex-row py-4 px-6 justify-between items-center border-t border-t-[#C3C6D1] bg-[#FFF] w-full mt-auto gap-4">
+        <div className="flex items-center gap-2">
+            {setItemsPerPage && (
+              <select 
+                  value={itemsPerPage} 
+                  onChange={(e) => { setItemsPerPage(Number(e.target.value)); onPageChange?.(1); }}
+                  className="text-[13px] border border-[#C3C6D1] rounded px-2 py-1 outline-none focus:border-[#1E3A8A] text-[#1A1C1E]"
+              >
+                  <option value={8}>8 / page</option>
+                  <option value={10}>10 / page</option>
+                  <option value={15}>15 / page</option>
+                  <option value={25}>25 / page</option>
+                  <option value={50}>50 / page</option>
+              </select>
+            )}
+            <p className="text-[#1A1C1E] font-iBMPlexSans text-[13px]">
+                Showing {startDisplay} - {endDisplay} of {totalUsers.toLocaleString('en-US')} pelapor
+            </p>
         </div>
-        <div className="flex items-center gap-1 w-fit">
-          <button
-            disabled={currentPage <= 1}
-            onClick={() => onPageChange?.(currentPage - 1)}
-            className={`flex justify-center items-center rounded-sm w-8 h-8 ${currentPage <= 1 ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-200'}`}
-          >
-            <svg width="8" height="12" viewBox="0 0 8 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 12L0 6L6 0L7.4 1.4L2.8 6L7.4 10.6L6 12Z" fill="#43474F"/></svg>
+        <div className="flex items-center gap-2">
+          <button onClick={() => onPageChange?.(Math.max(1, currentPage - 1))} disabled={currentPage === 1} className={`flex justify-center items-center rounded border border-[#C3C6D1] w-8 h-8 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-50'}`}>
+            <svg width="7" height="10" viewBox="0 0 7 10" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 10L0 5L5 0L6.16667 1.16667L2.33333 5L6.16667 8.83333L5 10Z" fill="black" /></svg>
           </button>
-          {renderPaginationButtons()}
-          <button
-            disabled={currentPage >= totalPages}
-            onClick={() => onPageChange?.(currentPage + 1)}
-            className={`flex justify-center items-center rounded-sm w-8 h-8 ${currentPage >= totalPages ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-200'}`}
-          >
-            <svg width="8" height="12" viewBox="0 0 8 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.6 6L0 1.4L1.4 0L7.4 6L1.4 12L0 10.6L4.6 6Z" fill="#43474F"/></svg>
+          
+          <button onClick={() => onPageChange?.(1)} className={`cursor-pointer rounded w-8 h-8 flex items-center justify-center font-semibold text-xs ${currentPage === 1 ? 'bg-[#1E3A8A] text-white' : 'hover:bg-gray-100 text-black'}`}>1</button>
+          
+          {totalPages > 1 && (
+              <button onClick={() => onPageChange?.(2)} className={`cursor-pointer rounded w-8 h-8 flex items-center justify-center font-semibold text-xs ${currentPage === 2 ? 'bg-[#1E3A8A] text-white' : 'hover:bg-gray-100 text-black'}`}>2</button>
+          )}
+
+          {totalPages > 2 && (
+              <button onClick={() => onPageChange?.(3)} className={`cursor-pointer rounded w-8 h-8 flex items-center justify-center font-semibold text-xs ${currentPage === 3 ? 'bg-[#1E3A8A] text-white' : 'hover:bg-gray-100 text-black'}`}>3</button>
+          )}
+          
+          {totalPages > 4 && <span className="px-1 text-base">...</span>}
+          
+          {totalPages > 3 && (
+            <button onClick={() => onPageChange?.(totalPages)} className={`cursor-pointer rounded w-8 h-8 flex items-center justify-center font-semibold text-xs ${currentPage === totalPages ? 'bg-[#1E3A8A] text-white' : 'hover:bg-gray-100 text-black'}`}>{totalPages}</button>
+          )}
+          
+          <button onClick={() => onPageChange?.(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages || totalPages === 0} className={`flex justify-center items-center rounded border border-[#C3C6D1] w-8 h-8 ${currentPage === totalPages || totalPages === 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-50'}`}>
+            <svg width="7" height="10" viewBox="0 0 7 10" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3.83333 5L0 1.16667L1.16667 0L6.16667 5L1.16667 10L0 8.83333L3.83333 5Z" fill="black" /></svg>
           </button>
         </div>
       </div>

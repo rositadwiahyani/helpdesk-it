@@ -152,22 +152,22 @@ export default function SLATableSection({
       <div className="flex flex-col items-start border-b border-b-[#C3C6D1] bg-[#F3F3F6] w-full min-w-[927px]">
         <div className="flex justify-between items-start w-full">
           <div className="flex py-4 px-6 flex-col items-start w-52">
-            <p className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">
+            <p className="text-[#43474F] font-iBMPlexSans text-[11px] font-bold leading-4 w-fit tracking-[0.05em]">
               TINGKAT PRIORITAS
             </p>
           </div>
           <div className="flex py-4 px-6 flex-col items-start w-[258px]">
-            <p className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">
+            <p className="text-[#43474F] font-iBMPlexSans text-[11px] font-bold leading-4 w-fit tracking-[0.05em]">
               TARGET RESPONS &#40;MENIT&#41;
             </p>
           </div>
           <div className="flex py-4 px-6 flex-col items-start w-[294px]">
-            <p className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">
+            <p className="text-[#43474F] font-iBMPlexSans text-[11px] font-bold leading-4 w-fit tracking-[0.05em]">
               TARGET PENYELESAIAN &#40;MENIT&#41;
             </p>
           </div>
           <div className="flex py-4 px-6 flex-col items-end w-[167px]">
-            <p className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">
+            <p className="text-[#43474F] font-iBMPlexSans text-[11px] font-bold leading-4 w-fit tracking-[0.05em]">
               AKSI
             </p>
           </div>

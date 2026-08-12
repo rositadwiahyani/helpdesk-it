@@ -1,7 +1,8 @@
-"use client";
+'use client';
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import StaffHeader from "./StaffHeader";
 import AgentModal from "./AgentModal";
@@ -10,6 +11,7 @@ import DeptModal from "./DeptModal";
 type StaffTab = "Agents" | "Teams" | "Departments";
 
 export default function StaffWorkspace() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<StaffTab>("Agents");
   const [agents, setAgents] = useState<any[]>([]);
   const [departments, setDepartments] = useState<any[]>([]);
@@ -18,7 +20,6 @@ export default function StaffWorkspace() {
   // Modal states
   const [isAgentModalOpen, setIsAgentModalOpen] = useState(false);
   const [isDeptModalOpen, setIsDeptModalOpen] = useState(false);
-  const [selectedAgent, setSelectedAgent] = useState<any>(null);
   const [selectedDept, setSelectedDept] = useState<any>(null);
 
   const fetchData = async () => {
@@ -36,50 +37,94 @@ export default function StaffWorkspace() {
   }, []);
 
   return (
-    <div className="flex flex-col items-start bg-[#F8F9FA] min-h-screen relative w-full pt-8 px-8 pb-16 gap-8">
-      <StaffHeader activeTab={activeTab} setActiveTab={(t) => setActiveTab(t as StaffTab)} />
+    <div className="flex flex-col items-start gap-4 w-full relative">
+      <StaffHeader />
       
-      {/* Toolbar */}
-      <div className="flex w-full justify-between items-center bg-white p-4 rounded-t border-b border-[#C3C6D1]">
-        <div className="flex bg-[#F3F3F6] border border-[#C3C6D1] rounded px-4 py-2 w-64 items-center">
-          <input type="text" placeholder={`Cari ${activeTab.toLowerCase()}...`} className="bg-transparent border-none outline-none text-sm w-full" />
+      {/* Toolbar - Now ABOVE the tabs */}
+      <div className="flex w-full justify-between items-center w-full mb-2 mt-2">
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <div className="relative w-full md:w-64">
+            <input 
+              type="text" 
+              placeholder={`Cari ${activeTab.toLowerCase()}...`} 
+              className="pl-9 pr-4 py-2 text-sm border border-[#C3C6D1] rounded focus:outline-none focus:border-[#0059BB] w-full" 
+            />
+            <svg className="w-4 h-4 absolute left-3 top-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+          </div>
         </div>
         {(activeTab === 'Agents' || activeTab === 'Departments') && (
-          <button 
-            onClick={() => {
-              if (activeTab === 'Agents') {
-                setSelectedAgent(null);
-                setIsAgentModalOpen(true);
-              } else {
-                setSelectedDept(null);
-                setIsDeptModalOpen(true);
-              }
-            }}
-            className="bg-[#001E40] text-white px-4 py-2 rounded text-sm hover:bg-[#00142d] transition-colors flex items-center gap-2"
-          >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M14 8H8V14H6V8H0V6H6V0H8V6H14V8Z" fill="white"/></svg>
-            Tambah {activeTab === 'Agents' ? 'Agen' : 'Departemen'}
-          </button>
+          <div className="flex items-center gap-3 shrink-0">
+            <button 
+              onClick={() => {
+                if (activeTab === 'Agents') {
+                  setIsAgentModalOpen(true);
+                } else if (activeTab === 'Departments') {
+                  setSelectedDept(null);
+                  setIsDeptModalOpen(true);
+                }
+              }}
+              title={`Tambah ${activeTab}`} 
+              className="flex items-center gap-2 px-4 py-2 bg-[#001E40] text-white rounded hover:bg-[#00142d] text-sm font-iBMPlexSans"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/></svg>
+              Tambah {activeTab === 'Agents' ? 'Staf' : 'Dept'}
+            </button>
+          </div>
         )}
       </div>
 
-      {/* Content Area */}
-      <div className="bg-white rounded-b border border-[#C3C6D1] border-t-0 flex flex-col overflow-hidden w-full">
-        {loading ? (
-          <div className="p-8 text-center text-gray-500">Loading...</div>
-        ) : (
-          <>
-            {activeTab === "Agents" && (
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-[#C3C6D1] bg-[#F8FAFC]">
-                    <th className="px-4 py-3 text-sm font-semibold text-[#43474F]">Nama</th>
-                    <th className="px-4 py-3 text-sm font-semibold text-[#43474F]">Email</th>
-                    <th className="px-4 py-3 text-sm font-semibold text-[#43474F]">Peran</th>
-                    <th className="px-4 py-3 text-sm font-semibold text-[#43474F]">Departemen</th>
-                    <th className="px-4 py-3 text-sm font-semibold text-[#43474F] w-24">Aksi</th>
-                  </tr>
-                </thead>
+      <div className="flex flex-col items-start rounded-lg border border-[#C3C6D1] bg-[#FFF] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] w-full overflow-hidden relative">
+        {/* Tabs - Now BELOW the toolbar and inside the card structure, or just top of the content */}
+        <div className="flex items-center border-b border-b-[#C3C6D1] w-full bg-[#FAFAFA]">
+          <button
+            onClick={() => setActiveTab('Agents')}
+            className={`cursor-pointer text-nowrap flex py-3 px-6 flex-col justify-center items-center border-b-2 w-fit ${
+              activeTab === 'Agents' ? 'border-b-[#001E40] bg-white' : 'border-b-[rgba(0,0,0,0.00)]'
+            }`}
+          >
+            <p className={`font-iBMPlexSans text-sm leading-5 w-fit ${activeTab === 'Agents' ? 'text-[#001E40] font-bold' : 'text-[#43474F]'}`}>
+              Agents
+            </p>
+          </button>
+          <button
+            onClick={() => setActiveTab('Teams')}
+            className={`cursor-pointer text-nowrap flex py-3 px-6 flex-col justify-center items-center border-b-2 w-fit ${
+              activeTab === 'Teams' ? 'border-b-[#001E40] bg-white' : 'border-b-[rgba(0,0,0,0.00)]'
+            }`}
+          >
+            <p className={`font-iBMPlexSans text-sm leading-5 w-fit ${activeTab === 'Teams' ? 'text-[#001E40] font-bold' : 'text-[#43474F]'}`}>
+              Teams
+            </p>
+          </button>
+          <button
+            onClick={() => setActiveTab('Departments')}
+            className={`cursor-pointer text-nowrap flex py-3 px-6 flex-col justify-center items-center border-b-2 w-fit ${
+              activeTab === 'Departments' ? 'border-b-[#001E40] bg-white' : 'border-b-[rgba(0,0,0,0.00)]'
+            }`}
+          >
+            <p className={`font-iBMPlexSans text-sm leading-5 w-fit ${activeTab === 'Departments' ? 'text-[#001E40] font-bold' : 'text-[#43474F]'}`}>
+              Departments
+            </p>
+          </button>
+        </div>
+
+        {/* Content Area */}
+        <div className="flex flex-col w-full bg-white relative">
+          {loading ? (
+            <div className="p-8 text-center text-gray-500">Loading...</div>
+          ) : (
+            <div className="w-full overflow-x-auto">
+              {activeTab === "Agents" && (
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-b-[#C3C6D1] bg-[#F3F3F6]">
+                      <th className="px-4 py-4 text-[#43474F] font-iBMPlexSans text-[11px] font-bold tracking-[0.05em]">NAMA</th>
+                      <th className="px-4 py-4 text-[#43474F] font-iBMPlexSans text-[11px] font-bold tracking-[0.05em]">EMAIL</th>
+                      <th className="px-4 py-4 text-[#43474F] font-iBMPlexSans text-[11px] font-bold tracking-[0.05em]">PERAN</th>
+                      <th className="px-4 py-4 text-[#43474F] font-iBMPlexSans text-[11px] font-bold tracking-[0.05em]">DEPARTEMEN</th>
+                      <th className="px-4 py-4 text-[#43474F] font-iBMPlexSans text-[11px] font-bold tracking-[0.05em] w-24">AKSI</th>
+                    </tr>
+                  </thead>
                 <tbody>
                   {agents.map((agent) => (
                     <tr key={agent.id} className="border-b border-[#E5E7EB] hover:bg-gray-50">
@@ -91,15 +136,15 @@ export default function StaffWorkspace() {
                       <td className="px-4 py-3 text-sm text-[#43474F]">{agent.email}</td>
                       <td className="px-4 py-3 text-sm text-[#43474F] uppercase">{agent.role}</td>
                       <td className="px-4 py-3 text-sm text-[#43474F]">{agent.dept?.name || '-'}</td>
-                      <td className="px-4 py-3 text-sm">
+                      <td className="px-4 py-3 text-sm text-center">
                         <button 
                           onClick={() => {
-                            setSelectedAgent(agent);
-                            setIsAgentModalOpen(true);
+                            router.push(`/dashboard/administrasi/staff/${agent.id}?edit=true`);
                           }}
-                          className="text-blue-600 hover:text-blue-800"
+                          className="p-1.5 text-[#1E3A8A] hover:bg-slate-100 rounded transition-colors inline-flex" 
+                          title="Edit Data"
                         >
-                          Edit
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                         </button>
                       </td>
                     </tr>
@@ -116,10 +161,10 @@ export default function StaffWorkspace() {
             {activeTab === "Departments" && (
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-[#C3C6D1] bg-[#F8FAFC]">
-                    <th className="px-4 py-3 text-sm font-semibold text-[#43474F]">ID</th>
-                    <th className="px-4 py-3 text-sm font-semibold text-[#43474F]">Nama Departemen</th>
-                    <th className="px-4 py-3 text-sm font-semibold text-[#43474F] w-24">Aksi</th>
+                  <tr className="border-b border-b-[#C3C6D1] bg-[#F3F3F6]">
+                    <th className="px-4 py-4 text-[#43474F] font-iBMPlexSans text-[11px] font-bold tracking-[0.05em]">ID</th>
+                    <th className="px-4 py-4 text-[#43474F] font-iBMPlexSans text-[11px] font-bold tracking-[0.05em]">NAMA DEPARTEMEN</th>
+                    <th className="px-4 py-4 text-[#43474F] font-iBMPlexSans text-[11px] font-bold tracking-[0.05em] w-24">AKSI</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -154,15 +199,17 @@ export default function StaffWorkspace() {
                 Fitur Teams sedang dalam pengembangan.
               </div>
             )}
-          </>
+            </div>
         )}
+        </div>
       </div>
 
+      {/* Modals */}
       <AgentModal 
         isOpen={isAgentModalOpen} 
         onClose={() => setIsAgentModalOpen(false)}
         onSuccess={() => { setIsAgentModalOpen(false); fetchData(); }}
-        agent={selectedAgent}
+        agent={null}
         departments={departments}
       />
       <DeptModal 

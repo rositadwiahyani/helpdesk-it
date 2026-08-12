@@ -7,7 +7,8 @@ import {
   getTicketMessages,
   sendStaffResponse,
   sendWaMessage,
-  confirmTicketPublic
+  confirmTicketPublic,
+  deleteTicketPermanently
 } from '../controllers/ticketController';
 
 const router = Router();
@@ -55,5 +56,12 @@ router.post(
 
 // 6. POST /api/admin/tickets/:ticketId/messages/wa - Kirim WA langsung
 router.post('/:ticketId/messages/wa', requireRole(['admin', 'operator', 'teknisi']), sendWaMessage);
+
+// 7. DELETE /api/admin/tickets/:id - Hapus permanen tiket
+router.delete(
+  '/:id',
+  requireRole(['admin']),
+  deleteTicketPermanently
+);
 
 export default router;

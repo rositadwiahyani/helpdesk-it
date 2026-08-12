@@ -25,7 +25,7 @@ export default function TicketHeader() {
         </div>
         <div className="flex flex-col items-start w-full">
           <p className="text-[#001E40] font-iBMPlexSans text-[32px] font-semibold leading-10 w-fit tracking-[-0.02em]">
-            Tickets Monitoring
+            Tiket
           </p>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import React from 'react';
 import PriorityTicketList from '@/components/operator/tickets/PriorityTicketList';
+import OperatorStatistics from '@/components/admin/tickets/OperatorStatistics';
 import { fetchServer } from '@/lib/apiServer';
 import AnimatedCounter from '@/components/ui/AnimatedCounter';
 
@@ -26,8 +27,8 @@ export default async function OperatorDashboard() {
         };
     }
 
-    const { tickets, counts } = dashboardData;
-    const { todayCount, verifiedCount, waitingVerificationCount } = counts || {};
+    const { tickets, ticketLogs, categories, departments, counts } = dashboardData;
+    const { todayCount, verifiedCount, waitingVerificationCount, systemResolvedCount } = counts || {};
 
     return (
         <div className="flex flex-col gap-6 p-6 md:p-10">
@@ -58,17 +59,27 @@ export default async function OperatorDashboard() {
                 </div>
                 <div className="bg-white border border-[var(--line-dark)] rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
                     <div>
-                        <div className="text-[11px] font-bold text-[var(--text-dim)] uppercase tracking-wider mb-2">Diverifikasi Hari Ini</div>
+                        <div className="text-[11px] font-bold text-[var(--text-dim)] uppercase tracking-wider mb-2">Tiket Self Resolved Hari Ini</div>
                         <div className="text-4xl font-bold text-[var(--ink)]">
-                            <AnimatedCounter value={verifiedCount || 0} duration={1800} />
+                            <AnimatedCounter value={systemResolvedCount || 0} duration={1800} />
                         </div>
                     </div>
-                    <div className="text-xs text-[var(--text-dim)] mt-4">Diteruskan / Ditolak</div>
+                    <div className="text-xs text-[var(--text-dim)] mt-4">Diselesaikan oleh sistem</div>
                 </div>
             </div>
 
-            {/* Komponen Tabel Prioritas */}
+            {/* Komponen Statistik & Grafik */}
             <div className="animate-in fade-in slide-in-from-bottom-6 duration-700 delay-300 fill-mode-both">
+                <OperatorStatistics 
+                    tickets={tickets || []}
+                    ticketLogs={ticketLogs || []}
+                    categories={categories || []}
+                    departments={departments || []}
+                />
+            </div>
+
+            {/* Komponen Tabel Prioritas */}
+            <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-500 fill-mode-both">
                 <PriorityTicketList tickets={tickets || []} />
             </div>
         </div>

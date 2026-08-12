@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import UsersHeader from './UsersHeader';
 import UsersStatistics from './UsersStatistics';
 import UsersToolbar from './UsersToolbar';
@@ -40,7 +41,7 @@ export default function UserWorkspace() {
     status: 'Aktif' as 'Aktif' | 'Terblokir'
   });
 
-  const itemsPerPage = 10;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const fetchUsers = async () => {
     setIsLoading(true);
@@ -84,24 +85,12 @@ export default function UserWorkspace() {
         user.phone.includes(searchQuery);
       
       let matchesFakultas = true;
-      let matchesDate = true;
       
       if (filters) {
         if (filters.fakultas !== 'ALL' && user.fakultasUnit !== filters.fakultas) matchesFakultas = false;
-        
-        if (filters.startDate) {
-          const d = new Date(user.rawDate);
-          if (d < new Date(filters.startDate)) matchesDate = false;
-        }
-        
-        if (filters.endDate) {
-          const d = new Date(user.rawDate);
-          d.setHours(23, 59, 59, 999);
-          if (d > new Date(filters.endDate)) matchesDate = false;
-        }
       }
       
-      return matchesSearch && matchesFakultas && matchesDate;
+      return matchesSearch && matchesFakultas;
     });
   }, [users, searchQuery, filters]);
 
@@ -132,11 +121,11 @@ export default function UserWorkspace() {
     setIsModalOpen(true);
   }, []);
 
+  const router = useRouter();
+
   const handleEditClick = useCallback((user: UserItem) => {
-    setEditingUser(user);
-    setFormData({ phone: user.phone, name: user.name, nimNip: user.nimNip, fakultasUnit: user.fakultasUnit, status: user.status });
-    setIsModalOpen(true);
-  }, []);
+    router.push(`/dashboard/administrasi/users/${user.id}?edit=true`);
+  }, [router]);
 
   const handleDeleteClick = async (id: string) => {
     if (confirm('Apakah Anda yakin ingin menghapus pelapor ini? Data riwayat tiketnya mungkin akan terdampak.')) {
@@ -184,17 +173,22 @@ export default function UserWorkspace() {
   };
 
   const stats = useMemo(() => {
+    let today = 0;
+    const todayStr = new Date().toISOString().split('T')[0];
+    users.forEach(u => {
+      if (u.rawDate.startsWith(todayStr)) today++;
+    });
     return {
       total: users.length,
-      active: users.filter((u) => u.status === 'Aktif').length,
-      blocked: users.filter((u) => u.status === 'Terblokir').length,
+      today
     };
   }, [users]);
 
   const handleBulkDelete = async () => {
-    if (!window.confirm(`Apakah Anda yakin ingin menghapus ${selectedUserIds.length} pelapor?`)) return;
+    if (selectedUserIds.length === 0) return;
+    if (!confirm(`Hapus ${selectedUserIds.length} pelapor?`)) return;
+    setIsLoading(true);
     try {
-      setIsLoading(true);
       for (const id of selectedUserIds) {
         await fetchClient(`/admin/reporters/${id}`, { method: 'DELETE' });
       }
@@ -208,13 +202,18 @@ export default function UserWorkspace() {
   };
 
   return (
-    <div className="flex flex-col items-start gap-6 w-full p-6 bg-[#F9FAFB] min-h-screen relative">
+    <div className="flex flex-col items-start gap-6 w-full relative">
       <UsersHeader />
-      <UsersStatistics totalUsers={stats.total} activeUsers={stats.active} blockedUsers={stats.blocked} />
+      <UsersStatistics totalUsers={stats.total} todayUsers={stats.today} />
       <UsersToolbar
         searchQuery={searchQuery}
         onSearchChange={(query) => { setSearchQuery(query); setCurrentPage(1); }}
         onFilterClick={() => setIsFilterModalOpen(true)}
+        onResetFilterClick={() => {
+          setFilters(null);
+          setSearchQuery('');
+          setCurrentPage(1);
+        }}
         onExportClick={() => alert('Exporting...')}
         onAddClick={handleAddClick}
         selectedCount={selectedUserIds.length}
@@ -226,6 +225,7 @@ export default function UserWorkspace() {
         currentPage={currentPage}
         totalPages={totalPages}
         itemsPerPage={itemsPerPage}
+        setItemsPerPage={setItemsPerPage}
         selectedUserIds={selectedUserIds}
         isLoading={isLoading}
         onSelectUser={handleSelectUser}

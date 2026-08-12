@@ -107,20 +107,50 @@ export default function KnowledgeBaseWorkspace() {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h2 className="text-xl font-bold text-gray-800">Basis Pengetahuan</h2>
-          <p className="text-sm text-gray-500">Kelola artikel panduan yang terhubung dengan Bot WhatsApp</p>
+    <div className="flex flex-col items-start gap-6 w-full relative">
+      <div className="flex justify-between items-end w-full">
+        <div className="flex flex-col items-start gap-1 w-fit">
+          <div className="flex items-start gap-2 w-full">
+            <div className="flex flex-col items-start w-fit h-full">
+              <p className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">
+                Dashboard
+              </p>
+            </div>
+            <div className="flex flex-col items-start w-fit h-full">
+              <p className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">
+                /
+              </p>
+            </div>
+            <div className="flex flex-col items-start w-fit h-full">
+              <p className="text-[#1A1C1E] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">
+                Basis Pengetahuan
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-col items-start w-full">
+            <p className="text-[#001E40] font-iBMPlexSans text-[32px] font-semibold leading-10 w-fit tracking-[-0.02em]">
+              Basis Pengetahuan
+            </p>
+          </div>
         </div>
+      </div>
+
+      {/* Toolbar */}
+      <div className="flex w-full justify-end items-center mb-4">
         <button 
-          onClick={() => handleOpenModal()}
-          className="bg-[var(--gold)] hover:bg-[var(--gold-dim)] text-white px-4 py-2 rounded-xl font-medium transition-colors flex items-center gap-2"
+          onClick={() => {
+            setFormData({ title: '', slug: '', category_id: '', content: '' });
+            setIsModalOpen(true);
+          }}
+          className="flex h-9 px-4 items-center gap-2 rounded bg-gray-700 text-white shadow-sm hover:bg-gray-800 transition-colors"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"/></svg>
-          Tambah Artikel
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M14 8H8V14H6V8H0V6H6V0H8V6H14V8Z" fill="white"/></svg>
+          <span className="text-white font-iBMPlexSans text-sm font-medium">Tambah Artikel</span>
         </button>
       </div>
+
+      <div className="flex flex-col items-start rounded-lg border border-[#C3C6D1] bg-[#FFF] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] w-full overflow-hidden relative">
+        <div className="flex flex-col w-full bg-white relative">
 
       {loading ? (
         <div className="flex justify-center p-12">
@@ -128,13 +158,13 @@ export default function KnowledgeBaseWorkspace() {
         </div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-gray-600">
-            <thead className="text-xs uppercase bg-gray-50 text-gray-500 border-b border-gray-100">
-              <tr>
-                <th className="px-6 py-4 font-semibold">Judul Artikel</th>
-                <th className="px-6 py-4 font-semibold">Kategori Terkait</th>
-                <th className="px-6 py-4 font-semibold">Slug (URL)</th>
-                <th className="px-6 py-4 font-semibold text-right">Aksi</th>
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-b-[#C3C6D1] bg-[#F3F3F6]">
+                <th className="px-6 py-4 text-[#43474F] font-iBMPlexSans text-[11px] font-bold tracking-[0.05em]">JUDUL ARTIKEL</th>
+                <th className="px-6 py-4 text-[#43474F] font-iBMPlexSans text-[11px] font-bold tracking-[0.05em]">KATEGORI TERKAIT</th>
+                <th className="px-6 py-4 text-[#43474F] font-iBMPlexSans text-[11px] font-bold tracking-[0.05em]">SLUG (URL)</th>
+                <th className="px-6 py-4 text-[#43474F] font-iBMPlexSans text-[11px] font-bold tracking-[0.05em] text-right">AKSI</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -174,6 +204,8 @@ export default function KnowledgeBaseWorkspace() {
           </table>
         </div>
       )}
+      </div>
+    </div>
 
       {/* Modal Form */}
       {isModalOpen && (

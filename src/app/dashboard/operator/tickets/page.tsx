@@ -56,12 +56,7 @@ export default async function OperatorTicketsPage() {
 
     return (
         <div className="w-full h-full text-slate-800 font-sans p-6 md:p-10">
-            <div className="mb-8 flex items-center justify-between animate-in fade-in slide-in-from-top-4 duration-500">
-                <div>
-                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-1">Manajemen Tiket</h1>
-                    <p className="text-sm text-slate-500">Kelola semua tiket yang masuk, menunggu verifikasi, dan diproses.</p>
-                </div>
-            </div>
+
 
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 fill-mode-both">
                 <OperatorTicketWorkspace 

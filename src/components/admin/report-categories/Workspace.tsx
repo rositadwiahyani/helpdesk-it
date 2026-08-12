@@ -170,7 +170,7 @@ export default function Workspace() {
         handleReorder: handleReorder,
       }}
     >
-      <div className="flex flex-col w-full min-h-screen pt-8 px-8 pb-16 gap-8 bg-[#F8F9FA]">
+      <div className="flex flex-col gap-6 w-full relative">
         <PageHeader />
         <Stats />
         

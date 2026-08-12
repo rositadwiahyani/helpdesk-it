@@ -726,7 +726,8 @@ async function handleConfirmTicket(sender: string, input: string, currentData: a
       nim_nip: currentData.nim_nip,
       unit: currentData.unit,
       priority: currentData.default_priority || 'MEDIUM',
-      status: currentData.is_escalated ? 'ESCALATED' : 'WAITING VERIFICATION'
+      status: currentData.is_escalated ? 'ESCALATED' : 'WAITING VERIFICATION',
+      attachment: currentData.attachment_url || null
     }]).select('id').single();
 
     if (error) {
@@ -734,15 +735,6 @@ async function handleConfirmTicket(sender: string, input: string, currentData: a
       await sendMessage(sender, "⚠️ Mohon maaf, terjadi kesalahan sistem saat membuat tiket. Silakan coba beberapa saat lagi.");
     } else {
       const ticketId = result.id;
-
-      // Handle Lampiran
-      if (currentData.attachment_url) {
-        await supabase.from('ticket_attachments').insert({
-          ticket_id: ticketId,
-          file_url: currentData.attachment_url,
-          file_name: 'wa_attachment.jpg'
-        });
-      }
 
       // Upsert data pelapor
       await supabase.from('reporters').upsert({
