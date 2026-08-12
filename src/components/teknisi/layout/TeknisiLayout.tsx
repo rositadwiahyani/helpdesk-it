@@ -51,7 +51,7 @@ export default function TeknisiLayout({ children }: { children: React.ReactNode 
 
         {/* Main Content */}
         <main className="flex-1 p-4 lg:p-8 overflow-y-auto">
-          <div className="w-full h-full max-w-[1600px] mx-auto">
+          <div className="w-full">
             {children}
           </div>
         </main>

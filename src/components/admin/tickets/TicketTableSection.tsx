@@ -19,17 +19,20 @@ interface TicketTableSectionProps {
     priority: string;
   };
   searchQuery?: string;
+  categories?: any[];
+  technicians?: any[];
+  departments?: any[];
   onEditTicket?: (ticketId: string) => void;
 }
 
-export default function TicketTableSection({ activeTab = 'all', tickets = [], newlyAddedTicket, selectedTickets = [], onSelectionChange, filters, searchQuery = '', onEditTicket }: TicketTableSectionProps) {
+export default function TicketTableSection({ activeTab = 'all', tickets = [], newlyAddedTicket, selectedTickets = [], onSelectionChange, filters, searchQuery = '', categories = [], technicians = [], departments = [], onEditTicket }: TicketTableSectionProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [displayTickets, setDisplayTickets] = useState<any[]>([]);
   
   // Sorting state
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
   
-  const itemsPerPage = 8; // Menampilkan 8 baris per halaman supaya pas
+  const [itemsPerPage, setItemsPerPage] = useState(8);
 
   useEffect(() => {
     let filteredData = [...tickets];
@@ -226,7 +229,7 @@ export default function TicketTableSection({ activeTab = 'all', tickets = [], ne
               <th className="px-4 py-4 w-12 text-center">
                 <input 
                   type="checkbox" 
-                  className="rounded border-gray-300 w-4 h-4 text-[#0059BB] focus:ring-[#0059BB]"
+                  className="rounded border-gray-300 w-4 h-4 text-[#1E3A8A] focus:ring-[#1E3A8A]"
                   checked={paginatedTickets.length > 0 && selectedTickets.length === paginatedTickets.length}
                   onChange={handleSelectAll}
                 />
@@ -255,10 +258,20 @@ export default function TicketTableSection({ activeTab = 'all', tickets = [], ne
                   <SortIcon columnKey="reporter_name" />
                 </div>
               </th>
+              <th className="px-4 py-4 select-none">
+                <div className="flex items-center group">
+                  <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">KATEGORI</span>
+                </div>
+              </th>
               <th className="px-4 py-4 select-none hover:bg-gray-200 transition-colors cursor-pointer" onClick={() => handleSort('priority')}>
                 <div className="flex items-center group">
                   <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">PRIORITY</span>
                   <SortIcon columnKey="priority" />
+                </div>
+              </th>
+              <th className="px-4 py-4 select-none">
+                <div className="flex items-center group">
+                  <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">ASSIGN TO</span>
                 </div>
               </th>
               <th className="px-4 py-4 select-none w-20 text-center">
@@ -275,13 +288,13 @@ export default function TicketTableSection({ activeTab = 'all', tickets = [], ne
                   <td className="px-4 py-4 text-center">
                     <input 
                       type="checkbox" 
-                      className="rounded border-gray-300 w-4 h-4 text-[#0059BB] focus:ring-[#0059BB]"
+                      className="rounded border-gray-300 w-4 h-4 text-[#1E3A8A] focus:ring-[#1E3A8A]"
                       checked={selectedTickets.includes(ticket.id)}
                       onChange={(e) => handleSelectRow(ticket.id, e.target.checked)}
                     />
                   </td>
-                  <td className="px-4 py-4 text-[#0059BB] font-liberationSerif text-sm font-semibold whitespace-nowrap">
-                    <Link href={`/dashboard/tickets/${ticket.id}`} className="hover:underline">
+                  <td className="px-4 py-4 text-[#1E3A8A] font-liberationSerif text-sm font-semibold whitespace-nowrap">
+                    <Link href={`/dashboard/administrasi/tickets/${ticket.id}`} className="hover:underline">
                       {ticket.ticket_num || ticket.ticketNumber}
                     </Link>
                   </td>
@@ -289,8 +302,8 @@ export default function TicketTableSection({ activeTab = 'all', tickets = [], ne
                     {formatTimeAgo(ticket.updated_at || ticket.created_at)}
                   </td>
                   <td className="px-4 py-4 max-w-xs">
-                    <Link href={`/dashboard/tickets/${ticket.id}`} className="block">
-                      <p className="text-[#1A1C1E] font-iBMPlexSans text-sm font-medium truncate mb-0.5 hover:text-[#0059BB]">
+                    <Link href={`/dashboard/administrasi/tickets/${ticket.id}`} className="block">
+                      <p className="text-[#1A1C1E] font-iBMPlexSans text-sm font-medium truncate mb-0.5 hover:text-[#1E3A8A]">
                         {ticket.subject}
                       </p>
                     </Link>
@@ -302,13 +315,27 @@ export default function TicketTableSection({ activeTab = 'all', tickets = [], ne
                       </span>
                     </div>
                   </td>
+                  <td className="px-4 py-4 whitespace-nowrap">
+                    <span className="text-[#43474F] font-iBMPlexSans text-[13px] font-medium truncate max-w-[160px] block">
+                      {categories.find(c => String(c.id) === String(ticket.category_id))?.name || 'N/A'}
+                    </span>
+                  </td>
                   <td className="px-4 py-4">
                     {renderPriorityBadge(ticket.priority)}
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap">
+                    <span className="text-[#43474F] font-iBMPlexSans text-[13px] font-medium truncate max-w-[120px] block">
+                      {ticket.dept_id
+                        ? (ticket.department?.name || departments.find(d => String(d.id) === String(ticket.dept_id))?.name || 'Department')
+                        : ticket.tech_id
+                        ? (ticket.tech?.name || technicians.find(t => String(t.id) === String(ticket.tech_id))?.name || '-')
+                        : '-'}
+                    </span>
                   </td>
                   <td className="px-4 py-4 text-center">
                     <button 
                       onClick={() => onEditTicket && onEditTicket(ticket.id)}
-                      className="p-1.5 text-blue-600 hover:bg-blue-50 hover:text-blue-800 rounded transition-colors inline-flex" 
+                      className="p-1.5 text-[#1E3A8A] hover:bg-slate-100 rounded transition-colors inline-flex" 
                       title="Edit Ticket"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
@@ -322,29 +349,42 @@ export default function TicketTableSection({ activeTab = 'all', tickets = [], ne
       </div>
 
       {/* Pagination */}
-      <div className="flex py-4 px-6 justify-between items-center border-t border-t-[#C3C6D1] bg-[#FFF] w-full mt-auto">
-        <p className="text-[#1A1C1E] font-iBMPlexSans text-[13px]">
-          Showing {totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} tickets
-        </p>
+      <div className="flex flex-col sm:flex-row py-4 px-6 justify-between items-center border-t border-t-[#C3C6D1] bg-[#FFF] w-full mt-auto gap-4">
+        <div className="flex items-center gap-2">
+            <select 
+                value={itemsPerPage} 
+                onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
+                className="text-[13px] border border-[#C3C6D1] rounded px-2 py-1 outline-none focus:border-[#1E3A8A] text-[#1A1C1E]"
+            >
+                <option value={8}>8 / page</option>
+                <option value={10}>10 / page</option>
+                <option value={15}>15 / page</option>
+                <option value={25}>25 / page</option>
+                <option value={50}>50 / page</option>
+            </select>
+            <p className="text-[#1A1C1E] font-iBMPlexSans text-[13px]">
+                Showing {totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} tickets
+            </p>
+        </div>
         <div className="flex items-center gap-2">
           <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className={`flex justify-center items-center rounded border border-[#C3C6D1] w-8 h-8 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-50'}`}>
             <svg width="7" height="10" viewBox="0 0 7 10" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 10L0 5L5 0L6.16667 1.16667L2.33333 5L6.16667 8.83333L5 10Z" fill="black" /></svg>
           </button>
           
-          <button onClick={() => setCurrentPage(1)} className={`cursor-pointer rounded w-8 h-8 flex items-center justify-center font-semibold text-xs ${currentPage === 1 ? 'bg-[#0070EA] text-white' : 'hover:bg-gray-100 text-black'}`}>1</button>
+          <button onClick={() => setCurrentPage(1)} className={`cursor-pointer rounded w-8 h-8 flex items-center justify-center font-semibold text-xs ${currentPage === 1 ? 'bg-[#1E3A8A] text-white' : 'hover:bg-gray-100 text-black'}`}>1</button>
           
           {totalPages > 1 && (
-              <button onClick={() => setCurrentPage(2)} className={`cursor-pointer rounded w-8 h-8 flex items-center justify-center font-semibold text-xs ${currentPage === 2 ? 'bg-[#0070EA] text-white' : 'hover:bg-gray-100 text-black'}`}>2</button>
+              <button onClick={() => setCurrentPage(2)} className={`cursor-pointer rounded w-8 h-8 flex items-center justify-center font-semibold text-xs ${currentPage === 2 ? 'bg-[#1E3A8A] text-white' : 'hover:bg-gray-100 text-black'}`}>2</button>
           )}
 
           {totalPages > 2 && (
-              <button onClick={() => setCurrentPage(3)} className={`cursor-pointer rounded w-8 h-8 flex items-center justify-center font-semibold text-xs ${currentPage === 3 ? 'bg-[#0070EA] text-white' : 'hover:bg-gray-100 text-black'}`}>3</button>
+              <button onClick={() => setCurrentPage(3)} className={`cursor-pointer rounded w-8 h-8 flex items-center justify-center font-semibold text-xs ${currentPage === 3 ? 'bg-[#1E3A8A] text-white' : 'hover:bg-gray-100 text-black'}`}>3</button>
           )}
           
           {totalPages > 4 && <span className="px-1 text-base">...</span>}
           
           {totalPages > 3 && (
-            <button onClick={() => setCurrentPage(totalPages)} className={`cursor-pointer rounded w-8 h-8 flex items-center justify-center font-semibold text-xs ${currentPage === totalPages ? 'bg-[#0070EA] text-white' : 'hover:bg-gray-100 text-black'}`}>{totalPages}</button>
+            <button onClick={() => setCurrentPage(totalPages)} className={`cursor-pointer rounded w-8 h-8 flex items-center justify-center font-semibold text-xs ${currentPage === totalPages ? 'bg-[#1E3A8A] text-white' : 'hover:bg-gray-100 text-black'}`}>{totalPages}</button>
           )}
           
           <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className={`flex justify-center items-center rounded border border-[#C3C6D1] w-8 h-8 ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-50'}`}>

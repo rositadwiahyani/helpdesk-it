@@ -6,15 +6,26 @@ export default function PageHeader() {
   return (
     <div className="flex pr-[0] justify-between items-end w-full">
       <div className="flex flex-col items-start gap-1 w-fit">
-        <div className="flex flex-col items-start w-full">
-          <p className="text-[#001E40] font-iBMPlexSans text-[32px] font-semibold leading-10 w-fit tracking-[-0.025em]">
-            Manajemen Kategori
-          </p>
+        <div className="flex items-start gap-2 w-full">
+          <div className="flex flex-col items-start w-fit h-full">
+            <p className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">
+              Dashboard
+            </p>
+          </div>
+          <div className="flex flex-col items-start w-fit h-full">
+            <p className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">
+              /
+            </p>
+          </div>
+          <div className="flex flex-col items-start w-fit h-full">
+            <p className="text-[#1A1C1E] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">
+              Manajemen Kategori
+            </p>
+          </div>
         </div>
         <div className="flex flex-col items-start w-full">
-          <p className="text-[#43474F] font-iBMPlexSans text-sm leading-5 w-fit">
-            Kelola hierarki kategori layanan &#40;Drag &amp; Drop untuk
-            mengatur posisi&#41;.
+          <p className="text-[#001E40] font-iBMPlexSans text-[32px] font-semibold leading-10 w-fit tracking-[-0.02em]">
+            Manajemen Kategori
           </p>
         </div>
       </div>

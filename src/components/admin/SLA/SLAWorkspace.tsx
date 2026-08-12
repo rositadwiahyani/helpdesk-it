@@ -100,11 +100,10 @@ export default function SLAWorkspace() {
   };
 
   return (
-    <div className="flex p-8 flex-col items-start gap-8 w-full">
+    <div className="flex flex-col items-start gap-6 w-full relative">
       <SLAHeader />
 
-      <div className="flex flex-col items-start rounded-lg border border-[#C3C6D1] bg-[#FFF] shadow-[01px2px0rgba(0,0,0,0.05)] w-full overflow-hidden">
-        <SLAToolbar />
+      <div className="flex flex-col items-start rounded-lg border border-[#C3C6D1] bg-[#FFF] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] w-full overflow-hidden">
         <SLATableSection slaData={slaData} onUpdateSLA={handleUpdateSLA} />
       </div>
     </div>

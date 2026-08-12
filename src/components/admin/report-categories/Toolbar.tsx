@@ -5,32 +5,29 @@ export default function Toolbar() {
   const ctx = useContext(TreeContext);
 
   return (
-    <div className="flex justify-between items-center w-full mb-4">
-      <div className="flex items-center w-fit relative">
-        <svg 
-          width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-          className="absolute left-3 top-2.5 text-gray-400 pointer-events-none"
-        >
-          <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>
-        <input
-          type="text"
-          value={ctx?.searchQuery || ""}
-          onChange={(e) => ctx?.setSearchQuery(e.target.value)}
-          placeholder="Cari kategori..."
-          className="w-72 h-9 pl-9 pr-4 py-2 border border-gray-200 rounded text-sm text-gray-800 placeholder-gray-400 outline-none focus:border-gray-300 transition-colors"
-        />
+    <div className="flex flex-col md:flex-row gap-4 justify-between items-center w-full mb-4">
+      <div className="flex items-center gap-2 w-full md:w-auto">
+        <div className="relative w-full md:w-64">
+          <input
+            type="text"
+            value={ctx?.searchQuery || ""}
+            onChange={(e) => ctx?.setSearchQuery(e.target.value)}
+            placeholder="Cari kategori..."
+            className="pl-9 pr-4 py-2 text-sm border border-[#C3C6D1] rounded focus:outline-none focus:border-[#0059BB] w-full md:w-[350px]"
+          />
+          <svg className="w-4 h-4 absolute left-3 top-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        </div>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3 w-full md:w-auto shrink-0">
         <button 
           onClick={ctx?.expandAll} 
-          className="h-9 px-4 flex items-center justify-center rounded border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors"
+          className="flex items-center gap-2 px-3 py-2 border border-[#C3C6D1] rounded bg-white hover:bg-gray-50 text-sm text-[#43474F] font-iBMPlexSans"
         >
           Expand All
         </button>
         <button 
           onClick={ctx?.collapseAll} 
-          className="h-9 px-4 flex items-center justify-center rounded border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors"
+          className="flex items-center gap-2 px-3 py-2 border border-[#C3C6D1] rounded bg-white hover:bg-gray-50 text-sm text-[#43474F] font-iBMPlexSans"
         >
           Collapse All
         </button>

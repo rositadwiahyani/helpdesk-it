@@ -34,19 +34,7 @@ export default function AdminFilterModal({ onClose, onApply, categories }: Admin
         <h2 className="text-xl font-bold text-gray-900 mb-4">Advanced Filters</h2>
         
         <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Category</label>
-            <select 
-              value={category} 
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
-            >
-              <option value="">All Categories</option>
-              {categories.map((cat: any) => (
-                <option key={cat.id} value={cat.id}>{cat.name}</option>
-              ))}
-            </select>
-          </div>
+
           
           <div className="flex gap-4">
             <div className="flex-1">
@@ -100,7 +88,7 @@ export default function AdminFilterModal({ onClose, onApply, categories }: Admin
           </button>
           <button 
             onClick={handleApply}
-            className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors shadow-sm"
+            className="px-4 py-2 text-sm font-semibold text-white bg-[#1E3A8A] hover:bg-blue-900 rounded transition-colors"
           >
             Apply Filters
           </button>

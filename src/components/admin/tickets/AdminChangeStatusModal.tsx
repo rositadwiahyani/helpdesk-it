@@ -37,7 +37,7 @@ export default function AdminChangeStatusModal({ onClose, onSubmit, selectedCoun
               className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
             >
               <option value="" disabled>Select a new status...</option>
-              <option value="NEW">OPEN</option>
+              <option value="OPEN">OPEN</option>
               <option value="IN PROGRESS">IN PROGRESS</option>
               <option value="WAITING VERIFICATION">WAITING VERIFICATION</option>
               <option value="RESOLVED">RESOLVED</option>

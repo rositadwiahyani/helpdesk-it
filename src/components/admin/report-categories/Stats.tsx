@@ -7,42 +7,41 @@ export default function Stats() {
       value: "24",
       growth: "Kategori Utama",
       icon: <FiFolder className="w-5 h-5" />,
-      color: "bg-blue-50 text-blue-600",
-      pillBg: "bg-blue-50/50 text-blue-600",
+      color: "text-[#0059BB]",
+      pillBg: "bg-[#D5E3FF]",
     },
     {
       title: "SUB-KATEGORI",
       value: "18",
       growth: "Subkategori",
-      icon: <FiGrid className="w-5 h-5" />,
-      color: "bg-indigo-50 text-indigo-600",
-      pillBg: "bg-indigo-50/50 text-indigo-600",
+      icon: <FiGrid className="w-5 h-5 text-[#2563EB]" />,
+      color: "text-[#2563EB]",
+      pillBg: "bg-[#FFF8E7]",
     },
     {
       title: "STATUS AKTIF",
       value: "22",
       growth: "Dari 42 Total Item",
-      icon: <FiCheckCircle className="w-5 h-5" />,
-      color: "bg-emerald-50 text-emerald-600",
-      pillBg: "bg-emerald-50/50 text-emerald-600",
+      icon: <FiCheckCircle className="w-5 h-5 text-[#93000A]" />,
+      color: "text-[#93000A]",
+      pillBg: "bg-[#FFDAD6]",
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full items-start">
+    <div className="flex flex-col md:flex-row justify-between items-stretch gap-6 w-full">
       {cardData.map((card, idx) => (
-        <div key={idx} className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between hover:shadow-md transition-shadow relative overflow-hidden">
-          <div className="flex justify-between items-start mb-4 relative z-10">
-            <div>
-              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">{card.title}</p>
-              <h3 className="text-3xl font-extrabold text-slate-900">{card.value}</h3>
+        <div key={idx} className="flex p-4 justify-between items-center rounded-lg border border-[#C3C6D1] bg-[#FFF] w-full">
+          <div className="flex flex-col items-start gap-1 w-fit">
+            <div className="flex flex-col items-start w-full">
+              <p className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">{card.title}</p>
             </div>
-            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${card.color}`}>
-              {card.icon}
+            <div className="flex flex-col items-start w-full">
+              <p className="text-[#001E40] font-iBMPlexSans text-2xl font-semibold leading-8 w-fit tracking-[-0.01em]">{card.value}</p>
             </div>
           </div>
-          <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold w-fit relative z-10 ${card.pillBg}`}>
-            {card.growth}
+          <div className={`flex justify-center items-center shrink-0 rounded-xl ${card.pillBg} w-12 h-12`}>
+            {card.icon}
           </div>
         </div>
       ))}

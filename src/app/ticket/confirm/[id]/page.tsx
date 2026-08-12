@@ -65,7 +65,7 @@ export default function TicketConfirmationPage() {
     };
 
     if (loading) {
-        return <div className="min-h-screen bg-slate-50 flex items-center justify-center font-sans"><div className="animate-spin text-blue-600"><svg className="w-8 h-8" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div></div>;
+        return <div className="min-h-screen bg-slate-50 flex items-center justify-center font-sans"><div className="animate-spin text-[#1E3A8A]"><svg className="w-8 h-8" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div></div>;
     }
 
     if (!ticket) {
@@ -89,9 +89,9 @@ export default function TicketConfirmationPage() {
 
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center font-sans p-6">
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 max-w-md w-full">
+            <div className="bg-white p-6 rounded-2xl shadow-sm border-t-4 border-t-[#1E3A8A] border-x border-b border-slate-200 max-w-md w-full">
                 <div className="mb-6 text-center border-b border-slate-100 pb-6">
-                    <h1 className="text-xl font-bold text-slate-800 mb-1">Konfirmasi Penyelesaian Tiket</h1>
+                    <h1 className="text-xl font-bold text-[#1E3A8A] mb-1">Konfirmasi Penyelesaian Tiket</h1>
                     <p className="text-sm text-slate-500">Tim kami melaporkan bahwa tiket Anda telah ditangani.</p>
                 </div>
 
@@ -111,12 +111,12 @@ export default function TicketConfirmationPage() {
                 </div>
 
                 <div className="flex flex-col gap-3">
-                    <p className="text-sm font-semibold text-slate-700 mb-1 text-center">Apakah kendala Anda sudah benar-benar teratasi?</p>
+                    <p className="text-sm font-semibold text-[#1E3A8A] mb-1 text-center">Apakah kendala Anda sudah benar-benar teratasi?</p>
                     
                     <button 
                         onClick={() => handleConfirm('RESOLVED')}
                         disabled={submitting}
-                        className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-70 text-white font-bold rounded-xl shadow-sm transition-all flex items-center justify-center gap-2"
+                        className="w-full py-3.5 bg-[#1E3A8A] hover:bg-[#152960] disabled:opacity-70 text-white font-bold rounded-xl shadow-sm transition-all flex items-center justify-center gap-2"
                     >
                         Ya, Masalah Sudah Teratasi
                     </button>
@@ -124,7 +124,7 @@ export default function TicketConfirmationPage() {
                     <button 
                         onClick={() => handleConfirm('IN PROGRESS')}
                         disabled={submitting}
-                        className="w-full py-3.5 bg-white border-2 border-red-500 text-red-600 hover:bg-red-50 disabled:opacity-70 font-bold rounded-xl transition-all flex items-center justify-center gap-2"
+                        className="w-full py-3.5 bg-white border-2 border-[#1E3A8A] text-[#1E3A8A] hover:bg-blue-50 disabled:opacity-70 font-bold rounded-xl transition-all flex items-center justify-center gap-2"
                     >
                         Belum, Masalah Masih Ada
                     </button>

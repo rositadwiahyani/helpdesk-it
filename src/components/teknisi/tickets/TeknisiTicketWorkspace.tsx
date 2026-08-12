@@ -30,7 +30,7 @@ export default function TeknisiTicketWorkspace({
     const filteredTickets = useMemo(() => {
         switch (activeTab) {
             case 'open':
-                return tickets.filter(t => ['Open', 'NEW'].includes(t.status?.toUpperCase() || t.status));
+                return tickets.filter(t => ['OPEN', 'NEW'].includes(t.status?.toUpperCase() || t.status));
             case 'my-tasks':
                 return tickets.filter(t => 
                     ['IN PROGRESS', 'DIPROSES'].includes(t.status?.toUpperCase() || t.status) &&
@@ -52,67 +52,81 @@ export default function TeknisiTicketWorkspace({
     };
 
     return (
-        <div className="flex flex-col gap-6 w-full">
-            {/* Tabs */}
-            <div className="flex overflow-x-auto border-b border-slate-200">
-                <button
-                    onClick={() => setActiveTab('all')}
-                    className={`px-6 py-3 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 ${
-                        activeTab === 'all'
-                            ? 'border-blue-600 text-blue-600'
-                            : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
-                    }`}
-                >
-                    Semua Tiket
-                    <span className="ml-2 bg-slate-100 text-slate-600 py-0.5 px-2 rounded-full text-xs">{tickets.length}</span>
-                </button>
-                <button
-                    onClick={() => setActiveTab('open')}
-                    className={`px-6 py-3 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 ${
-                        activeTab === 'open'
-                            ? 'border-blue-600 text-blue-600'
-                            : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
-                    }`}
-                >
-                    Siap Diambil
-                    <span className="ml-2 bg-amber-100 text-amber-700 py-0.5 px-2 rounded-full text-xs">
-                        {tickets.filter(t => ['Open', 'NEW'].includes(t.status?.toUpperCase() || t.status)).length}
-                    </span>
-                </button>
-                <button
-                    onClick={() => setActiveTab('my-tasks')}
-                    className={`px-6 py-3 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 ${
-                        activeTab === 'my-tasks'
-                            ? 'border-blue-600 text-blue-600'
-                            : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
-                    }`}
-                >
-                    Task Saya
-                    <span className="ml-2 bg-blue-100 text-blue-700 py-0.5 px-2 rounded-full text-xs">
-                        {techId ? tickets.filter(t => ['IN PROGRESS', 'DIPROSES'].includes(t.status?.toUpperCase() || t.status) && String(t.tech_id) === String(techId)).length : 0}
-                    </span>
-                </button>
-                <button
-                    onClick={() => setActiveTab('resolved')}
-                    className={`px-6 py-3 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 ${
-                        activeTab === 'resolved'
-                            ? 'border-blue-600 text-blue-600'
-                            : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
-                    }`}
-                >
-                    Selesai
-                    <span className="ml-2 bg-emerald-100 text-emerald-700 py-0.5 px-2 rounded-full text-xs">
-                        {tickets.filter(t => ['RESOLVED', 'CLOSED', 'RESOLVED_BY_SYSTEM'].includes(t.status?.toUpperCase() || t.status)).length}
-                    </span>
-                </button>
+        <div className="flex flex-col items-start gap-6 w-full relative">
+            {/* Header */}
+            <div className="flex justify-between items-end w-full">
+                <div className="flex flex-col items-start gap-1 w-fit">
+                    <div className="flex items-start gap-2 w-full">
+                        <div className="flex flex-col items-start w-fit h-full">
+                            <p className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">
+                                Dashboard
+                            </p>
+                        </div>
+                        <div className="flex flex-col items-start w-fit h-full">
+                            <p className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">
+                                /
+                            </p>
+                        </div>
+                        <div className="flex flex-col items-start w-fit h-full">
+                            <p className="text-[#1A1C1E] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">
+                                Tickets
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex flex-col items-start w-full">
+                        <p className="text-[#001E40] font-iBMPlexSans text-[32px] font-semibold leading-10 w-fit tracking-[-0.02em]">
+                            Tiket
+                        </p>
+                    </div>
+                </div>
             </div>
 
             {/* Table Area */}
-            <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+            <div className="w-full">
                 <TeknisiTicketTable
                     initialTickets={filteredTickets}
                     mainCategories={mainCategories}
                     actionType={getActionType()}
+                    tabsNode={
+                        <div className="flex items-end gap-6 border-b border-b-[#C3C6D1] w-full overflow-x-auto mt-2">
+                            <button
+                                onClick={() => setActiveTab('all')}
+                                className={`cursor-pointer text-nowrap flex pt-0 pr-1 pb-3 pl-1 flex-col justify-center items-center border-b-2 w-fit transition-colors ${
+                                    activeTab === 'all'
+                                        ? 'border-b-[#1E3A8A]'
+                                        : 'border-b-transparent hover:border-b-gray-300'
+                                }`}
+                            >
+                                <p className={`font-iBMPlexSans text-sm leading-5 w-fit transition-colors ${
+                                    activeTab === 'all' ? 'text-[#1E3A8A] font-semibold' : 'text-[#43474F]'
+                                }`}>Semua Tiket ({tickets.length})</p>
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('assigned')}
+                                className={`cursor-pointer text-nowrap flex pt-0 pr-1 pb-3 pl-1 flex-col justify-center items-center border-b-2 w-fit transition-colors ${
+                                    activeTab === 'assigned'
+                                        ? 'border-b-[#1E3A8A]'
+                                        : 'border-b-transparent hover:border-b-gray-300'
+                                }`}
+                            >
+                                <p className={`font-iBMPlexSans text-sm leading-5 w-fit transition-colors ${
+                                    activeTab === 'assigned' ? 'text-[#1E3A8A] font-semibold' : 'text-[#43474F]'
+                                }`}>Tiket Saya ({tickets.filter((t: any) => t.tech_id === techId).length})</p>
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('resolved')}
+                                className={`cursor-pointer text-nowrap flex pt-0 pr-1 pb-3 pl-1 flex-col justify-center items-center border-b-2 w-fit transition-colors ${
+                                    activeTab === 'resolved'
+                                        ? 'border-b-[#1E3A8A]'
+                                        : 'border-b-transparent hover:border-b-gray-300'
+                                }`}
+                            >
+                                <p className={`font-iBMPlexSans text-sm leading-5 w-fit transition-colors ${
+                                    activeTab === 'resolved' ? 'text-[#1E3A8A] font-semibold' : 'text-[#43474F]'
+                                }`}>Selesai ({tickets.filter((t: any) => ['RESOLVED', 'CLOSED', 'WAITING CONFIRMATION', 'RESOLVED_BY_SYSTEM'].includes(t.status?.toUpperCase() || t.status)).length})</p>
+                            </button>
+                        </div>
+                    }
                 />
             </div>
         </div>

@@ -135,7 +135,7 @@ export const getTicketById = async (req: Request, res: Response) => {
 
     const { data: ticket, error: ticketError } = await supabase
       .from('tickets')
-      .select('*, category:categories(name), dept:departments(name), tech:staff_profiles!tickets_tech_id_fkey(name)')
+      .select('*, category:categories(name), dept:departments(name), tech:staff_profiles!tickets_tech_id_fkey(name), attachments:ticket_attachments(*)')
       .eq('id', id)
       .single();
 
