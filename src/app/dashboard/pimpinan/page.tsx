@@ -6,6 +6,8 @@ import SlaHealth from "@/components/admin/dashboard/SlaHealth";
 import TopHelpTopicsPieChart from "@/components/admin/dashboard/TopHelpTopicsPieChart";
 import { fetchServer } from "@/lib/apiServer";
 
+export const dynamic = 'force-dynamic';
+
 export default async function PimpinanDashboard() {
   let dashboardData: any = {};
   
@@ -19,12 +21,12 @@ export default async function PimpinanDashboard() {
   }
 
   return (
-    <div className="flex flex-col items-start gap-6 w-full max-w-[1440px] mx-auto pb-10">
+    <div className="flex flex-col items-start gap-6 w-full max-w-[1440px] mx-auto pb-10 animate-in fade-in slide-in-from-bottom-2 duration-300">
       {/* Page Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end w-full gap-4">
         <div className="flex flex-col items-start gap-1">
-          <h1 className="text-slate-900 font-extrabold text-2xl tracking-tight">Executive Summary</h1>
-          <p className="text-slate-500 font-medium text-sm">Ringkasan analitik dan performa layanan IT Helpdesk.</p>
+          <h1 className="text-2xl font-bold text-[var(--ink)] tracking-tight">Executive Summary</h1>
+          <p className="text-[var(--text-dim)] text-sm font-medium">Ringkasan analitik dan performa layanan IT Helpdesk.</p>
         </div>
       </div>
 

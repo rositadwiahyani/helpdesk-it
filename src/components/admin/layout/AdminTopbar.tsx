@@ -15,6 +15,7 @@ interface AdminTopbarProps {
 
 const routeMapping: Record<string, string> = {
   '/dashboard': 'Dashboard Administrator',
+  '/dashboard/administrasi': 'Dashboard Administrator',
   '/dashboard/administrasi/tickets': 'Tickets',
   '/dashboard/administrasi/users': 'Manajemen Pengguna',
   '/dashboard/administrasi/report-categories': 'Kategori Laporan',
@@ -24,6 +25,18 @@ const routeMapping: Record<string, string> = {
   '/dashboard/administrasi/webhook': 'API Logs & Webhooks',
   '/dashboard/administrasi/settings': 'Pengaturan Sistem',
   '/dashboard/administrasi/profile': 'Profil Saya',
+  '/dashboard/pimpinan': 'Executive Summary',
+  '/dashboard/pimpinan/tickets': 'Laporan Tiket',
+  '/dashboard/pimpinan/performance': 'Laporan Performa',
+  '/dashboard/pimpinan/sla': 'Laporan SLA',
+  '/dashboard/pimpinan/reports': 'Rekap Laporan',
+  '/dashboard/pimpinan/profile': 'Profil Pimpinan',
+  '/dashboard/teknisi': 'Dashboard Teknisi',
+  '/dashboard/teknisi/tickets': 'Tiket Masuk',
+  '/dashboard/teknisi/profile': 'Profil Teknisi',
+  '/dashboard/operator': 'Dashboard Operator',
+  '/dashboard/operator/tickets': 'Tiket Masuk',
+  '/dashboard/operator/profile': 'Profil Operator',
 };
 
 export default function AdminTopbar({
@@ -79,7 +92,16 @@ export default function AdminTopbar({
   if (displayUserRole === 'authenticated') {
     if (currentUser.email?.includes('operator')) displayUserRole = 'Operator Helpdesk';
     else if (currentUser.email?.includes('teknisi')) displayUserRole = 'Teknisi Helpdesk';
+    else if (currentUser.email?.includes('pimpinan')) displayUserRole = 'Pimpinan';
     else displayUserRole = 'Administrator';
+  } else if (displayUserRole === 'pimpinan') {
+    displayUserRole = 'Pimpinan';
+  } else if (displayUserRole === 'admin') {
+    displayUserRole = 'Administrator';
+  } else if (displayUserRole === 'teknisi') {
+    displayUserRole = 'Teknisi Helpdesk';
+  } else if (displayUserRole === 'operator') {
+    displayUserRole = 'Operator Helpdesk';
   }
 
   const initials = displayUserName.substring(0, 2).toUpperCase();

@@ -199,7 +199,7 @@ export default function TicketWorkspace() {
         selectedCount={selectedTickets.length}
         categories={categories}
         selectedCategory={filters?.category || ''}
-        onCategoryChange={(catId) => setFilters(prev => ({ ...prev, category: catId }))}
+        onCategoryChange={(catId) => setFilters((prev: any) => ({ ...prev, category: catId }))}
         onBulkAction={(action) => {
           if (action === 'Change Status') setIsChangeStatusModalOpen(true);
           else if (action === 'Delete') setIsDeleteConfirmOpen(true);

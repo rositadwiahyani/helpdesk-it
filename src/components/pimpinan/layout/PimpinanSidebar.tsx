@@ -2,149 +2,143 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { logoutUser } from '@/lib/AuthService';
+import { 
+  LayoutDashboard, 
+  Ticket, 
+  TrendingUp, 
+  ShieldCheck, 
+  FileText, 
+  User, 
+  LogOut 
+} from 'lucide-react';
 
-export default function PimpinanSidebar() {
+interface PimpinanSidebarProps {
+  isOpen?: boolean;
+  setIsOpen?: (isOpen: boolean) => void;
+}
+
+export default function PimpinanSidebar({ isOpen = true, setIsOpen = () => {} }: PimpinanSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const handleLogout = () => {
-    document.cookie = 'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
-    localStorage.removeItem('isLoggedIn');
-    window.location.href = '/login';
+  const handleLogout = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    await logoutUser();
+    router.push('/login');
   };
 
   const MENU_ITEMS = [
-    { name: 'Beranda', path: '/dashboard/pimpinan', icon: HomeIcon },
-    { name: 'Laporan Tiket', path: '/dashboard/pimpinan/tickets', icon: TicketsIcon },
-    { name: 'Laporan Performa', path: '/dashboard/pimpinan/performance', icon: PerformanceIcon },
-    { name: 'Laporan SLA', path: '/dashboard/pimpinan/sla', icon: SlaIcon },
-    { name: 'Rekap Laporan', path: '/dashboard/pimpinan/reports', icon: ReportIcon },
-    { name: 'Profil', path: '/dashboard/pimpinan/profile', icon: SettingsIcon },
+    { name: 'Executive Summary', path: '/dashboard/pimpinan', icon: LayoutDashboard },
+    { name: 'Laporan Tiket', path: '/dashboard/pimpinan/tickets', icon: Ticket },
+    { name: 'Laporan Performa', path: '/dashboard/pimpinan/performance', icon: TrendingUp },
+    { name: 'Laporan SLA', path: '/dashboard/pimpinan/sla', icon: ShieldCheck },
+    { name: 'Rekap Laporan', path: '/dashboard/pimpinan/reports', icon: FileText },
+    { name: 'Profil', path: '/dashboard/pimpinan/profile', icon: User },
   ];
 
   return (
-    <aside className="w-64 bg-[#0F172A] text-slate-300 flex flex-col h-screen sticky top-0 left-0 border-r border-slate-800 shadow-xl overflow-hidden z-20">
-      {/* BRANDING */}
-      <div className="h-16 flex items-center px-6 bg-[#0B1120] border-b border-slate-800 shrink-0">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#FFD700] to-[#F59E0B] flex items-center justify-center mr-3 shadow-lg shadow-amber-500/20">
-          <span className="text-[#0F172A] font-black text-lg leading-none">IT</span>
-        </div>
-        <div className="flex flex-col">
-          <span className="text-white font-bold text-sm tracking-wide leading-tight">HELPDESK</span>
-          <span className="text-[10px] text-amber-400 font-medium tracking-wider uppercase">Pimpinan</span>
-        </div>
-      </div>
+    <>
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden transition-opacity"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
 
-      {/* NAVIGATION */}
-      <div className="flex-1 py-6 px-3 overflow-y-auto custom-scrollbar">
-        <div className="mb-3 px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Menu Utama</div>
-        <nav className="space-y-1">
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 bg-[#0B1B2E] flex flex-col transition-all duration-300 ease-[var(--ease)] ${
+          isOpen ? 'w-72 translate-x-0' : 'w-[80px] max-lg:-translate-x-full lg:translate-x-0'
+        }`}
+      >
+        {/* Header / Logo Area Sidebar */}
+        <div className="h-[92px] flex items-center px-4 border-b border-white/10 flex-none overflow-hidden transition-all duration-300">
+          <div className="w-12 h-12 flex items-center justify-center flex-none">
+            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center flex-none">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                <path d="M12 3 2 8l10 5 10-5-10-5Z" />
+                <path d="M6 10.3V15c0 1.66 2.69 3 6 3s6-1.34 6-3v-4.7" />
+                <path d="M22 8v6" />
+              </svg>
+            </div>
+          </div>
+          <div className={`flex flex-col leading-tight min-w-0 transition-opacity duration-200 ml-2 ${isOpen ? 'opacity-100' : 'opacity-0 hidden'}`}>
+            <span className="font-bold text-[17px] text-white truncate">IT Helpdesk</span>
+            <span className="text-[10.5px] font-medium text-white/50 uppercase tracking-wider truncate">
+              Universitas Diponegoro
+            </span>
+          </div>
+        </div>
+
+        {/* Menu Navigation */}
+        <nav className="flex-1 overflow-y-auto py-5 px-4 flex flex-col gap-1 overflow-x-hidden">
           {MENU_ITEMS.map((item) => {
-            const isActive = pathname === item.path || pathname.startsWith(`${item.path}/`);
+            const Icon = item.icon;
+            let isActive = false;
+            
+            if (item.path === '/dashboard/pimpinan') {
+              isActive = pathname === '/dashboard/pimpinan';
+            } else {
+              isActive = pathname === item.path || pathname?.startsWith(item.path + '/') || false;
+            }
+
             return (
-              <Link
-                key={item.path}
-                href={item.path}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group relative overflow-hidden ${
-                  isActive 
-                    ? 'bg-[#1E293B] text-white shadow-sm shadow-slate-900/20' 
-                    : 'text-slate-400 hover:bg-[#1E293B]/50 hover:text-slate-200'
-                }`}
-              >
-                {isActive && (
-                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-400 rounded-r-full shadow-[0_0_8px_rgba(251,191,36,0.6)]"></div>
+              <div key={item.name} className="relative group w-full">
+                <Link
+                  href={item.path}
+                  onClick={() => {
+                    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+                      setIsOpen(false);
+                    }
+                  }}
+                  className={`flex items-center rounded-xl text-[14px] transition-all duration-200 w-full h-12 px-3 gap-3 overflow-hidden ${
+                    isActive
+                      ? 'bg-white/10 !text-white font-semibold'
+                      : '!text-white font-medium hover:bg-white/5'
+                  }`}
+                >
+                  <div className="flex-none flex items-center justify-center w-6 h-6">
+                    <Icon className="w-5 h-5" strokeWidth={isActive ? 2.2 : 1.8} />
+                  </div>
+                  <span className={`truncate transition-opacity duration-200 ${isOpen ? 'opacity-100' : 'opacity-0 hidden'}`}>
+                    {item.name}
+                  </span>
+                </Link>
+                {/* Tooltip for collapsed state */}
+                {!isOpen && (
+                  <div className="absolute left-full ml-4 top-1/2 -translate-y-1/2 px-2 py-1.5 bg-gray-900 text-white text-xs font-semibold rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50">
+                    {item.name}
+                    <div className="absolute top-1/2 -left-1 -translate-y-1/2 border-y-4 border-y-transparent border-r-4 border-r-gray-900"></div>
+                  </div>
                 )}
-                <div className={`transition-transform duration-200 ${isActive ? 'scale-110 text-amber-400' : 'group-hover:scale-110 group-hover:text-amber-400/70'}`}>
-                  <item.icon isActive={isActive} />
-                </div>
-                <span className={`text-sm font-medium ${isActive ? 'font-semibold' : ''}`}>{item.name}</span>
-              </Link>
+              </div>
             );
           })}
         </nav>
-      </div>
 
-      {/* FOOTER ACTION */}
-      <div className="p-4 border-t border-slate-800 bg-[#0B1120] shrink-0">
-        <button 
-          onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-colors group"
-        >
-          <LogoutIcon isActive={false} />
-          <span>Keluar Sistem</span>
-        </button>
-      </div>
-    </aside>
-  );
-}
-
-// ICONS (Copied & modified from existing sidebar)
-function HomeIcon({ isActive }: { isActive: boolean }) {
-  return (
-    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-      <polyline points="9 22 9 12 15 12 15 22" />
-    </svg>
-  );
-}
-
-function TicketsIcon({ isActive }: { isActive: boolean }) {
-  return (
-    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-      <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-      <polyline points="14 2 14 8 20 8" />
-      <line x1="16" y1="13" x2="8" y2="13" />
-      <line x1="16" y1="17" x2="8" y2="17" />
-      <line x1="10" y1="9" x2="8" y2="9" />
-    </svg>
-  );
-}
-
-function PerformanceIcon({ isActive }: { isActive: boolean }) {
-  return (
-    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-      <line x1="18" y1="20" x2="18" y2="10" />
-      <line x1="12" y1="20" x2="12" y2="4" />
-      <line x1="6" y1="20" x2="6" y2="14" />
-    </svg>
-  );
-}
-
-function SlaIcon({ isActive }: { isActive: boolean }) {
-  return (
-    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="10" />
-      <polyline points="12 6 12 12 16 14" />
-    </svg>
-  );
-}
-
-function ReportIcon({ isActive }: { isActive: boolean }) {
-  return (
-    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-      <path d="M4 20V10" />
-      <path d="M10 20V4" />
-      <path d="M16 20v-7" />
-      <path d="M2 20h20" />
-    </svg>
-  );
-}
-
-function SettingsIcon({ isActive }: { isActive: boolean }) {
-  return (
-    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-      <circle cx="12" cy="7" r="4" />
-    </svg>
-  );
-}
-
-function LogoutIcon({ isActive }: { isActive: boolean }) {
-  return (
-    <svg className="w-5 h-5 flex-none" fill="none" stroke="currentColor" strokeWidth={isActive ? '2.2' : '1.8'} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-      <path d="m16 17 5-5-5-5" />
-      <path d="M21 12H9" />
-    </svg>
+        {/* Footer Area Sidebar - Logout */}
+        <div className="p-4 border-t border-white/10 flex-none flex">
+          <div className="relative group w-full">
+            <button
+              onClick={handleLogout}
+              className="flex items-center rounded-xl text-[14px] font-semibold text-[#F87171] hover:bg-red-500/10 transition-colors w-full h-12 px-3 gap-3 overflow-hidden"
+            >
+              <div className="flex-none flex items-center justify-center w-6 h-6">
+                <LogOut className="w-5 h-5" strokeWidth={1.8} />
+              </div>
+              <span className={`transition-opacity duration-200 ${isOpen ? 'opacity-100' : 'opacity-0 hidden'}`}>
+                Logout
+              </span>
+            </button>
+            {!isOpen && (
+              <div className="absolute left-full ml-4 top-1/2 -translate-y-1/2 px-2 py-1.5 bg-gray-900 text-white text-xs font-semibold rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50">
+                Logout
+                <div className="absolute top-1/2 -left-1 -translate-y-1/2 border-y-4 border-y-transparent border-r-4 border-r-gray-900"></div>
+              </div>
+            )}
+          </div>
+        </div>
+      </aside>
+    </>
   );
 }

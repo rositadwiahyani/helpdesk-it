@@ -4,6 +4,7 @@ interface UsersToolbarProps {
   searchQuery?: string;
   onSearchChange?: (query: string) => void;
   onFilterClick?: () => void;
+  onResetFilterClick?: () => void;
   onAddClick?: () => void;
   selectedCount?: number;
   onBulkDeleteClick?: () => void;

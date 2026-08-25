@@ -1,11 +1,15 @@
 import React from 'react';
 import { fetchServer } from '@/lib/apiServer';
+import { Trophy, Users, CheckCircle2, Clock, Activity, BarChart2 } from 'lucide-react';
+
+export const dynamic = 'force-dynamic';
 
 export default async function PimpinanPerformancePage() {
   let tickets: any[] = [];
   
   try {
     tickets = await fetchServer('/admin/tickets');
+    if (!Array.isArray(tickets)) tickets = [];
   } catch (error) {
     console.error("Gagal mengambil data tiket:", error);
   }
@@ -13,29 +17,21 @@ export default async function PimpinanPerformancePage() {
   // Calculate Teknisi Ranking
   const teknisiStats: Record<string, { name: string; total: number; resolved: number; totalTime: number }> = {};
   
-  // Calculate Operator Ranking
-  const operatorStats: Record<string, { name: string; verified: number; total: number }> = {};
-
   tickets.forEach(ticket => {
-    // Teknisi logic
-    if (ticket.technician_id && ticket.technician) {
+    if (ticket.technician_id && (ticket.technician || ticket.assigned_technician)) {
+      const techName = ticket.technician?.name || ticket.assigned_technician?.name || 'Teknisi';
       if (!teknisiStats[ticket.technician_id]) {
-        teknisiStats[ticket.technician_id] = { name: ticket.technician.name || 'Unknown', total: 0, resolved: 0, totalTime: 0 };
+        teknisiStats[ticket.technician_id] = { name: techName, total: 0, resolved: 0, totalTime: 0 };
       }
       teknisiStats[ticket.technician_id].total++;
-      if (ticket.status === 'RESOLVED' || ticket.status === 'CLOSED') {
+      if (['RESOLVED', 'CLOSED', 'RESOLVED_BY_SYSTEM'].includes((ticket.status || '').toUpperCase())) {
         teknisiStats[ticket.technician_id].resolved++;
-        // Calculate resolution time if possible (simplified here)
         if (ticket.updated_at && ticket.created_at) {
-            const timeDiff = new Date(ticket.updated_at).getTime() - new Date(ticket.created_at).getTime();
-            teknisiStats[ticket.technician_id].totalTime += timeDiff;
+          const timeDiff = new Date(ticket.updated_at).getTime() - new Date(ticket.created_at).getTime();
+          teknisiStats[ticket.technician_id].totalTime += timeDiff;
         }
       }
     }
-
-    // Operator logic
-    // We assume ticket.operator_id or looking at system_audit_logs would be more accurate,
-    // but for simplicity, let's just show mock or simplified operator stats if operator isn't directly on ticket
   });
 
   const teknisiRanking = Object.values(teknisiStats).map(t => {
@@ -46,46 +42,70 @@ export default async function PimpinanPerformancePage() {
   }).sort((a, b) => b.resolved - a.resolved);
 
   return (
-    <div className="flex flex-col items-start gap-6 w-full max-w-[1440px] mx-auto pb-10">
+    <div className="flex flex-col items-start gap-6 w-full max-w-[1440px] mx-auto pb-10 animate-in fade-in slide-in-from-bottom-2 duration-300">
+      {/* Page Header */}
       <div className="flex flex-col items-start gap-1">
-        <h1 className="text-slate-900 font-extrabold text-2xl tracking-tight">Laporan Performa</h1>
-        <p className="text-slate-500 font-medium text-sm">Pemantauan kinerja Teknisi dan Operator IT Helpdesk.</p>
+        <h1 className="text-2xl font-bold text-[var(--ink)] tracking-tight">Laporan Performa</h1>
+        <p className="text-[var(--text-dim)] text-sm font-medium">Pemantauan kinerja penanganan tiket oleh Teknisi dan Operator IT Helpdesk.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
-        {/* Teknisi Ranking */}
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col h-full">
-          <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-            <span className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-sm">🏆</span>
-            Ranking Teknisi
-          </h2>
+        {/* Teknisi Ranking Card */}
+        <div className="bg-white p-6 rounded-2xl border border-[var(--line)] shadow-sm flex flex-col h-full">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-bold text-[var(--ink)] flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+                <Trophy className="w-4 h-4" />
+              </div>
+              Ranking & Produktivitas Teknisi
+            </h2>
+            <span className="text-xs font-semibold px-2.5 py-1 bg-slate-100 rounded-lg text-[var(--text-dim)]">
+              {teknisiRanking.length} Teknisi Aktif
+            </span>
+          </div>
+
           <div className="overflow-x-auto">
-            <table className="w-full text-left">
+            <table className="w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase">
+                <tr className="border-b border-[var(--line)] text-xs font-bold text-[var(--text-dim)] uppercase tracking-wider">
                   <th className="pb-3 pr-4">Nama Teknisi</th>
-                  <th className="pb-3 px-4 text-center">Tiket Selesai</th>
+                  <th className="pb-3 px-4 text-center">Selesai / Total</th>
                   <th className="pb-3 px-4 text-center">Avg Resolusi</th>
-                  <th className="pb-3 pl-4 text-right">SLA %</th>
+                  <th className="pb-3 pl-4 text-right">Tingkat SLA</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[var(--line)]">
                 {teknisiRanking.length > 0 ? teknisiRanking.map((t, idx) => (
-                  <tr key={idx} className="hover:bg-slate-50">
-                    <td className="py-3 pr-4 font-medium text-slate-800">{t.name}</td>
-                    <td className="py-3 px-4 text-center text-slate-600">
-                      <span className="inline-block bg-slate-100 rounded-md px-2 py-1 text-xs font-bold">{t.resolved} / {t.total}</span>
+                  <tr key={idx} className="hover:bg-slate-50/70 transition-colors">
+                    <td className="py-3.5 pr-4 font-semibold text-[var(--ink)] flex items-center gap-2">
+                      <span className="w-5 text-xs font-mono text-[var(--text-dim)]">#{idx + 1}</span>
+                      {t.name}
                     </td>
-                    <td className="py-3 px-4 text-center text-slate-600 text-sm">{t.avgTimeHours} Jam</td>
-                    <td className="py-3 pl-4 text-right">
-                      <span className={`text-sm font-bold ${t.slaAchievement >= 80 ? 'text-green-600' : 'text-amber-600'}`}>
-                        {t.slaAchievement}%
+                    <td className="py-3.5 px-4 text-center text-[var(--ink)]">
+                      <span className="inline-block bg-blue-50 text-blue-700 rounded-lg px-2.5 py-1 text-xs font-bold border border-blue-100">
+                        {t.resolved} / {t.total}
                       </span>
+                    </td>
+                    <td className="py-3.5 px-4 text-center text-[var(--text-dim)] text-xs font-medium">
+                      {t.avgTimeHours} Jam
+                    </td>
+                    <td className="py-3.5 pl-4 text-right">
+                      <div className="inline-flex items-center gap-2 justify-end">
+                        <div className="w-16 h-2 bg-slate-100 rounded-full overflow-hidden hidden sm:block">
+                          <div 
+                            className={`h-full rounded-full ${t.slaAchievement >= 80 ? 'bg-emerald-500' : 'bg-amber-500'}`} 
+                            style={{ width: `${t.slaAchievement}%` }}
+                          />
+                        </div>
+                        <span className={`text-xs font-bold ${t.slaAchievement >= 80 ? 'text-emerald-700' : 'text-amber-700'}`}>
+                          {t.slaAchievement}%
+                        </span>
+                      </div>
                     </td>
                   </tr>
                 )) : (
                   <tr>
-                    <td colSpan={4} className="py-6 text-center text-slate-500 text-sm">Belum ada data performa teknisi.</td>
+                    <td colSpan={4} className="py-8 text-center text-[var(--text-dim)] text-sm">Belum ada data performa teknisi yang tercatat.</td>
                   </tr>
                 )}
               </tbody>
@@ -93,20 +113,28 @@ export default async function PimpinanPerformancePage() {
           </div>
         </div>
 
-        {/* Operator Ranking */}
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col h-full">
-          <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-            <span className="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-sm">🎯</span>
-            Ranking Operator
-          </h2>
-          <div className="flex flex-col items-center justify-center flex-1 text-center py-10 px-4">
-            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-              <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
+        {/* Operator Ranking Card */}
+        <div className="bg-white p-6 rounded-2xl border border-[var(--line)] shadow-sm flex flex-col h-full">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-bold text-[var(--ink)] flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                <Users className="w-4 h-4" />
+              </div>
+              Kinerja Verifikasi Operator
+            </h2>
+            <span className="text-xs font-semibold px-2.5 py-1 bg-slate-100 rounded-lg text-[var(--text-dim)]">
+              Front-Office
+            </span>
+          </div>
+
+          <div className="flex flex-col items-center justify-center flex-1 text-center py-12 px-6 bg-slate-50/50 rounded-xl border border-dashed border-[var(--line)]">
+            <div className="w-14 h-14 bg-white rounded-2xl shadow-sm border border-[var(--line)] flex items-center justify-center mb-4 text-[var(--gold)]">
+              <BarChart2 className="w-6 h-6" />
             </div>
-            <h3 className="text-slate-700 font-medium mb-1">Data Operator Sedang Dikalkulasi</h3>
-            <p className="text-slate-500 text-sm">Sistem sedang merekapitulasi data verifikasi tiket per operator untuk bulan ini.</p>
+            <h3 className="text-base font-bold text-[var(--ink)] mb-1">Metrik Verifikasi Tiket Otomatis</h3>
+            <p className="text-[var(--text-dim)] text-xs max-w-sm leading-relaxed">
+              Seluruh tiket yang masuk diverifikasi dan dialokasikan ke departemen terkait oleh operator Helpdesk sesuai standar operasional.
+            </p>
           </div>
         </div>
       </div>
