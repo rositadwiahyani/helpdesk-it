@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 interface RecentTicketActivityTableProps {
   data?: { id: string; ticketNum: string; status?: string; message: string; time: string; iconColor?: string }[];
 }
@@ -7,9 +9,9 @@ export default function RecentTicketActivityTable({ data = [] }: RecentTicketAct
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
       <div className="flex justify-between items-center p-6 border-b border-slate-100">
         <h3 className="text-lg font-bold text-slate-800">Recent Ticket Activity</h3>
-        <button className="text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors">
-          View All Activity
-        </button>
+        <Link href="/dashboard/administrasi/tickets" className="text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors">
+          View All Tickets
+        </Link>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm">

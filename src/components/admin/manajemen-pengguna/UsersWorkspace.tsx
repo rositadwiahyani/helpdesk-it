@@ -7,6 +7,7 @@ import UsersStatistics from './UsersStatistics';
 import UsersToolbar from './UsersToolbar';
 import UsersTableSection from './UsersTableSection';
 import UsersFilterModal, { UsersFilterData } from './UsersFilterModal';
+import AdminDeleteConfirmModal from '../tickets/modals/AdminDeleteConfirmModal';
 import { fetchClient } from '@/lib/apiClient';
 
 export interface UserItem {
@@ -123,19 +124,23 @@ export default function UserWorkspace() {
 
   const router = useRouter();
 
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastType, setToastType] = useState<'success' | 'error' | 'warning'>('success');
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+
+  const showToast = (message: string, type: 'success' | 'error' | 'warning' = 'success') => {
+      setToastMessage(message);
+      setToastType(type);
+      setTimeout(() => setToastMessage(null), 3000);
+  };
+
   const handleEditClick = useCallback((user: UserItem) => {
     router.push(`/dashboard/administrasi/users/${user.id}?edit=true`);
   }, [router]);
 
   const handleDeleteClick = async (id: string) => {
-    if (confirm('Apakah Anda yakin ingin menghapus pelapor ini? Data riwayat tiketnya mungkin akan terdampak.')) {
-      try {
-        await fetchClient(`/admin/reporters/${id}`, { method: 'DELETE' });
-        fetchUsers();
-      } catch (error: any) {
-        alert("Gagal menghapus data: " + error.message);
-      }
-    }
+    setSelectedUserIds([id]);
+    setIsDeleteConfirmOpen(true);
   };
 
   const handleSaveForm = async (e: React.FormEvent) => {
@@ -152,6 +157,7 @@ export default function UserWorkspace() {
             status: formData.status
           })
         });
+        showToast('Berhasil mengedit pelapor!', 'success');
       } else {
         await fetchClient('/admin/reporters', {
           method: 'POST',
@@ -164,11 +170,12 @@ export default function UserWorkspace() {
             status: formData.status
           })
         });
+        showToast('Berhasil menambahkan pelapor baru!', 'success');
       }
       setIsModalOpen(false);
       fetchUsers();
     } catch (error: any) {
-      alert("Gagal menyimpan data: " + error.message);
+      showToast("Gagal menyimpan data: " + error.message, 'error');
     }
   };
 
@@ -185,18 +192,25 @@ export default function UserWorkspace() {
   }, [users]);
 
   const handleBulkDelete = async () => {
-    if (selectedUserIds.length === 0) return;
-    if (!confirm(`Hapus ${selectedUserIds.length} pelapor?`)) return;
+    if (selectedUserIds.length === 0) {
+      showToast('Belum ada pelapor yang dipilih!', 'warning');
+      return;
+    }
+    setIsDeleteConfirmOpen(true);
+  };
+
+  const executeDelete = async () => {
     setIsLoading(true);
     try {
       for (const id of selectedUserIds) {
         await fetchClient(`/admin/reporters/${id}`, { method: 'DELETE' });
       }
+      showToast(`Berhasil menghapus ${selectedUserIds.length} pelapor.`, 'success');
       setSelectedUserIds([]);
       await fetchUsers();
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      alert('Gagal menghapus pelapor masal');
+      showToast('Gagal menghapus pelapor: ' + e.message, 'error');
       setIsLoading(false);
     }
   };
@@ -286,6 +300,36 @@ export default function UserWorkspace() {
           onClose={() => setIsFilterModalOpen(false)}
           onApply={(newFilters) => setFilters(newFilters)}
         />
+      )}
+
+      {isDeleteConfirmOpen && (
+        <AdminDeleteConfirmModal 
+          selectedCount={selectedUserIds.length}
+          isPermanent={true}
+          onClose={() => setIsDeleteConfirmOpen(false)}
+          onConfirm={executeDelete}
+        />
+      )}
+
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className={`fixed top-6 left-1/2 -translate-x-1/2 px-5 py-3.5 rounded-xl shadow-lg flex items-center gap-3 z-[100] animate-in slide-in-from-top-5 duration-300 ${
+            toastType === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 
+            toastType === 'error' ? 'bg-red-50 text-red-700 border border-red-200' : 
+            'bg-amber-50 text-amber-800 border border-amber-300 shadow-[0_8px_30px_rgb(251,191,36,0.2)]'
+        }`}>
+            {toastType === 'success' ? (
+                <svg className="w-5 h-5 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+            ) : toastType === 'error' ? (
+                <svg className="w-5 h-5 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            ) : (
+                <svg className="w-5 h-5 text-amber-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            )}
+            <span className="text-[14px] font-bold tracking-tight">{toastMessage}</span>
+            <button onClick={() => setToastMessage(null)} className="ml-2 hover:opacity-75 transition-opacity">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
       )}
     </div>
   );

@@ -15,6 +15,12 @@ export default function UserDetail({ userId }: { userId: string }) {
   const [tickets, setTickets] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  
+  const showToast = (message: string) => {
+    setToastMessage(message);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
   
   const [isEditing, setIsEditing] = useState(searchParams?.get('edit') === 'true');
   
@@ -32,11 +38,20 @@ export default function UserDetail({ userId }: { userId: string }) {
       try {
         const decodedId = decodeURIComponent(userId);
         
-        const { data: userData } = await supabase
-          .from('reporters')
-          .select('*')
-          .or(`id.eq.${decodedId},phone.eq.${decodedId}`)
-          .maybeSingle();
+        // Check if decodedId is a valid UUID
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        const isUuid = uuidRegex.test(decodedId);
+        
+        let query = supabase.from('reporters').select('*');
+        if (isUuid) {
+            query = query.or(`id.eq.${decodedId},phone.eq.${decodedId}`);
+        } else {
+            query = query.eq('phone', decodedId);
+        }
+        
+        const { data: userData, error } = await query.maybeSingle();
+        
+        if (error) throw error;
 
         if (userData) {
           setUser(userData);
@@ -48,13 +63,32 @@ export default function UserDetail({ userId }: { userId: string }) {
             status: userData.status || 'Aktif'
           });
           
-          const { data: ticketsData } = await supabase
-            .from('tickets')
-            .select('*, category:categories(name)')
-            .or(`phone.eq.${userData.phone},reporter_name.ilike.%${userData.name}%`)
-            .order('created_at', { ascending: false });
-            
-          if (ticketsData) setTickets(ticketsData);
+          let orConditions = [];
+          
+          // Only use unique/strong identifiers to avoid fetching unrelated tickets
+          if (userData.phone && userData.phone !== '-') {
+              orConditions.push(`phone.eq."${userData.phone}"`);
+          }
+          
+          if (userData.nim_nip && userData.nim_nip !== '-' && userData.nim_nip !== '0') {
+              orConditions.push(`nim_nip.eq."${userData.nim_nip}"`);
+          }
+          
+          // Only fallback to name if both phone and nim_nip are missing or generic,
+          // but avoid generic names like 'Anonim', 'Umum', dll.
+          if (orConditions.length === 0 && userData.name && userData.name.length > 3 && !userData.name.toLowerCase().includes('anonim')) {
+              orConditions.push(`reporter_name.eq."${userData.name}"`);
+          }
+          
+          if (orConditions.length > 0) {
+              const { data: ticketsData } = await supabase
+                .from('tickets')
+                .select('*, category:categories(name)')
+                .or(orConditions.join(','))
+                .order('created_at', { ascending: false });
+                
+              if (ticketsData) setTickets(ticketsData);
+          }
         }
       } catch (err) {
         console.error('Error fetching user detail:', err);
@@ -84,6 +118,7 @@ export default function UserDetail({ userId }: { userId: string }) {
       
       setUser({ ...user, ...formData });
       setIsEditing(false);
+      showToast("Berhasil menyimpan perubahan data pelapor.");
       router.replace(`/dashboard/administrasi/users/${user.id}`);
     } catch (err: any) {
       alert("Gagal menyimpan data: " + err.message);
@@ -303,7 +338,11 @@ export default function UserDetail({ userId }: { userId: string }) {
                         {t.ticket_num || t.ticket_number || '–'}
                       </Link>
                     </td>
-                    <td className="px-6 py-4 text-sm font-medium text-[#1A1C1E] truncate max-w-[200px] font-iBMPlexSans">{t.subject}</td>
+                    <td className="px-6 py-4">
+                      <Link href={`/dashboard/administrasi/tickets/${t.id}`} className="text-sm font-medium text-[#1A1C1E] truncate max-w-[200px] block hover:text-[#1E3A8A] hover:underline font-iBMPlexSans">
+                        {t.subject}
+                      </Link>
+                    </td>
                     <td className="px-6 py-4 text-sm text-[#43474F] font-iBMPlexSans">{t.category?.name || '-'}</td>
                     <td className="px-6 py-4 text-sm text-[#43474F] font-iBMPlexSans">{new Date(t.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
                     <td className="px-6 py-4">
@@ -316,6 +355,17 @@ export default function UserDetail({ userId }: { userId: string }) {
           </div>
         )}
       </div>
+
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 px-5 py-3.5 rounded-xl shadow-lg flex items-center gap-3 z-[100] animate-in slide-in-from-top-5 duration-300 bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <svg className="w-5 h-5 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+            <span className="text-[14px] font-bold tracking-tight">{toastMessage}</span>
+            <button onClick={() => setToastMessage(null)} className="ml-2 hover:opacity-75 transition-opacity">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+      )}
     </div>
   );
 }

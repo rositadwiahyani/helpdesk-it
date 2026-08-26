@@ -61,10 +61,6 @@ export default function TicketToolbar({
   };
 
   const handleBulkAction = (action: string) => {
-    if (selectedCount === 0) {
-      alert("Belum ada tiket yang dipilih!");
-      return;
-    }
     if (onBulkAction) {
       onBulkAction(action);
     }

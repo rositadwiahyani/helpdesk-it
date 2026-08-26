@@ -6,9 +6,10 @@ interface DeptModalProps {
   onClose: () => void;
   onSuccess: () => void;
   dept?: any; // If null, Add Mode. Else Edit Mode
+  showToast?: (message: string, type: 'success' | 'error') => void;
 }
 
-export default function DeptModal({ isOpen, onClose, onSuccess, dept }: DeptModalProps) {
+export default function DeptModal({ isOpen, onClose, onSuccess, dept, showToast }: DeptModalProps) {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -32,22 +33,40 @@ export default function DeptModal({ isOpen, onClose, onSuccess, dept }: DeptModa
 
     if (dept) {
       // Edit
-      const { error } = await supabase.from("departments").update(payload).eq("id", dept.id);
-      if (error) alert("Gagal mengupdate departemen: " + error.message);
-      else onSuccess();
+      try {
+        const { fetchClient } = await import('@/lib/apiClient');
+        await fetchClient(`/admin/departments/${dept.id}`, {
+          method: 'PUT',
+          body: JSON.stringify(payload)
+        });
+        if (showToast) showToast("Departemen berhasil diperbarui", "success");
+        onSuccess();
+      } catch (err: any) {
+        if (showToast) showToast("Gagal mengupdate departemen: " + err.message, "error");
+      }
     } else {
       // Add
-      const { error } = await supabase.from("departments").insert([payload]);
-      if (error) alert("Gagal menambah departemen: " + error.message);
-      else onSuccess();
+      try {
+        const { fetchClient } = await import('@/lib/apiClient');
+        await fetchClient('/admin/departments', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        if (showToast) showToast("Departemen berhasil ditambahkan", "success");
+        onSuccess();
+      } catch (err: any) {
+        if (showToast) showToast("Gagal menambah departemen: " + err.message, "error");
+      }
     }
     setLoading(false);
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg p-6 w-[400px]">
-        <h2 className="text-lg font-bold mb-4">{dept ? "Edit Departemen" : "Tambah Departemen Baru"}</h2>
+    <>
+      <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none p-4">
+        <div className="bg-white rounded-lg shadow-xl p-6 w-[400px] pointer-events-auto border border-[#C3C6D1]">
+          <h2 className="text-lg font-bold mb-4">{dept ? "Edit Departemen" : "Tambah Departemen Baru"}</h2>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
             <label className="block text-sm text-gray-600 mb-1">Nama Departemen / Layanan</label>
@@ -63,5 +82,6 @@ export default function DeptModal({ isOpen, onClose, onSuccess, dept }: DeptModa
         </form>
       </div>
     </div>
+    </>
   );
 }

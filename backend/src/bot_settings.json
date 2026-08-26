@@ -1,0 +1,7 @@
+{
+  "trigger_word": "HaloDesk",
+  "greeting_message": "Selamat datang di ChatBOT IT Helpdesk.",
+  "operational_hours": "Senin - Jumat: 08:00 - 16:00 WIB\nSabtu - Minggu: Libur / Tutup",
+  "location_info": "Gedung IT Center Lantai 1, Universitas Diponegoro",
+  "fallback_message": "Ketik *HaloDesk* untuk kembali ke menu utama."
+}

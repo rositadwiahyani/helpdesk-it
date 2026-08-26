@@ -1,5 +1,6 @@
 import SharedTicketDetail from '@/components/shared/tickets/SharedTicketDetail';
 
-export default function DashboardTicketDetailPage({ params }: { params: { id: string } }) {
-  return <SharedTicketDetail ticketId={params.id} />;
+export default async function DashboardTicketDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
+  return <SharedTicketDetail ticketId={resolvedParams.id} />;
 }

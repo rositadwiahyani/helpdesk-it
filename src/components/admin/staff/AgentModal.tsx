@@ -5,16 +5,18 @@ interface AgentModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  showToast: (msg: string, type: 'success' | 'error') => void;
   agent?: any; // If null, it's Add Mode. If object, it's Edit Mode.
   departments: any[];
 }
 
-export default function AgentModal({ isOpen, onClose, onSuccess, agent, departments }: AgentModalProps) {
+export default function AgentModal({ isOpen, onClose, onSuccess, showToast, agent, departments }: AgentModalProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [role, setRole] = useState("teknisi");
   const [deptId, setDeptId] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -24,12 +26,14 @@ export default function AgentModal({ isOpen, onClose, onSuccess, agent, departme
       setPhone(agent.phone || "");
       setRole(agent.role || "teknisi");
       setDeptId(agent.dept_id ? String(agent.dept_id) : "");
+      setPassword("");
     } else {
       setName("");
       setEmail("");
       setPhone("");
       setRole("teknisi");
       setDeptId("");
+      setPassword("");
     }
   }, [agent, isOpen]);
 
@@ -49,22 +53,38 @@ export default function AgentModal({ isOpen, onClose, onSuccess, agent, departme
 
     if (agent) {
       // Edit
-      const { error } = await supabase.from("staff_profiles").update(payload).eq("id", agent.id);
-      if (error) alert("Gagal mengupdate agen: " + error.message);
-      else onSuccess();
+      try {
+        const { fetchClient } = await import('@/lib/apiClient');
+        await fetchClient(`/admin/staff/${agent.id}`, {
+          method: 'PUT',
+          body: JSON.stringify(payload)
+        });
+        showToast("Berhasil mengedit staf", "success");
+        onSuccess();
+      } catch (err: any) {
+        showToast("Gagal mengupdate agen: " + err.message, "error");
+      }
     } else {
-      // Add (Assuming auth is handled separately or we just insert profile for now)
-      const { error } = await supabase.from("staff_profiles").insert([payload]);
-      if (error) alert("Gagal menambah agen: " + error.message);
-      else onSuccess();
+      // Add via backend to create auth user
+      try {
+        const { fetchClient } = await import('@/lib/apiClient');
+        await fetchClient('/admin/staff', {
+          method: 'POST',
+          body: JSON.stringify({ ...payload, password: password || 'password123' }) // Use entered password or default
+        });
+        showToast("Berhasil menambah staf", "success");
+        onSuccess();
+      } catch (err: any) {
+        showToast("Gagal menambah agen: " + err.message, "error");
+      }
     }
     setLoading(false);
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg p-6 w-[500px]">
-        <h2 className="text-lg font-bold mb-4">{agent ? "Edit Agen" : "Tambah Agen Baru"}</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+      <div className="bg-white rounded-lg p-6 w-[500px] border border-[#C3C6D1] shadow-xl">
+        <h2 className="text-lg font-bold mb-4 text-[#001E40]">{agent ? "Edit Agen" : "Tambah Agen Baru"}</h2>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
             <label className="block text-sm text-gray-600 mb-1">Nama Lengkap</label>
@@ -74,9 +94,15 @@ export default function AgentModal({ isOpen, onClose, onSuccess, agent, departme
             <label className="block text-sm text-gray-600 mb-1">Email</label>
             <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full border border-gray-300 rounded p-2 text-sm" />
           </div>
+          {!agent && (
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">Password</label>
+              <input required type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Minimal 6 karakter" minLength={6} className="w-full border border-gray-300 rounded p-2 text-sm" />
+            </div>
+          )}
           <div>
             <label className="block text-sm text-gray-600 mb-1">Nomor WA</label>
-            <input required type="text" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full border border-gray-300 rounded p-2 text-sm" />
+            <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full border border-gray-300 rounded p-2 text-sm" />
           </div>
           <div>
             <label className="block text-sm text-gray-600 mb-1">Peran (Role)</label>

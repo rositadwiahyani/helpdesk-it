@@ -21,6 +21,7 @@ export type TreeContextType = {
   onEditItem?: (item: any, type: 'category' | 'subcategory') => void;
   onDeleteItem?: (id: string, type: 'category' | 'subcategory') => void;
   handleReorder?: (newTreeData: any[]) => Promise<void>;
+  showToast?: (message: string, type?: 'success' | 'error') => void;
 };
 
 import { supabase } from "@/lib/supabase";
@@ -38,6 +39,23 @@ export default function Workspace() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [subParentId, setSubParentId] = useState<string | null>(null);
   const [editTarget, setEditTarget] = useState<any>(null);
+
+  // Toast state
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastType, setToastType] = useState<'success' | 'error'>('success');
+
+  React.useEffect(() => {
+      if (toastMessage) {
+          const timer = setTimeout(() => setToastMessage(null), 3000);
+          return () => clearTimeout(timer);
+      }
+  }, [toastMessage]);
+
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+      setToastMessage(message);
+      setToastType(type);
+  };
+
   
   const fetchData = async () => {
     const { data: cats } = await supabase.from('categories').select('*').order('sort_order', { ascending: true }).order('name', { ascending: true });
@@ -110,9 +128,10 @@ export default function Workspace() {
     try {
       await fetchClient(`/admin/categories/${id}`, { method: 'DELETE' });
       fetchData();
+      showToast('Data berhasil dihapus', 'success');
     } catch (err) {
       console.error(err);
-      alert('Gagal menghapus data');
+      showToast('Gagal menghapus data', 'error');
     }
   };
 
@@ -142,12 +161,14 @@ export default function Workspace() {
       });
       if (!res.success) {
         console.error("Failed to update sort_order", res.message);
-        alert('Gagal menyimpan urutan ke server.');
+        showToast('Gagal menyimpan urutan ke server.', 'error');
         fetchData(); // revert UI if failed
+      } else {
+        showToast('Urutan berhasil disimpan', 'success');
       }
     } catch (err: any) {
       console.error("Error updating sort_order", err);
-      alert('Terjadi kesalahan saat menyimpan urutan.');
+      showToast('Terjadi kesalahan saat menyimpan urutan.', 'error');
       fetchData(); // revert UI if failed
     }
   };
@@ -168,6 +189,7 @@ export default function Workspace() {
         onEditItem: handleEditItem,
         onDeleteItem: handleDeleteItem,
         handleReorder: handleReorder,
+        showToast,
       }}
     >
       <div className="flex flex-col gap-6 w-full relative">
@@ -184,6 +206,23 @@ export default function Workspace() {
       <AddCategoryModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onSuccess={fetchData} />
       <AddSubcategoryModal isOpen={isSubAddModalOpen} onClose={() => setIsSubAddModalOpen(false)} onSuccess={fetchData} categoryId={subParentId} />
       <EditItemModal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} onSuccess={fetchData} target={editTarget} />
+
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className={`fixed bottom-4 right-4 px-4 py-3 rounded shadow-lg flex items-center gap-3 z-[60] animate-in slide-in-from-bottom-5 ${
+            toastType === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
+        }`}>
+            {toastType === 'success' ? (
+                <svg className="w-5 h-5 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+            ) : (
+                <svg className="w-5 h-5 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            )}
+            <span className="text-sm font-medium">{toastMessage}</span>
+            <button onClick={() => setToastMessage(null)} className="ml-2 hover:opacity-75">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+      )}
     </TreeContext.Provider>
   );
 }

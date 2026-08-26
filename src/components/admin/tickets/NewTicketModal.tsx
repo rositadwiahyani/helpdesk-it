@@ -11,12 +11,41 @@ export default function NewTicketModal({ onClose, onSubmit }: NewTicketModalProp
   // Setup default date to today
   const today = new Date().toISOString().split('T')[0];
 
+  const [categories, setCategories] = useState<any[]>([]);
+  const [departments, setDepartments] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function loadData() {
+      const { supabase } = await import('@/lib/supabase');
+      const { data: deptData } = await supabase.from('departments').select('*').order('name');
+      if (deptData) setDepartments(deptData);
+
+      const { data: catData } = await supabase.from('categories').select('*').order('name');
+      if (catData) {
+        // Build hierarchy: Parent / Child
+        const mainCats = catData.filter(c => !c.parent_id);
+        const subCats = catData.filter(c => c.parent_id);
+        const hierarchical: any[] = [];
+
+        mainCats.forEach(main => {
+          hierarchical.push(main);
+          subCats.filter(sub => sub.parent_id === main.id).forEach(sub => {
+            hierarchical.push({ ...sub, display_name: `${main.name} / ${sub.name}` });
+          });
+        });
+        setCategories(hierarchical);
+      }
+    }
+    loadData();
+  }, []);
+
   const [formData, setFormData] = useState({
     dateCreated: today,
     status: 'NEW',
     requesterName: '',
     requesterNim: '',
     requesterUnit: '',
+    requesterPhone: '',
     subject: '',
     description: '',
     category: '',
@@ -55,7 +84,7 @@ export default function NewTicketModal({ onClose, onSubmit }: NewTicketModalProp
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 flex flex-col gap-5">
+        <form id="new-ticket-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 flex flex-col gap-5">
           
           {/* Row 1: Date & Status (Auto/Readonly) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -91,22 +120,25 @@ export default function NewTicketModal({ onClose, onSubmit }: NewTicketModalProp
           {/* Ticket Details */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-1">
+              <label className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-[0.05em]">No. WhatsApp *</label>
+              <input type="text" name="requesterPhone" required value={formData.requesterPhone} onChange={handleChange} className="p-2 border border-[#C3C6D1] rounded text-sm outline-none focus:border-[#1E3A8A]" placeholder="628..." />
+            </div>
+            <div className="flex flex-col gap-1">
               <label className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-[0.05em]">Kategori Kendala *</label>
-              <select required name="category" value={formData.category} onChange={handleChange} className="p-2 border border-[#C3C6D1] rounded text-sm text-[#1A1C1E] focus:border-[#0059BB] outline-none transition-all">
+              <select required name="category" value={formData.category} onChange={handleChange} className="p-2 border border-[#C3C6D1] rounded text-sm text-[#1A1C1E] focus:border-[#0059BB] outline-none transition-all bg-white">
                 <option value="" disabled>Pilih Kategori...</option>
-                <option value="Applications">Aplikasi / Akademik</option>
-                <option value="Infrastructure">Infrastruktur / Jaringan</option>
-                <option value="Hardware">Website / Domain</option>
-                <option value="Account">Akun & Akses (SSO)</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>{c.display_name || c.name}</option>
+                ))}
               </select>
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-[0.05em]">Assign To</label>
-              <select name="assignTo" value={formData.assignTo} onChange={handleChange} className="p-2 border border-[#C3C6D1] rounded text-sm text-[#1A1C1E] focus:border-[#0059BB] outline-none transition-all">
+              <label className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-[0.05em]">Departemen (Assign To)</label>
+              <select name="assignTo" value={formData.assignTo} onChange={handleChange} className="p-2 border border-[#C3C6D1] rounded text-sm text-[#1A1C1E] focus:border-[#0059BB] outline-none transition-all bg-white">
                 <option value="">Unassigned (Biarkan kosong)</option>
-                <option value="Deni Pratama">Deni Pratama (IT Support)</option>
-                <option value="Siti Aminah">Siti Aminah (Helpdesk)</option>
-                <option value="Bambang Heru">Bambang Heru (Teknisi)</option>
+                {departments.map((d) => (
+                  <option key={d.id} value={d.id}>{d.name}</option>
+                ))}
               </select>
             </div>
           </div>
@@ -133,8 +165,8 @@ export default function NewTicketModal({ onClose, onSubmit }: NewTicketModalProp
             Cancel
           </button>
           <button 
-            type="button"
-            onClick={handleSubmit}
+            type="submit"
+            form="new-ticket-form"
             className="px-6 py-2 rounded bg-[#0059BB] text-white font-iBMPlexSans text-xs font-semibold shadow-sm hover:bg-[#00428A] transition-colors"
           >
             Submit Ticket

@@ -9,6 +9,10 @@ export default function Tree() {
   const [draggedId, setDraggedId] = useState<string | null>(null);
 
   const handleDragStart = (id: string, e: React.DragEvent) => {
+    if (ctx?.searchQuery) {
+      e.preventDefault();
+      return;
+    }
     e.stopPropagation();
     setDraggedId(id);
   };
@@ -126,7 +130,7 @@ export default function Tree() {
       return (
         <div
           key={node.id}
-          draggable
+          draggable={!ctx?.searchQuery}
           onDragStart={(e) => handleDragStart(node.id, e)}
           onDragOver={handleDragOver}
           onDrop={(e) => handleDrop(node.id, e)}
@@ -154,7 +158,7 @@ export default function Tree() {
     return (
       <div
         key={node.id}
-        draggable
+        draggable={!ctx?.searchQuery}
         onDragStart={(e) => handleDragStart(node.id, e)}
         onDragOver={handleDragOver}
         onDrop={(e) => handleDrop(node.id, e)}
@@ -170,14 +174,14 @@ export default function Tree() {
             count={node.count}
             status={node.status}
             childrenWrapperClassName={node.childrenWrapperClassName}
-            onMoveUp={index > 0 ? () => {
+            onMoveUp={index > 0 && !ctx?.searchQuery ? () => {
               const updatedData = [...treeData];
               const temp = updatedData[index];
               updatedData[index] = updatedData[index - 1];
               updatedData[index - 1] = temp;
               ctx?.handleReorder?.(updatedData);
             } : undefined}
-            onMoveDown={index < treeData.length - 1 ? () => {
+            onMoveDown={index < treeData.length - 1 && !ctx?.searchQuery ? () => {
               const updatedData = [...treeData];
               const temp = updatedData[index];
               updatedData[index] = updatedData[index + 1];
@@ -193,7 +197,7 @@ export default function Tree() {
             title={node.title}
             nodeId={node.id}
             hasDivider={node.type === "leaf-bordered" ? true : undefined}
-            onMoveUp={index > 0 ? () => {
+            onMoveUp={index > 0 && !ctx?.searchQuery ? () => {
               const updatedData = [...treeData];
               const parentIndex = updatedData.findIndex(p => p.children?.some((c: any) => c.id === node.id));
               if (parentIndex !== -1) {
@@ -207,7 +211,7 @@ export default function Tree() {
                 ctx?.handleReorder?.(updatedData);
               }
             } : undefined}
-            onMoveDown={index < (treeData.find((p: any) => p.children?.some((c: any) => c.id === node.id))?.children?.length || 0) - 1 ? () => {
+            onMoveDown={index < (treeData.find((p: any) => p.children?.some((c: any) => c.id === node.id))?.children?.length || 0) - 1 && !ctx?.searchQuery ? () => {
               const updatedData = [...treeData];
               const parentIndex = updatedData.findIndex(p => p.children?.some((c: any) => c.id === node.id));
               if (parentIndex !== -1) {

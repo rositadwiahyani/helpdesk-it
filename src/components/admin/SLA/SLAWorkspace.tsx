@@ -52,22 +52,42 @@ const INITIAL_SLA_DATA: SLAItem[] = [
 
 export default function SLAWorkspace() {
   const [slaData, setSlaData] = useState<SLAItem[]>([]);
+  
+  // Toast state
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastType, setToastType] = useState<'success' | 'error'>('success');
+
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => setToastMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
+
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToastMessage(message);
+    setToastType(type);
+  };
 
   useEffect(() => {
     fetchSlas();
   }, []);
 
   const fetchSlas = async () => {
-    const { data } = await supabase.from('slas').select('*').order('response_time', { ascending: true });
+    const { data } = await supabase.from('sla_configs').select('*').order('response_target_hours', { ascending: true });
     if (data && data.length > 0) {
-      const formatted: SLAItem[] = data.map(d => ({
-        id: String(d.id),
-        priority: d.priority as any,
-        badgeBg: d.badge_bg,
-        badgeTextColor: d.badge_text_color,
-        responseTime: d.response_time,
-        resolutionTime: d.resolution_time,
-      }));
+      const formatted: SLAItem[] = data.map(d => {
+        // Find matching priority from INITIAL_SLA_DATA for badges
+        const initial = INITIAL_SLA_DATA.find(i => i.priority === d.priority);
+        return {
+          id: String(d.id),
+          priority: d.priority as any,
+          badgeBg: initial?.badgeBg || 'bg-[#F3F3F6]',
+          badgeTextColor: initial?.badgeTextColor || 'text-[#43474F]',
+          responseTime: (d.response_target_hours || 0) * 60,
+          resolutionTime: (d.resolution_target_hours || 0) * 60,
+        };
+      });
       setSlaData(formatted);
     } else {
       // Fallback if table is empty (user didn't run the INSERT sql)
@@ -76,36 +96,57 @@ export default function SLAWorkspace() {
   };
 
   const handleUpdateSLA = async (updatedItem: SLAItem) => {
-    // 1. Update Supabase
-    const { error } = await supabase.from('slas').update({
-      response_time: updatedItem.responseTime,
-      resolution_time: updatedItem.resolutionTime,
-      updated_at: new Date().toISOString()
-    }).eq('id', updatedItem.id);
+    // We update by priority instead of string id
+    try {
+      // Round to nearest hour
+      const responseHours = Math.max(1, Math.round(updatedItem.responseTime / 60));
+      const resolutionHours = Math.max(1, Math.round(updatedItem.resolutionTime / 60));
 
-    if (error) {
-      alert("Gagal menyimpan SLA: " + error.message);
-      return;
+      const { fetchClient } = await import('@/lib/apiClient');
+      const res = await fetchClient('/admin/sla', {
+        method: 'PUT',
+        body: JSON.stringify({
+          priority: updatedItem.priority,
+          response_target_hours: responseHours,
+          resolution_target_hours: resolutionHours,
+        })
+      });
+      if (!res.id && res.error) throw new Error(res.error);
+      
+      // 2. Update state lokal
+      setSlaData((prev) => prev.map((item) => (item.priority === updatedItem.priority ? updatedItem : item)));
+      showToast(`SLA untuk prioritas ${updatedItem.priority} berhasil disimpan!`, 'success');
+      fetchSlas();
+    } catch (err: any) {
+      console.error(err);
+      showToast(`Gagal menyimpan SLA: ${err.message}`, 'error');
     }
-
-    // 2. Update data SLA lokal
-    setSlaData((prevData) =>
-      prevData.map((item) => (item.id === updatedItem.id ? updatedItem : item))
-    );
-
-    // 4. Tampilkan alert bawaan browser
-    setTimeout(() => {
-      alert(`Target waktu pada SLA ${updatedItem.priority} berhasil disimpan!`);
-    }, 100); 
   };
 
   return (
     <div className="flex flex-col items-start gap-6 w-full relative">
       <SLAHeader />
 
-      <div className="flex flex-col items-start rounded-lg border border-[#C3C6D1] bg-[#FFF] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] w-full overflow-hidden">
+      <div className="flex flex-col items-start rounded-lg border border-[#C3C6D1] bg-[#FFF] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] w-full overflow-hidden relative">
         <SLATableSection slaData={slaData} onUpdateSLA={handleUpdateSLA} />
       </div>
+      
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className={`fixed top-6 left-1/2 -translate-x-1/2 px-5 py-3.5 rounded-xl shadow-lg flex items-center gap-3 z-[100] animate-in slide-in-from-top-5 duration-300 ${
+            toastType === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'
+        }`}>
+            {toastType === 'success' ? (
+                <svg className="w-5 h-5 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+            ) : (
+                <svg className="w-5 h-5 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            )}
+            <span className="text-[14px] font-bold tracking-tight">{toastMessage}</span>
+            <button onClick={() => setToastMessage(null)} className="ml-2 hover:opacity-75 transition-opacity">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+      )}
     </div>
   );
 }
