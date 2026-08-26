@@ -1,60 +1,57 @@
 import React from 'react';
 import OperatorTicketTable from '@/components/admin/tickets/OperatorTicketTable';
 import { calculateIsOverdue } from '@/lib/utils/sla';
-import { supabase } from '@/lib/supabase';
+import { fetchServer } from '@/lib/apiServer';
 
 export const dynamic = 'force-dynamic';
 
 export default async function OperatorRejectedTicketsPage() {
-    // Auth check dilewati (di-bypass) sementara agar bisa fokus desain UI
-    
-    // Mengambil tiket yang berstatus 'Ditolak' beserta kategori
-    const { data: tickets, error } = await supabase
-        .from('tickets')
-        .select(`
-            *,
-            category:category_id (name)
-        `)
-        .eq('status', 'Ditolak')
-        .order('created_at', { ascending: false });
+    let apiData;
+    try {
+        const res = await fetchServer('/operator/tickets/rejected');
+        apiData = res.data;
+    } catch (err) {
+        console.error("Error fetching rejected tickets:", err);
+        apiData = {
+            tickets: [],
+            slaConfigs: [],
+            departments: [],
+            categories: []
+        };
+    }
 
-    // Mengambil SLA Configs
-    const { data: slaConfigs } = await supabase.from('sla_configs').select('*');
+    const { tickets, slaConfigs, departments, categories: rawCategories } = apiData;
 
-    // Inject is_overdue
-    const processedTickets = (tickets || []).map(t => ({
-        ...t,
-        is_overdue: calculateIsOverdue(t, slaConfigs || [])
-    }));
-
-    // Mengambil daftar departemen untuk distribusi tiket
-    const { data: departments } = await supabase
-        .from('departments')
-        .select('id, name')
-        .order('name', { ascending: true });
-
-    // Mengambil SEMUA kategori untuk di-format menjadi "Parent / Child"
-    const { data: rawCategories } = await supabase
-        .from('categories')
-        .select('*');
-
-    // Build hierarchical names for the dropdown
-    const formattedCategories = (rawCategories || []).map(cat => {
+    // Format kategori dengan hierarki Departemen / Kategori / Subkategori (jika ada)
+    const formattedCategories = (rawCategories || []).map((cat: any) => {
+        const dept = (departments || []).find((d: any) => d.id === cat.dept_id);
+        const deptName = dept ? dept.name : '';
+        
         const breadcrumb = [];
         let current = cat;
         while (current) {
             breadcrumb.unshift(current.name);
-            current = (rawCategories || []).find(c => c.id === current.parent_id);
+            current = (rawCategories || []).find((c: any) => c.id === current.parent_id);
         }
+        
+        if (deptName) {
+            breadcrumb.unshift(deptName);
+        }
+        
         return {
-            id: cat.id,
+            ...cat,
             name: breadcrumb.join(' / '),
-            parent_id: cat.parent_id // for filter
         };
-    }).sort((a, b) => a.name.localeCompare(b.name));
+    }).sort((a: any, b: any) => a.name.localeCompare(b.name));
 
-    // Kategori utama untuk filter pencarian (parent_id is null)
-    const mainCategories = formattedCategories.filter(c => !c.parent_id);
+    // Inject is_overdue
+    const processedTickets = (tickets || []).map((t: any) => ({
+        ...t,
+        is_overdue: calculateIsOverdue(t, slaConfigs || [])
+    }));
+
+    // Kategori utama untuk filter pencarian (tampilkan semua kategori)
+    const mainCategories = formattedCategories;
 
     return (
         <div className="w-full h-full text-slate-800 font-sans p-6 md:p-10">

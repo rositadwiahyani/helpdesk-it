@@ -1,9 +1,9 @@
-import AdminLayout from '@/components/admin/layout/AdminLayout';
+import OperatorLayout from '@/components/operator/layout/OperatorLayout';
 
-export default function OperatorLayout({ children }: { children: React.ReactNode }) {
+export default function OperatorDashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <AdminLayout>
+    <OperatorLayout>
       {children}
-    </AdminLayout>
+    </OperatorLayout>
   );
 }

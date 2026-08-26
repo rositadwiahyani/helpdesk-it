@@ -1,88 +1,69 @@
 import React from 'react';
 import OperatorStatistics from '@/components/admin/tickets/OperatorStatistics';
-import { supabase } from '@/lib/supabase';
+import { fetchServer } from '@/lib/apiServer';
+import AnimatedCounter from '@/components/ui/AnimatedCounter';
 
 export const dynamic = 'force-dynamic';
 
 export default async function OperatorDashboard() {
-    // Auth check dilewati sementara
-    
-    // Ambil SEMUA tiket untuk direkap di Client Component
-    // Pada production berskala besar, sebaiknya ini menggunakan RPC atau View di Supabase
-    const { data: tickets } = await supabase
-        .from('tickets')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-    // Ambil log tiket (untuk mengetahui kapan tiket diverifikasi / ditolak)
-    const { data: ticketLogs, error: logError } = await supabase
-        .from('ticket_logs')
-        .select('*')
-        .in('action', ['CHANGE_STATUS', 'REJECT_TICKET']);
-        
-    if (logError) console.error("Error logs:", logError);
-
-    // Ambil kategori & departemen
-    const { data: rawCategories } = await supabase.from('categories').select('*');
-    const { data: departments } = await supabase.from('departments').select('id, name');
-
-    // Build hierarchical names for the categories (Topics)
-    const formattedCategories = (rawCategories || []).map(cat => {
-        const breadcrumb = [];
-        let current = cat;
-        while (current) {
-            breadcrumb.unshift(current.name);
-            current = (rawCategories || []).find(c => c.id === current.parent_id);
+    // Ambil data dashboard dari Express API
+    let dashboardData;
+    try {
+        const response = await fetchServer('/operator/dashboard');
+        dashboardData = response.data;
+    } catch (error: any) {
+        if (error?.digest?.startsWith('NEXT_REDIRECT')) {
+            throw error;
         }
-        return {
-            id: cat.id,
-            name: breadcrumb.join(' / '),
+        console.error("Gagal mengambil data dashboard:", error);
+        // Fallback jika API gagal
+        dashboardData = {
+            tickets: [],
+            ticketLogs: [],
+            categories: [],
+            departments: [],
+            counts: { todayCount: 0, verifiedCount: 0, openCount: 0 }
         };
-    }).sort((a, b) => a.name.localeCompare(b.name));
+    }
 
-    // Summary Cards (Hari Ini)
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const todayStr = today.toISOString();
-
-    const { count: todayCount } = await supabase
-        .from('tickets')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', todayStr);
-
-    const { count: verifiedCount } = await supabase
-        .from('ticket_logs')
-        .select('*', { count: 'exact', head: true })
-        .in('action', ['CHANGE_STATUS', 'REJECT_TICKET'])
-        .gte('created_at', todayStr);
-
-    const openCount = (tickets || []).filter(t => t.status === 'Open').length;
+    const { tickets, ticketLogs, categories: formattedCategories, departments, counts } = dashboardData;
+    const { todayCount, verifiedCount, openCount } = counts;
 
     return (
-        <div className="w-full h-full text-slate-800 font-sans p-6 md:p-10">
-            <div className="mb-8 flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Dashboard Operator</h1>
-                    <p className="text-sm text-slate-500 mt-1">Ringkasan statistik dan aktivitas helpdesk.</p>
-                </div>
+        <div className="flex flex-col gap-6 p-6 md:p-10">
+            <div className="animate-in fade-in slide-in-from-left-4 duration-500">
+                <h2 className="text-2xl font-bold text-[var(--ink)] mb-1">Beranda Operator</h2>
+                <p className="text-[var(--text-dim)] text-sm">Ringkasan statistik dan aktivitas helpdesk secara real-time.</p>
             </div>
 
             {/* Statistik Hari Ini */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-8">
-                <div className="bg-white border border-slate-200 rounded-xl p-5 flex-1 shadow-sm">
-                    <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Tiket Dibuat Hari Ini</div>
-                    <div className="text-3xl font-black text-slate-800">{todayCount || 0}</div>
-                    <div className="text-xs text-slate-500 mt-1">Total masuk hari ini</div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 fill-mode-both">
+                <div className="bg-white border border-[var(--line-dark)] rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+                    <div>
+                        <div className="text-[11px] font-bold text-[var(--text-dim)] uppercase tracking-wider mb-2">Tiket Dibuat Hari Ini</div>
+                        <div className="text-4xl font-bold text-[var(--ink)]">
+                            <AnimatedCounter value={todayCount || 0} duration={1200} />
+                        </div>
+                    </div>
+                    <div className="text-xs text-[var(--text-dim)] mt-4">Total masuk hari ini</div>
                 </div>
-                <div className="bg-white border border-slate-200 rounded-xl p-5 flex-1 shadow-sm">
-                    <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Menunggu Verifikasi</div>
-                    <div className="text-3xl font-black text-orange-600">{openCount}</div>
-                    <div className="text-xs text-slate-500 mt-1">Status Open</div>
+                <div className="bg-white border border-[var(--line-dark)] rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+                    <div>
+                        <div className="text-[11px] font-bold text-[var(--text-dim)] uppercase tracking-wider mb-2">Menunggu Verifikasi</div>
+                        <div className="text-4xl font-bold text-[var(--gold)]">
+                            <AnimatedCounter value={openCount || 0} duration={1500} />
+                        </div>
+                    </div>
+                    <div className="text-xs text-[var(--text-dim)] mt-4">Status Open</div>
                 </div>
-                <div className="bg-white border border-slate-200 rounded-xl p-5 flex-1 shadow-sm">
-                    <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Diverifikasi Hari Ini</div>
-                    <div className="text-3xl font-black text-emerald-600">{verifiedCount || 0}</div>
-                    <div className="text-xs text-slate-500 mt-1">Diterima / Ditolak</div>
+                <div className="bg-white border border-[var(--line-dark)] rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+                    <div>
+                        <div className="text-[11px] font-bold text-[var(--text-dim)] uppercase tracking-wider mb-2">Diverifikasi Hari Ini</div>
+                        <div className="text-4xl font-bold text-[var(--ink)]">
+                            <AnimatedCounter value={verifiedCount || 0} duration={1800} />
+                        </div>
+                    </div>
+                    <div className="text-xs text-[var(--text-dim)] mt-4">Diterima / Ditolak</div>
                 </div>
             </div>
 

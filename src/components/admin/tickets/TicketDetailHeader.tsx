@@ -1,8 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
 import { Ticket } from '@/lib/mock/tickets';
-import PriorityBadge from './PriorityBadge';
-import StatusBadge from './StatusBadge';
 
 interface TicketDetailHeaderProps {
   ticket: Ticket;
@@ -25,8 +23,12 @@ export default function TicketDetailHeader({ ticket }: TicketDetailHeaderProps) 
             <span className="font-mono font-bold text-lg text-[var(--gold-soft)] bg-[var(--paper-2)] px-2.5 py-1 rounded-lg border border-[var(--line-dark)]">
               {ticket.id}
             </span>
-            <PriorityBadge priority={ticket.priority} />
-            <StatusBadge status={ticket.status} />
+            <span className="px-2 py-1 bg-[var(--gold-soft)] text-[var(--gold)] font-bold rounded-lg">
+              {ticket.priority}
+            </span>
+            <span className="px-2 py-1 bg-[var(--success)] text-[var(--success-text)] font-bold rounded-lg">
+              {ticket.status}
+            </span>
           </div>
           <h2 className="text-xl sm:text-2xl font-bold text-[var(--ink)] leading-tight">
             {ticket.subject}

@@ -7,10 +7,14 @@ interface WASession {
   data: {
     dept_id?: number;
     dept_name?: string;
-    category_id?: number;
+    cat_id?: number;
     cat_name?: string;
     subcat_id?: number;
     subcat_name?: string;
+    category_id?: number;
+    current_parent_id?: number | null;
+    current_parent_name?: string | null;
+    category_path?: string;
     subject_description?: string;
     reporter_name?: string;
     nim_nip?: string;
@@ -22,6 +26,17 @@ interface WASession {
 
 export async function handleIncomingMessage(sender: string, messageText: string) {
   const cleanInput = messageText.trim();
+
+  // 0. Cek apakah pengguna diblokir
+  const { data: reporter } = await supabase
+    .from('reporters')
+    .select('status, name, nim_nip, unit, reporter_type')
+    .eq('phone', sender)
+    .single();
+
+  if (reporter?.status === 'Terblokir') {
+    return sendMessage(sender, "⚠️ Maaf, nomor Anda saat ini diblokir dari sistem IT Helpdesk karena pelanggaran ketentuan layanan.");
+  }
 
   // 1. GLOBAL TRIGGER: HaloDesk / MENU / BATAL
   if (['halodesk', 'batal', 'menu'].includes(cleanInput.toLowerCase())) {
@@ -43,7 +58,8 @@ export async function handleIncomingMessage(sender: string, messageText: string)
 
   // 3. Jika User Baru & BELUM ketik "HaloDesk"
   if (!session) {
-    return sendMessage(sender, "👋 Halo! Silakan ketik *HaloDesk* untuk memulai layanan IT Helpdesk.");
+    const greetingName = reporter?.name ? `, ${reporter.name}` : '';
+    return sendMessage(sender, `👋 Halo${greetingName}! Silakan ketik *HaloDesk* untuk memulai layanan IT Helpdesk.`);
   }
 
   const currentData = session.data || {};
@@ -78,6 +94,10 @@ export async function handleIncomingMessage(sender: string, messageText: string)
       await handleInputTicketDetail(sender, cleanInput, currentData);
       break;
 
+    case 'ASK_REUSE_INFO':
+      await handleAskReuseInfo(sender, cleanInput, currentData);
+      break;
+
     case 'INPUT_USER_INFO':
       await handleInputUserInfo(sender, cleanInput, currentData);
       break;
@@ -100,11 +120,24 @@ export async function handleIncomingMessage(sender: string, messageText: string)
 // STEP 1: GREETINGS & MENU UTAMA
 // ==========================================
 async function showMainMenu(sender: string) {
-  let text = `👋 *Selamat datang di IT Helpdesk!*\n\n`;
-  text += `Silakan pilih menu layanan di bawah ini:\n`;
-  text += `1. 📝 Buat Tiket Pengaduan\n`;
-  text += `2. 🔍 Cek Status Tiket\n\n`;
-  text += `_Balas angka pilihan Anda (Contoh: 1)_`;
+  const { data: reporter } = await supabase.from('reporters').select('name').eq('phone', sender).single();
+  const greetingName = reporter?.name ? ` ${reporter.name}` : '';
+  
+  // Ambil template pesan
+  const { data: template } = await supabase.from('bot_templates').select('message_text').eq('template_key', 'greeting_menu').single();
+  
+  let text = '';
+  if (template && template.message_text) {
+    // Replace placeholder {{name}}
+    text = template.message_text.replace('{{name}}', greetingName);
+  } else {
+    // Fallback if template doesn't exist
+    text = `👋 *Halo${greetingName}, Selamat datang di IT Helpdesk!*\n\n`;
+    text += `Silakan pilih menu layanan di bawah ini:\n`;
+    text += `1. 📝 Buat Tiket Pengaduan\n`;
+    text += `2. 🔍 Cek Status Tiket\n\n`;
+    text += `_Balas angka pilihan Anda (Contoh: 1)_`;
+  }
 
   await sendMessage(sender, text);
 }
@@ -277,24 +310,127 @@ async function handleSelectSubcategory(sender: string, input: string, categoryId
 // ==========================================
 async function promptTicketDetail(sender: string) {
   let text = `✏️ *SUBJEK & DESKRIPSI KENDALA*\n\n`;
-  text += `Silakan isi *Subjek Tiket & Detail Kendala* Anda secara jelas (bisa sertakan lampiran link gambar jika ada):`;
+  text += `Silakan isi subjek dan detail kendala dengan format berikut:\n`;
+  text += `- Baris pertama: Subjek Tiket\n`;
+  text += `- Baris kedua dst: Detail Kendala\n\n`;
+  text += `*Contoh:*\n`;
+  text += `Gagal Login SSO\n`;
+  text += `Halo, saya tidak bisa login ke SSO meskipun password sudah benar...`;
 
   await sendMessage(sender, text);
 }
 
 async function handleInputTicketDetail(sender: string, input: string, currentData: any) {
-  await supabase.from('wa_sessions').update({
-    step: 'INPUT_USER_INFO',
-    data: { ...currentData, subject_description: input },
-    updated_at: new Date().toISOString()
-  }).eq('phone', sender);
+  const lines = input.split('\n');
+  const subjectInput = lines[0].trim();
+  const descriptionInput = lines.length > 1 ? lines.slice(1).join('\n').trim() : '-';
 
-  let text = `👤 *INPUT DATA DIRI*\n\n`;
-  text += `Silakan masukkan Data Diri Anda.\n`;
-  text += `*Format:* Nama - NIP/NIM - Unit Kerja/Fakultas\n\n`;
-  text += `_Contoh: Budi - 19901234 - Bagian Keuangan_`;
+  const updatedData = {
+    ...currentData,
+    subject_input: subjectInput,
+    subject_description: descriptionInput
+  };
 
-  await sendMessage(sender, text);
+  const { data: reporter } = await supabase
+    .from('reporters')
+    .select('name, nim_nip, unit')
+    .eq('phone', sender)
+    .single();
+
+  if (reporter && reporter.name) {
+    await supabase.from('wa_sessions').update({
+      step: 'ASK_REUSE_INFO',
+      data: updatedData,
+      updated_at: new Date().toISOString()
+    }).eq('phone', sender);
+
+    let text = `Kami menemukan data Anda sebelumnya:\n`;
+    text += `Nama: ${reporter.name}\n`;
+    text += `NIP/NIM: ${reporter.nim_nip}\n`;
+    text += `Unit: ${reporter.unit}\n\n`;
+    text += `Apakah Anda ingin menggunakan data diri ini untuk tiket Anda?\n`;
+    text += `1. ✅ Ya, gunakan data ini\n`;
+    text += `2. 🔄 Tidak, isi data baru\n\n`;
+    text += `_Balas angka 1 atau 2_`;
+
+    await sendMessage(sender, text);
+  } else {
+    await supabase.from('wa_sessions').update({
+      step: 'INPUT_USER_INFO',
+      data: updatedData,
+      updated_at: new Date().toISOString()
+    }).eq('phone', sender);
+
+    let text = `👤 *INPUT DATA DIRI*\n\n`;
+    text += `Silakan masukkan Data Diri Anda.\n`;
+    text += `*Format:* Nama - NIP/NIM - Unit Kerja/Fakultas\n\n`;
+    text += `_Contoh: Budi - 19901234 - Bagian Keuangan_`;
+
+    await sendMessage(sender, text);
+  }
+}
+
+async function handleAskReuseInfo(sender: string, input: string, currentData: any) {
+  if (input === '1') {
+    const { data: reporter } = await supabase
+      .from('reporters')
+      .select('name, nim_nip, unit, reporter_type')
+      .eq('phone', sender)
+      .single();
+      
+    if (reporter) {
+      const updatedData = {
+        ...currentData,
+        user_info: `${reporter.name} - ${reporter.nim_nip} - ${reporter.unit}`,
+        reporter_name: reporter.name,
+        nim_nip: reporter.nim_nip,
+        unit: reporter.unit,
+        reporter_type: reporter.reporter_type
+      };
+      
+      await supabase.from('wa_sessions').update({
+        step: 'CONFIRM_TICKET',
+        data: updatedData,
+        updated_at: new Date().toISOString()
+      }).eq('phone', sender);
+      
+      await showConfirmTicketSummary(sender, updatedData);
+    }
+  } else if (input === '2') {
+    await supabase.from('wa_sessions').update({
+      step: 'INPUT_USER_INFO',
+      data: currentData,
+      updated_at: new Date().toISOString()
+    }).eq('phone', sender);
+
+    let text = `👤 *INPUT DATA DIRI*\n\n`;
+    text += `Silakan masukkan Data Diri Anda.\n`;
+    text += `*Format:* Nama - NIP/NIM - Unit Kerja/Fakultas\n\n`;
+    text += `_Contoh: Budi - 19901234 - Bagian Keuangan_`;
+
+    await sendMessage(sender, text);
+  } else {
+    await sendMessage(sender, "❌ Pilihan tidak valid. Balas dengan angka *1* (Ya) atau *2* (Tidak).");
+  }
+}
+
+async function showConfirmTicketSummary(sender: string, updatedData: any) {
+  let summaryText = `📑 *KONFIRMASI TIKET PENGADUAN*\n`;
+  summaryText += `-----------------------------------\n`;
+  summaryText += `• *Kategori:* ${updatedData.category_path || '-'}\n`;
+  summaryText += `• *Subjek:* ${updatedData.subject_input || '-'}\n`;
+  summaryText += `• *Kendala:* ${updatedData.subject_description || '-'}\n`;
+  summaryText += `• *Nama Pelapor:* ${updatedData.reporter_name}\n`;
+  summaryText += `• *Tipe Pelapor:* ${updatedData.reporter_type}\n`;
+  summaryText += `• *NIM/NIP:* ${updatedData.nim_nip}\n`;
+  summaryText += `• *Unit/Fakultas:* ${updatedData.unit}\n`;
+  summaryText += `-----------------------------------\n\n`;
+  summaryText += `Apakah data tiket di atas sudah benar?\n`;
+  summaryText += `1. ✅ Ya, Kirim Tiket\n`;
+  summaryText += `2. ❌ Batal Kirim\n\n`;
+  summaryText += `_Balas dengan angka 1 atau 2_`;
+
+  await sendMessage(sender, summaryText);
 }
 
 async function handleInputUserInfo(sender: string, input: string, currentData: any) {
@@ -363,7 +499,7 @@ async function handleConfirmTicket(sender: string, input: string, currentData: a
       dept_id: currentData.dept_id,
       category_id: currentData.category_id,
       subcategory_id: currentData.subcat_id || null,
-      subject: currentData.subcat_name || 'Laporan Pengaduan IT',
+      subject: currentData.subject_input || currentData.subcat_name || 'Laporan Pengaduan IT',
       description: currentData.subject_description,
       reporter_name: currentData.reporter_name,
       reporter_type: currentData.reporter_type || 'Umum', // <-- Dinamis sesuai hasil parsing
@@ -376,6 +512,16 @@ async function handleConfirmTicket(sender: string, input: string, currentData: a
       console.error("❌ ERROR INSERT TICKET:", error);
       await sendMessage(sender, "⚠️ Mohon maaf, terjadi kesalahan sistem saat membuat tiket. Silakan coba beberapa saat lagi.");
     } else {
+      // Upsert data pelapor
+      await supabase.from('reporters').upsert({
+        phone: sender,
+        name: currentData.reporter_name,
+        nim_nip: currentData.nim_nip,
+        unit: currentData.unit,
+        reporter_type: currentData.reporter_type || 'Umum',
+        status: 'Aktif'
+      }, { onConflict: 'phone' });
+
       await supabase.from('wa_sessions').update({
         step: 'MAIN_MENU',
         data: {},

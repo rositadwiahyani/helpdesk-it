@@ -1,69 +1,59 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  });
-
-  // 1. Inisialisasi Supabase Client khusus untuk Middleware (Server-Side)
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value;
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          request.cookies.set({ name, value, ...options });
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          });
-          response.cookies.set({ name, value, ...options });
-        },
-        remove(name: string, options: CookieOptions) {
-          request.cookies.set({ name, value: '', ...options });
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          });
-          response.cookies.set({ name, value: '', ...options });
-        },
-      },
-    }
-  );
-
-  // 2. Ambil data sesi user aktif
-  const { data: { user } } = await supabase.auth.getUser();
-
   const url = request.nextUrl.clone();
-
-  // 3. LOGIKA PROTEKSI RUTE (GUARD)
+  
+  // Periksa cookie isLoggedIn yang di set oleh halaman login
+  const isLoggedIn = request.cookies.get('isLoggedIn')?.value === 'true';
+  const userRole = request.cookies.get('userRole')?.value || '';
 
   // A. Jika user MENCOBA mengakses halaman dashboard tapi BELUM login
-  if (url.pathname.startsWith('/dashboard') && !user) {
+  if (url.pathname.startsWith('/dashboard') && !isLoggedIn) {
     url.pathname = '/login';
     return NextResponse.redirect(url);
   }
 
-  // B. Jika user SUDAH login tapi mencoba kembali ke halaman login/register
-  if ((url.pathname.startsWith('/login') || url.pathname.startsWith('/register')) && user) {
-    url.pathname = '/dashboard';
+  // B. Role-Based Access Control (RBAC) untuk Dashboard
+  if (isLoggedIn && url.pathname.startsWith('/dashboard')) {
+    // Tangani root /dashboard redirect sesuai role
+    if (url.pathname === '/dashboard') {
+      if (userRole === 'admin' || userRole === 'administrasi') url.pathname = '/dashboard/administrasi';
+      else if (userRole === 'pimpinan') url.pathname = '/dashboard/pimpinan';
+      else if (userRole === 'teknisi' || userRole === 'agent') url.pathname = '/dashboard/teknisi';
+      else url.pathname = '/dashboard/operator';
+      return NextResponse.redirect(url);
+    }
+
+    // Proteksi dashboard teknisi
+    if (url.pathname.startsWith('/dashboard/teknisi') && (userRole !== 'teknisi' && userRole !== 'agent')) {
+      url.pathname = userRole === 'admin' || userRole === 'administrasi' ? '/dashboard/administrasi' : '/dashboard/operator';
+      return NextResponse.redirect(url);
+    }
+    
+    // Proteksi dashboard admin
+    if (url.pathname.startsWith('/dashboard/administrasi') && (userRole !== 'admin' && userRole !== 'administrasi')) {
+      url.pathname = userRole === 'teknisi' || userRole === 'agent' ? '/dashboard/teknisi' : '/dashboard/operator';
+      return NextResponse.redirect(url);
+    }
+  }
+
+  // C. Jika user SUDAH login tapi mencoba kembali ke halaman login/register
+  if ((url.pathname.startsWith('/login') || url.pathname.startsWith('/register')) && isLoggedIn) {
+    if (userRole === 'admin' || userRole === 'administrasi') url.pathname = '/dashboard/administrasi';
+    else if (userRole === 'pimpinan') url.pathname = '/dashboard/pimpinan';
+    else if (userRole === 'teknisi' || userRole === 'agent') url.pathname = '/dashboard/teknisi';
+    else url.pathname = '/dashboard/operator';
+    
     return NextResponse.redirect(url);
   }
 
-  return response;
+  return NextResponse.next();
 }
 
-// 4. Tentukan halaman mana saja yang akan diawasi oleh Middleware ini
 export const config = {
   matcher: [
-
+    '/dashboard/:path*',
+    '/login',
+    '/register'
   ],
 };

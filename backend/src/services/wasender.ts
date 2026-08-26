@@ -9,12 +9,19 @@ interface SendMessageResponse {
   data?: unknown;
 }
 
+// Memory untuk Simulator
+export const simulatorLogs: { phone: string; message: string; timestamp: string; sender: 'bot' | 'user' }[] = [];
+
 export async function sendMessage(to: string, text: string): Promise<SendMessageResponse | undefined> {
   // 💡 TARUH LOG TESTING-NYA DI SINI (Sebelum try-catch)
   console.log('\n================ WASENDER OUTGOING MESSAGE ================');
   console.log(`Penerima : ${to}`);
   console.log(`Pesan    :\n${text}`);
   console.log('===========================================================\n');
+
+  // Simpan ke memory simulator (maks 100 pesan)
+  simulatorLogs.push({ phone: to, message: text, timestamp: new Date().toISOString(), sender: 'bot' });
+  if (simulatorLogs.length > 100) simulatorLogs.shift();
 
   try {
     const response = await axios.post<SendMessageResponse>(
