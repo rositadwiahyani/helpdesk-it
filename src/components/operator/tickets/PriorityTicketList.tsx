@@ -10,11 +10,13 @@ interface PriorityTicketListProps {
 }
 
 export default function PriorityTicketList({ tickets }: PriorityTicketListProps) {
-    // Filter tiket yang butuh tindakan (Waiting Verification, atau Priority High/Critical)
-    const priorityTickets = tickets.filter(t => 
-        t.status === 'WAITING VERIFICATION' || 
-        ['CRITICAL', 'HIGH'].includes(t.priority?.toUpperCase())
-    ).slice(0, 8); // Ambil maksimal 8
+    // Filter tiket yang butuh tindakan (Waiting Verification, atau Priority High/Critical) yang belum selesai
+    const priorityTickets = tickets.filter(t => {
+        const isCompleted = ['RESOLVED_BY_SYSTEM', 'RESOLVED', 'CLOSED', 'DELETED'].includes(t.status?.toUpperCase());
+        if (isCompleted) return false;
+        
+        return t.status === 'WAITING VERIFICATION' || ['CRITICAL', 'HIGH'].includes(t.priority?.toUpperCase());
+    }).slice(0, 8); // Ambil maksimal 8
 
     if (priorityTickets.length === 0) {
         return (

@@ -102,15 +102,15 @@ export default function TeknisiTicketWorkspace({
                                 }`}>Semua Tiket ({tickets.length})</p>
                             </button>
                             <button
-                                onClick={() => setActiveTab('assigned')}
+                                onClick={() => setActiveTab('my-tasks')}
                                 className={`cursor-pointer text-nowrap flex pt-0 pr-1 pb-3 pl-1 flex-col justify-center items-center border-b-2 w-fit transition-colors ${
-                                    activeTab === 'assigned'
+                                    activeTab === 'my-tasks'
                                         ? 'border-b-[#1E3A8A]'
                                         : 'border-b-transparent hover:border-b-gray-300'
                                 }`}
                             >
                                 <p className={`font-iBMPlexSans text-sm leading-5 w-fit transition-colors ${
-                                    activeTab === 'assigned' ? 'text-[#1E3A8A] font-semibold' : 'text-[#43474F]'
+                                    activeTab === 'my-tasks' ? 'text-[#1E3A8A] font-semibold' : 'text-[#43474F]'
                                 }`}>Tiket Saya ({tickets.filter((t: any) => t.tech_id === techId).length})</p>
                             </button>
                             <button

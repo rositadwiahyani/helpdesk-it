@@ -22,6 +22,7 @@ const routeMapping: Record<string, string> = {
   '/dashboard/administrasi/sla': 'Manajemen SLA',
   '/dashboard/administrasi/staff': 'Manajemen Staff',
   '/dashboard/administrasi/webhook': 'API Logs & Webhooks',
+  '/dashboard/administrasi/bot-settings': 'Manajemen Template Bot',
   '/dashboard/administrasi/settings': 'Pengaturan Sistem',
   '/dashboard/administrasi/profile': 'Profil Saya',
 };

@@ -3,7 +3,6 @@ import TicketTrendChart from "@/components/admin/dashboard/TicketTrendChart";
 import DepartmentPerformanceTable from "@/components/admin/dashboard/DepartmentPerformanceTable";
 import RecentTicketActivityTable from "@/components/admin/dashboard/RecentTicketActivityTable";
 import TopHelpTopicsPieChart from "@/components/admin/dashboard/TopHelpTopicsPieChart";
-import QuickActions from "@/components/admin/dashboard/QuickActions";
 import { fetchServer } from "@/lib/apiServer";
 
 export default async function AdministrasiDashboard() {
@@ -20,13 +19,11 @@ export default async function AdministrasiDashboard() {
   }
 
   return (
-    <div className="flex flex-col items-start gap-6 w-full max-w-[1440px] mx-auto pb-10">
+    <div className="flex flex-col gap-6 p-6 md:p-10 w-full max-w-[1440px] mx-auto pb-10">
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end w-full gap-4">
-        <div className="flex flex-col items-start gap-1">
-          <h1 className="text-slate-900 font-extrabold text-2xl tracking-tight">Dashboard Overview</h1>
-          <p className="text-slate-500 font-medium text-sm">Welcome back, Administrator. Here's what's happening today.</p>
-        </div>
+      <div className="animate-in fade-in slide-in-from-left-4 duration-500">
+          <h1 className="text-2xl font-bold text-[var(--ink)] mb-1">Dashboard Overview</h1>
+          <p className="text-[var(--text-dim)] text-sm">Welcome back, Administrator. Here's what's happening today.</p>
       </div>
 
       {/* Row 1: Summary Cards */}
@@ -41,23 +38,23 @@ export default async function AdministrasiDashboard() {
         <div className="lg:col-span-2 flex flex-col gap-6 w-full">
           {/* Ticket Trend Chart */}
           <TicketTrendChart data={dashboardData.ticketTrend} />
-          
-          {/* Department Performance Table */}
-          <DepartmentPerformanceTable data={dashboardData.departments} />
-          
-          {/* Recent Ticket Activity */}
-          <RecentTicketActivityTable data={dashboardData.recentLogs} />
         </div>
 
         {/* Right Column (Narrower - spans 1 col) */}
         <div className="flex flex-col gap-6 w-full">
           {/* Top Help Topics (Moved to top of right column) */}
           <TopHelpTopicsPieChart data={dashboardData.categories} />
-          
-          {/* Quick Actions (Moved below Pie Chart) */}
-          <QuickActions />
         </div>
 
+      </div>
+
+      {/* Full Width Tables Below Grid */}
+      <div className="flex flex-col gap-6 w-full">
+        {/* Department Performance Table */}
+        <DepartmentPerformanceTable data={dashboardData.departments} />
+        
+        {/* Recent Ticket Activity */}
+        <RecentTicketActivityTable data={dashboardData.recentLogs} />
       </div>
     </div>
   );

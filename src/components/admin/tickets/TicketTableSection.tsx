@@ -304,7 +304,7 @@ export default function TicketTableSection({ activeTab = 'all', tickets = [], ne
                   <td className="px-4 py-4 max-w-xs">
                     <Link href={`/dashboard/administrasi/tickets/${ticket.id}`} className="block">
                       <p className="text-[#1A1C1E] font-iBMPlexSans text-sm font-medium truncate mb-0.5 hover:text-[#1E3A8A]">
-                        {ticket.subject}
+                        {(ticket.subject || '').replace(/\s*>\s*/g, ' / ')}
                       </p>
                     </Link>
                   </td>

@@ -8,7 +8,7 @@ import StaffHeader from "./StaffHeader";
 import AgentModal from "./AgentModal";
 import DeptModal from "./DeptModal";
 
-type StaffTab = "Agents" | "Teams" | "Departments";
+type StaffTab = "Agents" | "Departments";
 
 export default function StaffWorkspace() {
   const router = useRouter();
@@ -16,11 +16,28 @@ export default function StaffWorkspace() {
   const [agents, setAgents] = useState<any[]>([]);
   const [departments, setDepartments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Modal states
   const [isAgentModalOpen, setIsAgentModalOpen] = useState(false);
   const [isDeptModalOpen, setIsDeptModalOpen] = useState(false);
   const [selectedDept, setSelectedDept] = useState<any>(null);
+
+  // Toast state
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastType, setToastType] = useState<'success' | 'error'>('success');
+
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => setToastMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
+
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToastMessage(message);
+    setToastType(type);
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -38,6 +55,14 @@ export default function StaffWorkspace() {
 
   return (
     <div className="flex flex-col items-start gap-4 w-full relative">
+      {toastMessage && (
+        <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className={`px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 font-medium text-white ${toastType === 'error' ? 'bg-red-500' : 'bg-[#10B981]'}`}>
+            {toastType === 'success' && <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"></path></svg>}
+            {toastMessage}
+          </div>
+        </div>
+      )}
       <StaffHeader />
       
       {/* Toolbar - Now ABOVE the tabs */}
@@ -46,6 +71,8 @@ export default function StaffWorkspace() {
           <div className="relative w-full md:w-64">
             <input 
               type="text" 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={`Cari ${activeTab.toLowerCase()}...`} 
               className="pl-9 pr-4 py-2 text-sm border border-[#C3C6D1] rounded focus:outline-none focus:border-[#0059BB] w-full" 
             />
@@ -87,16 +114,6 @@ export default function StaffWorkspace() {
             </p>
           </button>
           <button
-            onClick={() => setActiveTab('Teams')}
-            className={`cursor-pointer text-nowrap flex py-3 px-6 flex-col justify-center items-center border-b-2 w-fit ${
-              activeTab === 'Teams' ? 'border-b-[#001E40] bg-white' : 'border-b-[rgba(0,0,0,0.00)]'
-            }`}
-          >
-            <p className={`font-iBMPlexSans text-sm leading-5 w-fit ${activeTab === 'Teams' ? 'text-[#001E40] font-bold' : 'text-[#43474F]'}`}>
-              Teams
-            </p>
-          </button>
-          <button
             onClick={() => setActiveTab('Departments')}
             className={`cursor-pointer text-nowrap flex py-3 px-6 flex-col justify-center items-center border-b-2 w-fit ${
               activeTab === 'Departments' ? 'border-b-[#001E40] bg-white' : 'border-b-[rgba(0,0,0,0.00)]'
@@ -126,7 +143,9 @@ export default function StaffWorkspace() {
                     </tr>
                   </thead>
                 <tbody>
-                  {agents.map((agent) => (
+                  {agents
+                    .filter(a => a.name.toLowerCase().includes(searchQuery.toLowerCase()) || a.email.toLowerCase().includes(searchQuery.toLowerCase()) || (a.dept?.name || '').toLowerCase().includes(searchQuery.toLowerCase()))
+                    .map((agent) => (
                     <tr key={agent.id} className="border-b border-[#E5E7EB] hover:bg-gray-50">
                       <td className="px-4 py-3 text-sm text-[#1A1C1E]">
                         <Link href={`/dashboard/administrasi/staff/${agent.id}`} className="hover:text-blue-600 hover:underline font-bold">
@@ -149,7 +168,7 @@ export default function StaffWorkspace() {
                       </td>
                     </tr>
                   ))}
-                  {agents.length === 0 && (
+                  {agents.filter(a => a.name.toLowerCase().includes(searchQuery.toLowerCase()) || a.email.toLowerCase().includes(searchQuery.toLowerCase()) || (a.dept?.name || '').toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
                     <tr>
                       <td colSpan={5} className="px-4 py-8 text-center text-gray-500">Belum ada data agen.</td>
                     </tr>
@@ -168,7 +187,9 @@ export default function StaffWorkspace() {
                   </tr>
                 </thead>
                 <tbody>
-                  {departments.map((dept) => (
+                  {departments
+                    .filter(d => d.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                    .map((dept) => (
                     <tr key={dept.id} className="border-b border-[#E5E7EB] hover:bg-gray-50">
                       <td className="px-4 py-3 text-sm text-[#43474F]">{dept.id}</td>
                       <td className="px-4 py-3 text-sm text-[#1A1C1E] font-medium">{dept.name}</td>
@@ -185,7 +206,7 @@ export default function StaffWorkspace() {
                       </td>
                     </tr>
                   ))}
-                  {departments.length === 0 && (
+                  {departments.filter(d => d.name.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
                     <tr>
                       <td colSpan={3} className="px-4 py-8 text-center text-gray-500">Belum ada data departemen.</td>
                     </tr>
@@ -194,11 +215,6 @@ export default function StaffWorkspace() {
               </table>
             )}
 
-            {activeTab === "Teams" && (
-              <div className="p-8 text-center text-gray-500">
-                Fitur Teams sedang dalam pengembangan.
-              </div>
-            )}
             </div>
         )}
         </div>
@@ -207,17 +223,35 @@ export default function StaffWorkspace() {
       {/* Modals */}
       <AgentModal 
         isOpen={isAgentModalOpen} 
-        onClose={() => setIsAgentModalOpen(false)}
-        onSuccess={() => { setIsAgentModalOpen(false); fetchData(); }}
-        agent={null}
-        departments={departments}
+        onClose={() => setIsAgentModalOpen(false)} 
+        onSuccess={() => { setIsAgentModalOpen(false); fetchData(); }} 
+        showToast={showToast}
+        departments={departments} 
       />
       <DeptModal 
         isOpen={isDeptModalOpen} 
-        onClose={() => setIsDeptModalOpen(false)}
-        onSuccess={() => { setIsDeptModalOpen(false); fetchData(); }}
-        dept={selectedDept}
+        onClose={() => setIsDeptModalOpen(false)} 
+        onSuccess={() => { setIsDeptModalOpen(false); fetchData(); }} 
+        showToast={showToast}
+        dept={selectedDept} 
       />
+      
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className={`fixed top-6 left-1/2 -translate-x-1/2 px-5 py-3.5 rounded-xl shadow-lg flex items-center gap-3 z-[100] animate-in slide-in-from-top-5 duration-300 ${
+            toastType === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'
+        }`}>
+            {toastType === 'success' ? (
+                <svg className="w-5 h-5 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+            ) : (
+                <svg className="w-5 h-5 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            )}
+            <span className="text-[14px] font-bold tracking-tight">{toastMessage}</span>
+            <button onClick={() => setToastMessage(null)} className="ml-2 hover:opacity-75 transition-opacity">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+      )}
     </div>
   );
 }

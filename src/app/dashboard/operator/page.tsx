@@ -70,7 +70,7 @@ export default async function OperatorDashboard() {
 
             {/* Komponen Statistik & Grafik */}
             <div className="animate-in fade-in slide-in-from-bottom-6 duration-700 delay-300 fill-mode-both">
-                <OperatorStatistics 
+                <OperatorStatistics
                     tickets={tickets || []}
                     ticketLogs={ticketLogs || []}
                     categories={categories || []}

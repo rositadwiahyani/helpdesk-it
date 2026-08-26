@@ -90,12 +90,11 @@ export default function StaffDetail({ staffId }: { staffId: string }) {
         dept_id: formData.dept_id ? parseInt(formData.dept_id) : null
       };
 
-      const { error } = await supabase
-        .from('staff_profiles')
-        .update(payload)
-        .eq('id', staff.id);
-
-      if (error) throw error;
+      const { fetchClient } = await import('@/lib/apiClient');
+      await fetchClient(`/admin/staff/${staff.id}`, {
+        method: 'PUT',
+        body: JSON.stringify(payload)
+      });
       
       // Update local state smoothly
       const selectedDept = departments.find(d => d.id === payload.dept_id);
@@ -108,7 +107,7 @@ export default function StaffDetail({ staffId }: { staffId: string }) {
       setIsEditing(false);
       router.replace(`/dashboard/administrasi/staff/${staff.id}`);
     } catch (err: any) {
-      alert("Gagal menyimpan data: " + err.message);
+      alert("Gagal menyimpan data: " + (err.message || "Unknown error"));
     } finally {
       setIsSaving(false);
     }

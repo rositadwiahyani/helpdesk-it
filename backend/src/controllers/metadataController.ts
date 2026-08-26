@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
 import { supabase, supabaseAdmin } from '../config/supabase';
+import fs from 'fs';
+import path from 'path';
 
 /**
  * GET /api/admin/departments
@@ -122,6 +124,36 @@ export const deleteCategory = async (req: Request, res: Response) => {
     const { error } = await supabaseAdmin.from('categories').delete().eq('id', id);
     if (error) throw error;
     res.status(200).json({ success: true, message: 'Data berhasil dihapus' });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * GET /api/admin/bot-templates
+ */
+export const getBotTemplates = async (req: Request, res: Response) => {
+  try {
+    const filePath = path.join(__dirname, '../bot_settings.json');
+    if (!fs.existsSync(filePath)) {
+      fs.writeFileSync(filePath, JSON.stringify({}));
+    }
+    const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    res.status(200).json({ success: true, data });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * PUT /api/admin/bot-templates
+ */
+export const updateBotTemplates = async (req: Request, res: Response) => {
+  try {
+    const filePath = path.join(__dirname, '../bot_settings.json');
+    const payload = req.body;
+    fs.writeFileSync(filePath, JSON.stringify(payload, null, 2));
+    res.status(200).json({ success: true, message: 'Template berhasil disimpan', data: payload });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
   }

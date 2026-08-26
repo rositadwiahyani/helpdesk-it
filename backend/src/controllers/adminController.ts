@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { supabase, supabaseAdmin } from '../config/supabase';
+import crypto from 'crypto';
 
 export const getAdminDashboard = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -227,7 +228,19 @@ export const getQuickReplies = async (req: Request, res: Response) => {
 export const createQuickReply = async (req: Request, res: Response) => {
   try {
     const { title, content } = req.body;
-    const { data, error } = await supabaseAdmin.from('quick_replies').insert([{ title, content }]).select().single();
+    
+    // Workaround for permission denied on sequence
+    const { data: maxData, error: maxError } = await supabaseAdmin
+      .from('quick_replies')
+      .select('id')
+      .order('id', { ascending: false })
+      .limit(1);
+      
+    if (maxError) throw maxError;
+    
+    const nextId = (maxData && maxData.length > 0) ? maxData[0].id + 1 : 1;
+
+    const { data, error } = await supabaseAdmin.from('quick_replies').insert([{ id: nextId, title, content }]).select().single();
     if (error) throw error;
     res.json(data);
   } catch (error: any) {
@@ -253,6 +266,107 @@ export const deleteQuickReply = async (req: Request, res: Response) => {
     const { error } = await supabaseAdmin.from('quick_replies').delete().eq('id', id);
     if (error) throw error;
     res.json({ message: 'Deleted successfully' });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const createStaff = async (req: Request, res: Response) => {
+  try {
+    const { password, ...payload } = req.body;
+    
+    // Check if email already exists
+    const { data: existing } = await supabaseAdmin.from('staff_profiles').select('id').eq('email', payload.email).single();
+    if (existing) {
+      return res.status(400).json({ error: 'Email sudah terdaftar' });
+    }
+
+    // Create auth user
+    let userId = payload.id;
+    if (password) {
+      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+        email: payload.email,
+        password: password,
+        email_confirm: true
+      });
+      if (authError) throw authError;
+      userId = authData.user.id;
+    } else {
+      if (!userId) {
+        userId = crypto.randomUUID();
+      }
+    }
+    
+    payload.id = userId;
+
+    const { data, error } = await supabaseAdmin.from('staff_profiles').insert([payload]).select().single();
+    if (error) {
+      // Rollback auth user creation if profile insert fails
+      if (password && userId) {
+        await supabaseAdmin.auth.admin.deleteUser(userId);
+      }
+      throw error;
+    }
+    res.json(data);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const updateStaff = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const payload = req.body;
+    const { data, error } = await supabaseAdmin.from('staff_profiles').update(payload).eq('id', id).select().single();
+    if (error) throw error;
+    res.json(data);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const createDepartment = async (req: Request, res: Response) => {
+  try {
+    const payload = req.body;
+    const { data, error } = await supabaseAdmin.from('departments').insert([payload]).select().single();
+    if (error) throw error;
+    res.json(data);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const updateDepartment = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const payload = req.body;
+    const { data, error } = await supabaseAdmin.from('departments').update(payload).eq('id', id).select().single();
+    if (error) throw error;
+    res.json(data);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const updateSLA = async (req: Request, res: Response) => {
+  try {
+    const payload = req.body;
+    const { data: existing } = await supabaseAdmin.from('sla_configs').select('id').eq('priority', payload.priority).maybeSingle();
+    let result, error;
+    if (existing) {
+      const res = await supabaseAdmin.from('sla_configs').update({
+        response_target_hours: payload.response_target_hours,
+        resolution_target_hours: payload.resolution_target_hours,
+      }).eq('id', existing.id).select().single();
+      result = res.data;
+      error = res.error;
+    } else {
+      const res = await supabaseAdmin.from('sla_configs').insert([payload]).select().single();
+      result = res.data;
+      error = res.error;
+    }
+    if (error) throw error;
+    res.json(result);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { fetchClient } from '@/lib/apiClient';
+import { TreeContext } from './Workspace';
 
 interface ModalProps {
   isOpen: boolean;
@@ -25,6 +26,8 @@ export function AddCategoryModal({ isOpen, onClose, onSuccess }: ModalProps) {
   }, [isOpen]);
 
   if (!isOpen) return null;
+
+  const { showToast } = React.useContext(TreeContext) || {};
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,9 +56,10 @@ export function AddCategoryModal({ isOpen, onClose, onSuccess }: ModalProps) {
       setParentId('');
       setBotContent('');
       setDefaultPriority('MEDIUM');
+      if (showToast) showToast('Kategori berhasil ditambahkan', 'success');
     } catch (err) {
       console.error(err);
-      alert('Gagal menambah kategori');
+      if (showToast) showToast('Gagal menambah kategori', 'error');
     } finally {
       setLoading(false);
     }
@@ -136,6 +140,8 @@ export function AddSubcategoryModal({ isOpen, onClose, onSuccess, categoryId }: 
 
   if (!isOpen) return null;
 
+  const { showToast } = React.useContext(TreeContext) || {};
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!categoryId) return;
@@ -157,9 +163,10 @@ export function AddSubcategoryModal({ isOpen, onClose, onSuccess, categoryId }: 
       setName('');
       setBotContent('');
       setDefaultPriority('MEDIUM');
+      if (showToast) showToast('Subkategori berhasil ditambahkan', 'success');
     } catch (err) {
       console.error(err);
-      alert('Gagal menambah subkategori');
+      if (showToast) showToast('Gagal menambah subkategori', 'error');
     } finally {
       setLoading(false);
     }
@@ -242,6 +249,8 @@ export function EditItemModal({ isOpen, onClose, onSuccess, target }: ModalProps
 
   if (!isOpen || !target) return null;
 
+  const { showToast } = React.useContext(TreeContext) || {};
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -258,9 +267,10 @@ export function EditItemModal({ isOpen, onClose, onSuccess, target }: ModalProps
       });
       onSuccess();
       onClose();
+      if (showToast) showToast('Data berhasil diubah', 'success');
     } catch (err) {
       console.error(err);
-      alert('Gagal mengubah data');
+      if (showToast) showToast('Gagal mengubah data', 'error');
     } finally {
       setLoading(false);
     }

@@ -1,11 +1,6 @@
 'use client';
 
-import {
-  FiFileText,
-  FiClock,
-  FiCheckCircle,
-  FiXCircle,
-} from "react-icons/fi";
+import AnimatedCounter from '@/components/ui/AnimatedCounter';
 
 interface SummaryCardsProps {
   data?: {
@@ -23,54 +18,53 @@ export default function SummaryCards({ data }: SummaryCardsProps) {
   const cardData = [
     {
       title: "Tiket Hari Ini",
-      value: defaultData.today.toString(),
+      value: defaultData.today,
       growth: `${defaultData.growth}% vs yesterday`,
-      icon: <FiFileText className="w-5 h-5" />,
-      color: "bg-blue-50 text-blue-600",
-      pillBg: "bg-blue-50/50 text-blue-600",
+      containerClass: "bg-white border border-[var(--line-dark)] rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow",
+      titleClass: "text-[11px] font-bold text-[var(--text-dim)] uppercase tracking-wider mb-2",
+      valueClass: "text-4xl font-bold text-[var(--ink)]",
+      descClass: "text-xs text-[var(--text-dim)] mt-4",
     },
     {
       title: "Open Ticket",
-      value: defaultData.open.toString(),
+      value: defaultData.open,
       growth: "Needs attention",
-      icon: <FiClock className="w-5 h-5" />,
-      color: "bg-slate-50 text-slate-700",
-      pillBg: "bg-slate-50/50 text-slate-600",
+      containerClass: "bg-white border border-amber-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow bg-amber-50/30",
+      titleClass: "text-[11px] font-bold text-amber-700 uppercase tracking-wider mb-2",
+      valueClass: "text-4xl font-bold text-amber-600",
+      descClass: "text-xs text-amber-700 mt-4",
     },
     {
       title: "Overdue SLA",
-      value: defaultData.overdue.toString(),
+      value: defaultData.overdue,
       growth: "Action required",
-      icon: <FiCheckCircle className="w-5 h-5" />,
-      color: "bg-red-50 text-red-500",
-      pillBg: "bg-red-50/50 text-red-600",
+      containerClass: "bg-white border border-red-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow bg-red-50/30",
+      titleClass: "text-[11px] font-bold text-red-700 uppercase tracking-wider mb-2",
+      valueClass: "text-4xl font-bold text-red-600",
+      descClass: "text-xs text-red-700 mt-4",
     },
     {
       title: "Solved by Sistem",
-      value: defaultData.failedMessages.toString(),
+      value: defaultData.failedMessages,
       growth: "Auto-resolved",
-      icon: <FiCheckCircle className="w-5 h-5" />,
-      color: "bg-emerald-50 text-emerald-500",
-      pillBg: "bg-emerald-50/50 text-emerald-600",
+      containerClass: "bg-white border border-[var(--line-dark)] rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow",
+      titleClass: "text-[11px] font-bold text-[var(--text-dim)] uppercase tracking-wider mb-2",
+      valueClass: "text-4xl font-bold text-[var(--ink)]",
+      descClass: "text-xs text-[var(--text-dim)] mt-4",
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 fill-mode-both">
       {cardData.map((card, idx) => (
-        <div key={idx} className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between hover:shadow-md transition-shadow relative overflow-hidden">
-          <div className="flex justify-between items-start mb-4 relative z-10">
+        <div key={idx} className={card.containerClass}>
             <div>
-              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">{card.title}</p>
-              <h3 className="text-3xl font-extrabold text-slate-900">{card.value}</h3>
+                <div className={card.titleClass}>{card.title}</div>
+                <div className={card.valueClass}>
+                    <AnimatedCounter value={card.value} duration={1200 + (idx * 300)} />
+                </div>
             </div>
-            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${card.color}`}>
-              {card.icon}
-            </div>
-          </div>
-          <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold w-fit relative z-10 ${card.pillBg}`}>
-            {card.growth}
-          </div>
+            <div className={card.descClass}>{card.growth}</div>
         </div>
       ))}
     </div>

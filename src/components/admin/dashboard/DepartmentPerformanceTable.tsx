@@ -9,7 +9,6 @@ export default function DepartmentPerformanceTable({ data = [] }: DepartmentPerf
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
       <div className="flex justify-between items-center p-6 border-b border-slate-100">
         <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Department Performance</h3>
-        <button className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors">View All</button>
       </div>
       
       <div className="overflow-x-auto w-full">

@@ -41,7 +41,7 @@ export default function AdminSidebar({ isOpen = true, setIsOpen = () => {} }: Ad
     { name: 'Manajemen Staff', path: '/dashboard/administrasi/staff', icon: UserCog },
     { name: 'Jawaban Cepat', path: '/dashboard/administrasi/quick-replies', icon: MessageSquare },
     { name: 'Basis Pengetahuan', path: '/dashboard/administrasi/knowledge-base', icon: BookOpen },
-    { name: 'Log API Webhook', path: '/dashboard/administrasi/webhook', icon: Webhook },
+    { name: 'Manajemen Bot', path: '/dashboard/administrasi/bot-settings', icon: Webhook },
     { name: 'Profil', path: '/dashboard/administrasi/profile', icon: User },
   ];
 

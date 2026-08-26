@@ -11,6 +11,21 @@ export default function QuickRepliesPage() {
     const [formData, setFormData] = useState({ id: null, title: '', content: '' });
     const [saving, setSaving] = useState(false);
 
+    const [toastMessage, setToastMessage] = useState<string | null>(null);
+    const [toastType, setToastType] = useState<'success' | 'error'>('success');
+
+    useEffect(() => {
+        if (toastMessage) {
+            const timer = setTimeout(() => setToastMessage(null), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [toastMessage]);
+
+    const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+        setToastMessage(message);
+        setToastType(type);
+    };
+
     useEffect(() => {
         loadReplies();
     }, []);
@@ -44,9 +59,10 @@ export default function QuickRepliesPage() {
             }
             setIsModalOpen(false);
             loadReplies();
+            showToast('Template berhasil disimpan!', 'success');
         } catch (error) {
             console.error(error);
-            alert('Gagal menyimpan template');
+            showToast('Gagal menyimpan template', 'error');
         } finally {
             setSaving(false);
         }
@@ -57,9 +73,10 @@ export default function QuickRepliesPage() {
         try {
             await fetchClient(`/admin/quick-replies/${id}`, { method: 'DELETE' });
             loadReplies();
+            showToast('Template berhasil dihapus!', 'success');
         } catch (error) {
             console.error(error);
-            alert('Gagal menghapus template');
+            showToast('Gagal menghapus template', 'error');
         }
     };
 
@@ -208,6 +225,23 @@ export default function QuickRepliesPage() {
                                 </div>
                             </form>
                         </div>
+                    </div>
+                )}
+                
+                {/* Toast Notification */}
+                {toastMessage && (
+                    <div className={`fixed bottom-4 right-4 px-4 py-3 rounded shadow-lg flex items-center gap-3 z-[60] animate-in slide-in-from-bottom-5 ${
+                        toastType === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
+                    }`}>
+                        {toastType === 'success' ? (
+                            <svg className="w-5 h-5 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                        ) : (
+                            <svg className="w-5 h-5 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        )}
+                        <span className="text-sm font-medium">{toastMessage}</span>
+                        <button onClick={() => setToastMessage(null)} className="ml-2 hover:opacity-75">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
                     </div>
                 )}
             </div>

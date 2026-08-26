@@ -1,5 +1,25 @@
 import { supabase } from '../config/supabase';
 import { sendMessage } from './wasender';
+import fs from 'fs';
+import path from 'path';
+
+
+function getTriggerWord(): string {
+  const settings = getBotSettings();
+  return settings.trigger_word || 'HaloDesk';
+}
+
+function getBotSettings() {
+  try {
+    const filePath = path.join(__dirname, '../bot_settings.json');
+    if (fs.existsSync(filePath)) {
+      return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    }
+  } catch (e) {
+    console.error('Error reading bot settings:', e);
+  }
+  return {};
+}
 
 // Helper: Ambil waktu WIB (UTC+7)
 function getWIBTime(): Date {
@@ -82,8 +102,8 @@ export async function handleIncomingMessage(sender: string, messageText: string,
     }
   }
 
-  // 1. GLOBAL TRIGGER: HaloDesk / MENU / BATAL
-  if (['halodesk', 'batal', 'menu'].includes(cleanInput.toLowerCase())) {
+  // 1. GLOBAL TRIGGER: ${getTriggerWord()} / MENU / BATAL
+  if ([getTriggerWord().toLowerCase(), 'batal', 'menu'].includes(cleanInput.toLowerCase())) {
     await supabase.from('wa_sessions').upsert({
       phone: sender,
       step: 'MAIN_MENU',
@@ -92,7 +112,7 @@ export async function handleIncomingMessage(sender: string, messageText: string,
     });
     const { data: reporter } = await supabase.from('reporters').select('name').eq('phone', sender).single();
     if (cleanInput.toLowerCase() === 'batal') {
-      return sendMessage(sender, `❌ Sesi dibatalkan. Ketik *HaloDesk* jika ingin memulai lagi.`);
+      return sendMessage(sender, `❌ Sesi dibatalkan. Ketik *${getTriggerWord()}* jika ingin memulai lagi.`);
     }
     return showMainMenu(sender);
   }
@@ -105,9 +125,20 @@ export async function handleIncomingMessage(sender: string, messageText: string,
       if (currSession.step === 'SELECT_CATEGORY') {
         // Mundur ke kategori sebelumnya atau MAIN_MENU
         if (currSession.data && currSession.data.current_parent_id) {
-          // Untuk simplifikasi, kita reset saja ke MAIN_MENU karena melacak breadcrumb terlalu rumit tanpa struktur stack
-          await supabase.from('wa_sessions').update({ step: 'MAIN_MENU', data: {} }).eq('phone', sender);
-          return showMainMenu(sender);
+          const { data: parentCat } = await supabase.from('categories').select('parent_id').eq('id', currSession.data.current_parent_id).single();
+          if (parentCat && parentCat.parent_id) {
+             const { data: grandParent } = await supabase.from('categories').select('id, name').eq('id', parentCat.parent_id).single();
+             if (grandParent) {
+                 currSession.data.current_parent_id = grandParent.id;
+                 currSession.data.current_parent_name = grandParent.name;
+                 await supabase.from('wa_sessions').update({ step: 'SELECT_CATEGORY', data: currSession.data }).eq('phone', sender);
+                 return showDynamicCategoryMenu(sender, grandParent.id, grandParent.name, currSession.data);
+             }
+          }
+          currSession.data.current_parent_id = null;
+          currSession.data.current_parent_name = null;
+          await supabase.from('wa_sessions').update({ step: 'SELECT_CATEGORY', data: currSession.data }).eq('phone', sender);
+          return showDynamicCategoryMenu(sender, null, null, currSession.data);
         } else {
           await supabase.from('wa_sessions').update({ step: 'MAIN_MENU', data: {} }).eq('phone', sender);
           return showMainMenu(sender);
@@ -131,11 +162,13 @@ export async function handleIncomingMessage(sender: string, messageText: string,
     .eq('phone', sender)
     .single<WASession>();
 
-  // 3. Jika User Baru & BELUM ketik "HaloDesk"
+  // 3. Jika User Baru & BELUM ketik "${getTriggerWord()}"
   if (!session) {
+    const settings = getBotSettings();
+    const greetingMsg = settings.greeting_message || 'Selamat datang di IT Helpdesk.';
     const greetingName = reporter?.name ? `, Kak ${reporter.name}` : '';
     const greeting = getGreeting();
-    return sendMessage(sender, `👋 Selamat ${greeting}${greetingName}! Silakan ketik *HaloDesk* untuk memulai layanan IT Helpdesk.`);
+    return sendMessage(sender, `👋 Selamat ${greeting}${greetingName}! ${greetingMsg}\n\nSilakan ketik *${getTriggerWord()}* untuk memulai layanan.`);
   }
 
   const currentData = session.data || {};
@@ -183,7 +216,8 @@ export async function handleIncomingMessage(sender: string, messageText: string,
       break;
 
     default:
-      await sendMessage(sender, "Ketik *HaloDesk* untuk kembali ke menu utama.");
+      const settings = getBotSettings();
+      await sendMessage(sender, settings.fallback_message || `Ketik *${getTriggerWord()}* untuk kembali ke menu utama.`);
       break;
   }
 }
@@ -194,6 +228,8 @@ export async function handleIncomingMessage(sender: string, messageText: string,
 async function showMainMenu(sender: string) {
   const { data: reporter } = await supabase.from('reporters').select('name').eq('phone', sender).single();
   const greetingName = reporter?.name ? ` ${reporter.name}` : '';
+  const settings = getBotSettings();
+  const greetingMsg = settings.greeting_message || 'Selamat datang di IT Helpdesk.';
   
   // 1. Ambil menu utama yang aktif dari database
   const { data: menus } = await supabase
@@ -203,7 +239,7 @@ async function showMainMenu(sender: string) {
     .eq('is_active', true)
     .order('sort_order', { ascending: true });
 
-  let text = `👋 *Selamat ${getGreeting()}${greetingName}!* Selamat datang di IT Helpdesk.\n\n`;
+  let text = `*Selamat ${getGreeting()}${greetingName}!* ${greetingMsg}\n\n`;
   text += `Silakan pilih menu layanan di bawah ini:\n`;
 
   if (menus && menus.length > 0) {
@@ -216,7 +252,7 @@ async function showMainMenu(sender: string) {
     text += `2. 🔍 Cek Status Tiket\n`;
   }
   
-  text += `\n_Balas angka pilihan Anda (Contoh: 1)_\n_Atau, ketik kata kunci kendala Anda secara langsung (contoh: "Wifi putus")._`;
+  text += `\n_Balas angka pilihan Anda (Contoh: 1)_`;
 
   await sendMessage(sender, text);
 }
@@ -248,11 +284,11 @@ async function handleMainMenu(sender: string, input: string) {
           text += `${idx + 1}. *${article.title}*\n`;
           text += `🔗 http://localhost:3000/knowledgebase/article/${article.slug}\n\n`;
         });
-        text += `_Ketik *HaloDesk* untuk melihat menu layanan lainnya._`;
+        text += `_Ketik *${getTriggerWord()}* untuk melihat menu layanan lainnya._`;
         return sendMessage(sender, text);
       }
 
-      return sendMessage(sender, "❌ Pilihan tidak valid atau artikel tidak ditemukan. Balas dengan angka yang sesuai dari menu. Ketik *HaloDesk* untuk reset.");
+      return sendMessage(sender, `❌ Pilihan tidak valid atau artikel tidak ditemukan. Balas dengan angka yang sesuai dari menu. Ketik *${getTriggerWord()}* untuk reset.`);
     }
     
     const selectedMenu = menus[selectedIndex];
@@ -270,9 +306,9 @@ async function handleMainMenu(sender: string, input: string) {
         data: {},
         updated_at: new Date().toISOString()
       }).eq('phone', sender);
-      return sendMessage(sender, "🔍 Silakan ketikkan *Nomor Tiket* Anda (Contoh: TKT-123456):");
+      return sendTicketStatusMenu(sender);
     } else if (selectedMenu.action_type === 'TEXT_REPLY') {
-      // Langsung balas teks, dan tetapkan step tetap di MAIN_MENU (atau bisa reset ke HaloDesk)
+      // Langsung balas teks, dan tetapkan step tetap di MAIN_MENU (atau bisa reset ke ${getTriggerWord()})
       await sendMessage(sender, selectedMenu.content || "Tidak ada isi konten.");
       return;
     } else {
@@ -293,9 +329,9 @@ async function handleMainMenu(sender: string, input: string) {
         data: {},
         updated_at: new Date().toISOString()
       }).eq('phone', sender);
-      return sendMessage(sender, "🔍 Silakan ketikkan *Nomor Tiket* Anda (Contoh: TKT-123456):");
+      return sendTicketStatusMenu(sender);
     } else {
-      return sendMessage(sender, "❌ Pilihan tidak valid. Balas angka *1* (Buat Tiket) atau *2* (Cek Status). Ketik *HaloDesk* untuk reset.");
+      return sendMessage(sender, `❌ Pilihan tidak valid. Balas angka *1* (Buat Tiket) atau *2* (Cek Status). Ketik *${getTriggerWord()}* untuk reset.`);
     }
   }
 }
@@ -331,7 +367,7 @@ async function showDynamicCategoryMenu(sender: string, parentId: number | null, 
     text += `${index + 1}. ${cat.name}\n`;
   });
   text += `${categories.length + 1}. 📝 Lainnya (Buat Tiket)\n`;
-  text += "\n_Balas angka pilihan Anda_\n_Ketik *0* untuk kembali, atau *Batal* untuk mengakhiri._";
+  text += "\n_Balas angka pilihan Anda_\n_Ketik *0* untuk kembali ke menu awal atau *${getTriggerWord()}* untuk reset._";
 
   await sendMessage(sender, text);
 }
@@ -398,10 +434,16 @@ async function handleDynamicCategorySelect(sender: string, input: string, parent
       let text = `*Panduan untuk: ${selectedCat.name}*\n\n`;
       text += `Untuk melihat langkah-langkah penyelesaiannya, silakan kunjungi halaman Basis Pengetahuan kami pada tautan berikut:\n`;
       text += `🔗 http://localhost:3000/knowledgebase/article/${kbData.slug}\n\n`;
-      text += `Apakah panduan pada tautan di atas berhasil mengatasi masalah Anda?\n`;
-      text += `1. ✅ Ya, masalah teratasi\n`;
-      text += `2. ❌ Tidak, masalah belum teratasi (Buat Tiket)\n\n`;
-      text += `_Balas 1 atau 2_\n_Ketik *0* untuk kembali._`;
+      text += `Apakah panduan di atas berhasil menyelesaikan kendala Anda?\n`;
+      text += `1. ✅ Ya, kendala teratasi\n`;
+      text += `2. ❌ Tidak, saya ingin membuat tiket ke Teknisi\n\n`;
+      
+      const settings = getBotSettings();
+      if (settings.fallback_message) {
+         text += `_Ketik *0* untuk kembali, atau *${getTriggerWord()}* untuk ke menu utama._`;
+      } else {
+         text += `_Ketik *0* untuk kembali, atau *Batal* untuk mengakhiri._`;
+      }
       
       await sendMessage(sender, text);
     } else {
@@ -444,6 +486,17 @@ async function handleConfirmResolution(sender: string, input: string, currentDat
     
     const { data: reporter } = await supabase.from('reporters').select('*').eq('phone', sender).single();
     
+    const reporterName = reporter?.name || sender;
+
+    await supabase.from('reporters').upsert({
+      phone: sender,
+      name: reporterName,
+      nim_nip: reporter?.nim_nip || '-',
+      unit: reporter?.unit || '-',
+      reporter_type: reporter?.reporter_type || 'Umum',
+      status: 'Aktif'
+    }, { onConflict: 'phone' });
+    
     const ticketData = {
       ticket_num: ticketNumber,
       phone: sender,
@@ -452,7 +505,7 @@ async function handleConfirmResolution(sender: string, input: string, currentDat
       subcategory_id: null,
       subject: `[Self-Resolved] ${currentData.category_path || 'Umum'}`,
       description: 'Masalah berhasil diselesaikan sendiri oleh pelapor melalui panduan Bot WA.',
-      reporter_name: reporter?.name || 'Pelapor Anonim',
+      reporter_name: reporterName,
       reporter_type: reporter?.reporter_type || 'Umum',
       nim_nip: reporter?.nim_nip || '-',
       unit: reporter?.unit || '-',
@@ -469,7 +522,7 @@ async function handleConfirmResolution(sender: string, input: string, currentDat
       return sendMessage(sender, "Terjadi kesalahan saat memproses data. Silakan coba lagi nanti.");
     }
     
-    return sendMessage(sender, `🎉 Syukurlah masalah Anda sudah teratasi!\nSistem telah mencatat interaksi ini dengan nomor referensi: *${ticketNumber}*.\n\nKetik *HaloDesk* jika Anda butuh bantuan lainnya.`);
+    return sendMessage(sender, `🎉 Syukurlah masalah Anda sudah teratasi!\nSistem telah mencatat interaksi ini dengan nomor referensi: *${ticketNumber}*.\n\nKetik *${getTriggerWord()}* jika Anda butuh bantuan lainnya.`);
   } else if (input === '2') {
     // Belum teratasi, eskalasi ke pimpinan/buat tiket escalated
     await supabase.from('wa_sessions').update({
@@ -772,7 +825,7 @@ async function handleConfirmTicket(sender: string, input: string, currentData: a
       updated_at: new Date().toISOString()
     }).eq('phone', sender);
 
-    await sendMessage(sender, "❌ Pembuatan tiket dibatalkan. Ketik *HaloDesk* jika ingin memulai lagi.");
+    await sendMessage(sender, `❌ Pembuatan tiket dibatalkan. Ketik *${getTriggerWord()}* jika ingin memulai lagi.`);
   } else {
     await sendMessage(sender, "❌ Pilihan tidak valid. Balas dengan angka *1* (Kirim) atau *2* (Batal).");
   }
@@ -780,6 +833,29 @@ async function handleConfirmTicket(sender: string, input: string, currentData: a
 
 // FITUR CEK STATUS TIKET
 // ==========================================
+async function sendTicketStatusMenu(sender: string) {
+  const { data: recentTickets } = await supabase
+    .from('tickets')
+    .select('ticket_num, subject, status, created_at')
+    .eq('phone', sender)
+    .order('created_at', { ascending: false })
+    .limit(3);
+
+  let text = `🔍 *CEK STATUS TIKET*\n\n`;
+
+  if (recentTickets && recentTickets.length > 0) {
+    text += `Daftar tiket terbaru Anda:\n\n`;
+    recentTickets.forEach(t => {
+      text += `*${t.ticket_num || '-'}*\n`;
+      text += `Subjek: ${t.subject}\n`;
+      text += `Status: *${t.status}*\n\n`;
+    });
+  }
+
+  text += `Silakan ketikkan *Nomor Tiket* Anda (Contoh: #000001) untuk melihat detail yang lebih lengkap.`;
+  return sendMessage(sender, text);
+}
+
 async function handleCheckTicketStatus(sender: string, inputNumber: string) {
   const formattedTicketNum = inputNumber.toUpperCase().trim();
 
@@ -793,7 +869,7 @@ async function handleCheckTicketStatus(sender: string, inputNumber: string) {
     return sendMessage(
       sender,
       `❌ Nomor tiket *${formattedTicketNum}* tidak ditemukan.\n\n` +
-      `Silakan periksa kembali nomor tiket Anda atau ketik *HaloDesk* untuk kembali ke menu utama.`
+      `Silakan periksa kembali nomor tiket Anda atau ketik *${getTriggerWord()}* untuk kembali ke menu utama.`
     );
   }
 
@@ -813,7 +889,7 @@ async function handleCheckTicketStatus(sender: string, inputNumber: string) {
   text += `• *Deskripsi:* ${ticket.description || '-'}\n`;
   text += `• *Tanggal Dibuat:* ${createdDate}\n`;
   text += `-----------------------------------\n\n`;
-  text += `Ketik *HaloDesk* untuk kembali ke menu utama.`;
+  text += `Ketik *${getTriggerWord()}* untuk kembali ke menu utama.`;
 
   await supabase.from('wa_sessions').update({
     step: 'MAIN_MENU',
@@ -831,7 +907,7 @@ async function handleWaitingRating(sender: string, input: string, currentData: a
   const ticketId = currentData.ticket_id;
   if (!ticketId) {
     await supabase.from('wa_sessions').update({ step: 'MAIN_MENU', data: {} }).eq('phone', sender);
-    return sendMessage(sender, "⚠️ Sesi penilaian tidak valid. Ketik *HaloDesk* untuk kembali ke menu utama.");
+    return sendMessage(sender, `⚠️ Sesi penilaian tidak valid. Ketik *${getTriggerWord()}* untuk kembali ke menu utama.`);
   }
 
   // Coba parse rating (digit pertama yang ditemukan)
@@ -862,5 +938,5 @@ async function handleWaitingRating(sender: string, input: string, currentData: a
     updated_at: new Date().toISOString()
   }).eq('phone', sender);
 
-  await sendMessage(sender, `⭐ *Terima Kasih!*\n\nPenilaian Anda (Rating: ${rating}/5) dan ulasan telah kami simpan. Masukan Anda sangat berarti bagi peningkatan layanan IT Helpdesk kami.\n\nKetik *HaloDesk* jika Anda membutuhkan bantuan lain.`);
+  await sendMessage(sender, `⭐ *Terima Kasih!*\n\nPenilaian Anda (Rating: ${rating}/5) dan ulasan telah kami simpan. Masukan Anda sangat berarti bagi peningkatan layanan IT Helpdesk kami.\n\nKetik *${getTriggerWord()}* jika Anda membutuhkan bantuan lain.`);
 }
