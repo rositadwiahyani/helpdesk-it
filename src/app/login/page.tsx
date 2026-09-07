@@ -62,8 +62,7 @@ export default function LoginPage() {
         // Cek role untuk routing
         const role = combinedUser.role || combinedUser.user_metadata?.role || '';
         let targetPath = '/dashboard/operator'; // Default fallback
-        if (role === 'teknisi' || role === 'agent') targetPath = '/dashboard/teknisi';
-        else if (role === 'pimpinan') targetPath = '/dashboard/pimpinan';
+        if (role === 'pimpinan') targetPath = '/dashboard/pimpinan';
         else if (role === 'admin') targetPath = '/dashboard/administrasi';
         
         // Set exit state for animation before redirect

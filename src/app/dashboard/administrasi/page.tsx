@@ -1,6 +1,5 @@
 import SummaryCards from "@/components/admin/dashboard/SummaryCards";
 import TicketTrendChart from "@/components/admin/dashboard/TicketTrendChart";
-import DepartmentPerformanceTable from "@/components/admin/dashboard/DepartmentPerformanceTable";
 import RecentTicketActivityTable from "@/components/admin/dashboard/RecentTicketActivityTable";
 import TopHelpTopicsPieChart from "@/components/admin/dashboard/TopHelpTopicsPieChart";
 import { fetchServer } from "@/lib/apiServer";
@@ -50,8 +49,6 @@ export default async function AdministrasiDashboard() {
 
       {/* Full Width Tables Below Grid */}
       <div className="flex flex-col gap-6 w-full">
-        {/* Department Performance Table */}
-        <DepartmentPerformanceTable data={dashboardData.departments} />
         
         {/* Recent Ticket Activity */}
         <RecentTicketActivityTable data={dashboardData.recentLogs} />

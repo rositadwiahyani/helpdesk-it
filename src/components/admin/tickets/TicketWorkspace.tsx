@@ -22,6 +22,7 @@ export default function TicketWorkspace() {
   // Real data state
   const [tickets, setTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<any>(null);
   
   // State untuk bulk action
   const [selectedTickets, setSelectedTickets] = useState<string[]>([]);
@@ -96,6 +97,15 @@ export default function TicketWorkspace() {
 
   useEffect(() => {
     fetchTicketsData();
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        setCurrentUser(user);
+      } catch (e) {
+        console.error('Failed to parse user', e);
+      }
+    }
   }, []);
 
   const handleNewTicket = () => setIsNewTicketModalOpen(true);
@@ -115,6 +125,8 @@ export default function TicketWorkspace() {
       
       if (activeTab === 'resolved') {
         filteredTickets = filteredTickets.filter(t => ['RESOLVED', 'RESOLVED_BY_SYSTEM'].includes((t.status || '').toUpperCase()));
+      } else if (activeTab === 'my_tickets') {
+        filteredTickets = filteredTickets.filter(t => t.tech_id === currentUser?.id && !['RESOLVED', 'CLOSED', 'RESOLVED_BY_SYSTEM'].includes((t.status || '').toUpperCase()));
       } else {
         filteredTickets = filteredTickets.filter(t => (t.status || '').toUpperCase() === statusMap[activeTab]);
       }
@@ -171,7 +183,7 @@ export default function TicketWorkspace() {
         description: data.description || '',
         category_id: data.category || null,
         dept_id: data.assignTo || null,
-        status: 'NEW',
+        status: 'WAITING VERIFICATION',
         priority: 'MEDIUM'
       };
       
@@ -223,9 +235,39 @@ export default function TicketWorkspace() {
     }
   };
 
+  const handleAcceptTicket = async (ticketId: string) => {
+    try {
+      const updateData: any = { status: 'IN PROGRESS' };
+      if (currentUser?.id) {
+        updateData.tech_id = currentUser.id;
+      }
+      
+      const { error } = await supabase.from('tickets').update(updateData).eq('id', ticketId);
+      if (error) throw error;
+      showToast('Tiket berhasil diterima dan ditetapkan ke Anda.', 'success');
+      await fetchTicketsData(true);
+    } catch (err) {
+      console.error(err);
+      showToast('Gagal menerima tiket.', 'error');
+    }
+  };
+
+  const handleRejectTicket = async (ticketId: string) => {
+    try {
+      const { error } = await supabase.from('tickets').update({ status: 'DITOLAK' }).eq('id', ticketId);
+      if (error) throw error;
+      showToast('Tiket telah ditolak (Spam / Tidak Valid).', 'success');
+      await fetchTicketsData(true);
+    } catch (err) {
+      console.error(err);
+      showToast('Gagal menolak tiket.', 'error');
+    }
+  };
+
   // Kalkulasi counts
   const counts = {
     all: tickets.length,
+    myTickets: tickets.filter(t => t.tech_id === currentUser?.id && !['RESOLVED', 'CLOSED', 'RESOLVED_BY_SYSTEM'].includes((t.status || '').toUpperCase())).length,
     open: tickets.filter(t => (t.status || '').toUpperCase() === 'OPEN').length,
     inProgress: tickets.filter(t => (t.status || '').toUpperCase() === 'IN PROGRESS').length,
     waitingVerification: tickets.filter(t => (t.status || '').toUpperCase() === 'WAITING VERIFICATION').length,
@@ -278,6 +320,9 @@ export default function TicketWorkspace() {
           technicians={technicians}
           departments={departments}
           onEditTicket={(id) => { setSelectedTicketToEdit(id); setIsEditTicketModalOpen(true); }}
+          onAcceptTicket={handleAcceptTicket}
+          onRejectTicket={handleRejectTicket}
+          currentUserId={currentUser?.id}
         />
       )}
 

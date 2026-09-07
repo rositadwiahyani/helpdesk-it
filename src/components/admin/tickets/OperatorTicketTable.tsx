@@ -20,17 +20,19 @@ export default function OperatorTicketTable({
     actionType = 'verify',
     assignToHeader,
     assignToType,
-    tabsNode
+    tabsNode,
+    currentUserId
 }: {
     initialTickets: Ticket[],
     categories: Category[],
     mainCategories: Category[],
     departments: Department[],
     technicians?: Technician[],
-    actionType?: 'verify' | 'rollback' | 'readonly',
+    actionType?: 'verify' | 'rollback' | 'readonly' | 'resolve',
     assignToHeader?: string,
     assignToType?: 'dept' | 'tech' | 'resolver',
-    tabsNode?: React.ReactNode
+    tabsNode?: React.ReactNode,
+    currentUserId?: string
 }) {
     const router = useRouter();
     // Local state for tickets to support optimistic updates
@@ -68,16 +70,16 @@ export default function OperatorTicketTable({
         setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 5000);
     };
 
-    // Action handler for Terima / Tolak / Rollback
-    const handleTicketAction = async (ticketId: string, ticketNum: string, action: 'accept' | 'reject' | 'rollback') => {
+    // Action handler for Terima / Tolak / Rollback / Resolve
+    const handleTicketAction = async (ticketId: string, ticketNum: string, action: 'accept' | 'reject' | 'rollback' | 'resolve') => {
         try {
             const ticket = tickets.find(t => t.id === ticketId);
             if (!ticket) return;
 
             // Validasi khusus untuk aksi "Terima"
             if (action === 'accept') {
-                if (!ticket.category_id || !ticket.dept_id) {
-                    showToast('Kategori dan Unit wajib dipilih sebelum menerima tiket!', 'error');
+                if (!ticket.category_id) {
+                    showToast('Kategori wajib dipilih sebelum menerima tiket!', 'error');
                     return;
                 }
             }
@@ -85,11 +87,11 @@ export default function OperatorTicketTable({
             // Optimistic update: remove ticket from the current view
             setTickets(prev => prev.filter(t => t.id !== ticketId));
 
-            const newStatus = action === 'accept' ? 'Open' : action === 'reject' ? 'REJECTED' : 'WAITING VERIFICATION';
+            const newStatus = action === 'accept' ? 'Open' : action === 'reject' ? 'REJECTED' : action === 'resolve' ? 'RESOLVED' : 'WAITING VERIFICATION';
             
             const payload: any = { status: newStatus };
             if (action === 'accept') {
-                payload.dept_id = ticket.dept_id;
+                payload.tech_id = currentUserId;
                 payload.category_id = ticket.category_id;
             }
 
@@ -103,11 +105,11 @@ export default function OperatorTicketTable({
             // But it's fine to keep the manual log here for UI completeness:
             await supabase.from('ticket_logs').insert({
                 ticket_id: ticketId,
-                action: action === 'accept' ? 'CHANGE_STATUS' : action === 'reject' ? 'REJECT_TICKET' : 'ROLLBACK_TICKET',
+                action: action === 'accept' ? 'CHANGE_STATUS' : action === 'reject' ? 'REJECT_TICKET' : action === 'resolve' ? 'RESOLVE_TICKET' : 'ROLLBACK_TICKET',
                 notes: `Status changed to ${newStatus}`
             });
 
-            const actionText = action === 'accept' ? 'terima' : action === 'reject' ? 'tolak' : 'rollback';
+            const actionText = action === 'accept' ? 'terima' : action === 'reject' ? 'tolak' : action === 'resolve' ? 'selesaikan' : 'rollback';
             const toastType = action === 'reject' ? 'error' : 'success';
             
             showToast(`Tiket ${ticketNum} berhasil di${actionText}.`, toastType);
@@ -672,25 +674,11 @@ export default function OperatorTicketTable({
                                         {assignToType === 'dept' ? (
                                             <span className="text-[#43474F] font-iBMPlexSans text-[12px]">{ticket.department?.name || departments?.find(d => String(d.id) === String(ticket.dept_id))?.name || ticket.dept_id || '-'}</span>
                                         ) : assignToType === 'tech' ? (
-                                            <span className="text-[#43474F] font-iBMPlexSans text-[12px]">{ticket.tech?.name || ticket.tech_id || 'Belum di-assign'}</span>
+                                            <span className="text-[#43474F] font-iBMPlexSans text-[12px]">{ticket.tech?.name || technicians?.find(t => String(t.id) === String(ticket.tech_id))?.name || ticket.tech_id || 'Belum di-assign'}</span>
                                         ) : assignToType === 'resolver' ? (
                                             <span className="text-[#43474F] font-iBMPlexSans text-[12px]">{ticket.tech?.name || ticket.tech_id || 'System'}</span>
                                         ) : actionType === 'verify' ? (
-                                            <div className="relative w-[140px]">
-                                                <select 
-                                                    value={ticket.dept_id?.toString() || ''}
-                                                    onChange={(e) => handleInlineUpdate(ticket.id, 'dept_id', e.target.value ? Number(e.target.value) : null)}
-                                                    className="w-full bg-white border border-[#C3C6D1] rounded pl-3 pr-8 py-1.5 text-xs text-slate-700 focus:border-[#0059BB] focus:ring-1 focus:ring-[#0059BB] outline-none cursor-pointer appearance-none hover:border-slate-300 transition-colors"
-                                                >
-                                                    <option value="">Pilih Unit...</option>
-                                                    {departments?.map(dept => (
-                                                        <option key={dept.id} value={dept.id?.toString()}>{dept.name}</option>
-                                                    ))}
-                                                </select>
-                                                <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                                    <path fillRule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
-                                                </svg>
-                                            </div>
+                                            <span className="text-[#43474F] font-iBMPlexSans text-[12px] text-gray-400 italic">Otomatis ke Anda saat Diterima</span>
                                         ) : (
                                             <span className="text-[#43474F] font-iBMPlexSans text-[12px]">{ticket.department?.name || departments?.find(d => String(d.id) === String(ticket.dept_id))?.name || ticket.dept_id || '-'}</span>
                                         )}
@@ -713,6 +701,13 @@ export default function OperatorTicketTable({
                                                             Tolak
                                                         </button>
                                                     </>
+                                                ) : actionType === 'resolve' ? (
+                                                    <button 
+                                                        onClick={() => handleTicketAction(ticket.id, formattedTicketNum, 'resolve')}
+                                                        className="py-1.5 px-4 bg-[#1E3A8A] border border-[#1E3A8A] rounded text-xs font-semibold text-white hover:bg-blue-900 transition-colors"
+                                                    >
+                                                        Tandai Selesai
+                                                    </button>
                                                 ) : (
                                                     <button 
                                                         onClick={() => handleTicketAction(ticket.id, formattedTicketNum, 'rollback')}

@@ -19,20 +19,13 @@ export async function middleware(request: NextRequest) {
     if (url.pathname === '/dashboard') {
       if (userRole === 'admin' || userRole === 'administrasi') url.pathname = '/dashboard/administrasi';
       else if (userRole === 'pimpinan') url.pathname = '/dashboard/pimpinan';
-      else if (userRole === 'teknisi' || userRole === 'agent') url.pathname = '/dashboard/teknisi';
       else url.pathname = '/dashboard/operator';
       return NextResponse.redirect(url);
     }
 
-    // Proteksi dashboard teknisi
-    if (url.pathname.startsWith('/dashboard/teknisi') && (userRole !== 'teknisi' && userRole !== 'agent')) {
-      url.pathname = userRole === 'admin' || userRole === 'administrasi' ? '/dashboard/administrasi' : '/dashboard/operator';
-      return NextResponse.redirect(url);
-    }
-    
     // Proteksi dashboard admin
     if (url.pathname.startsWith('/dashboard/administrasi') && (userRole !== 'admin' && userRole !== 'administrasi')) {
-      url.pathname = userRole === 'teknisi' || userRole === 'agent' ? '/dashboard/teknisi' : '/dashboard/operator';
+      url.pathname = '/dashboard/operator';
       return NextResponse.redirect(url);
     }
   }
@@ -41,7 +34,6 @@ export async function middleware(request: NextRequest) {
   if ((url.pathname.startsWith('/login') || url.pathname.startsWith('/register')) && isLoggedIn) {
     if (userRole === 'admin' || userRole === 'administrasi') url.pathname = '/dashboard/administrasi';
     else if (userRole === 'pimpinan') url.pathname = '/dashboard/pimpinan';
-    else if (userRole === 'teknisi' || userRole === 'agent') url.pathname = '/dashboard/teknisi';
     else url.pathname = '/dashboard/operator';
     
     return NextResponse.redirect(url);

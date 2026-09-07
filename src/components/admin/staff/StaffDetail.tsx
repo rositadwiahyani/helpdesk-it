@@ -18,6 +18,7 @@ export default function StaffDetail({ staffId }: { staffId: string }) {
   const [isSaving, setIsSaving] = useState(false);
   
   const [isEditing, setIsEditing] = useState(searchParams?.get('edit') === 'true');
+  const [activeTab, setActiveTab] = useState<'active' | 'resolved'>('active');
   
   const [formData, setFormData] = useState({
     name: '',
@@ -158,11 +159,7 @@ export default function StaffDetail({ staffId }: { staffId: string }) {
 
   // Hitung performa
   const resolvedTickets = tickets.filter(t => t.status === 'RESOLVED' || t.status === 'CLOSED' || t.status === 'WAITING CONFIRMATION');
-  const ticketsWithRating = tickets.filter(t => t.rating != null);
-  const avgRating = ticketsWithRating.length > 0 
-    ? (ticketsWithRating.reduce((acc, t) => acc + t.rating, 0) / ticketsWithRating.length).toFixed(1) 
-    : '5.0';
-  const completionRate = tickets.length > 0 ? ((resolvedTickets.length / tickets.length) * 100).toFixed(0) : '0';
+  const activeTickets = tickets.filter(t => !(t.status === 'RESOLVED' || t.status === 'CLOSED' || t.status === 'WAITING CONFIRMATION'));
 
   return (
     <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-2 duration-300 p-6 md:p-10 w-full max-w-[1200px]">
@@ -245,7 +242,6 @@ export default function StaffDetail({ staffId }: { staffId: string }) {
                                 >
                                     <option value="admin">Administrator</option>
                                     <option value="operator">Operator (Agent)</option>
-                                    <option value="teknisi">Teknisi</option>
                                 </select>
                             </div>
                         </div>
@@ -317,23 +313,10 @@ export default function StaffDetail({ staffId }: { staffId: string }) {
                 </div>
 
                 {/* Metric Performa */}
-                <div className="flex flex-col justify-center gap-5 shrink-0 min-w-[280px]">
+                <div className="flex flex-col justify-center gap-5 shrink-0 min-w-[200px]">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider font-iBMPlexSans">Completion Rate</span>
-                    <span className="text-2xl font-black text-[#1E3A8A] font-iBMPlexSans">{completionRate}%</span>
-                  </div>
-                  
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                     <span className="text-xs font-bold text-gray-500 uppercase tracking-wider font-iBMPlexSans">Tiket Selesai</span>
-                    <span className="text-xl font-black text-[#1A1C1E] font-iBMPlexSans">{resolvedTickets.length} <span className="text-sm font-medium text-gray-400">/ {tickets.length}</span></span>
-                  </div>
-                  
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider font-iBMPlexSans">Rating Rata-Rata</span>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xl font-black text-amber-500 font-iBMPlexSans">{avgRating}</span>
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="#F59E0B" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
-                    </div>
+                    <span className="text-3xl font-black text-[#1E3A8A] font-iBMPlexSans">{resolvedTickets.length}</span>
                   </div>
                 </div>
             </div>
@@ -341,43 +324,93 @@ export default function StaffDetail({ staffId }: { staffId: string }) {
       </div>
 
       <div className="bg-white rounded-xl border border-[#C3C6D1] shadow-sm flex flex-col overflow-hidden w-full">
-        <div className="px-6 py-5 border-b border-[#C3C6D1]">
-          <h3 className="text-lg font-bold text-[#1A1C1E] font-iBMPlexSans">Riwayat Tiket ({tickets.length})</h3>
+        <div className="flex items-center border-b border-[#C3C6D1] px-2 bg-[#F8F9FA]">
+          <button 
+            onClick={() => setActiveTab('active')}
+            className={`px-6 py-4 text-[14px] font-bold font-iBMPlexSans outline-none transition-colors border-b-2 ${activeTab === 'active' ? 'border-[#1E3A8A] text-[#1E3A8A]' : 'border-transparent text-[#43474F] hover:text-[#1E3A8A]'}`}
+          >
+            Tiket Sedang Ditangani ({activeTickets.length})
+          </button>
+          <button 
+            onClick={() => setActiveTab('resolved')}
+            className={`px-6 py-4 text-[14px] font-bold font-iBMPlexSans outline-none transition-colors border-b-2 ${activeTab === 'resolved' ? 'border-[#1E3A8A] text-[#1E3A8A]' : 'border-transparent text-[#43474F] hover:text-[#1E3A8A]'}`}
+          >
+            Tiket Diselesaikan ({resolvedTickets.length})
+          </button>
         </div>
         
-        {tickets.length === 0 ? (
-          <div className="p-8 text-center text-[#43474F] font-medium font-iBMPlexSans">Belum ada tiket yang ditangani.</div>
-        ) : (
-          <div className="overflow-x-auto w-full">
-            <table className="w-full text-left">
-              <thead className="bg-[#F3F3F6] border-b border-[#C3C6D1]">
-                <tr>
-                  <th className="px-6 py-4 text-xs font-semibold text-[#43474F] tracking-[0.05em] font-iBMPlexSans select-none">NO. TIKET</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-[#43474F] tracking-[0.05em] font-iBMPlexSans select-none">SUBJECT</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-[#43474F] tracking-[0.05em] font-iBMPlexSans select-none">KATEGORI</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-[#43474F] tracking-[0.05em] font-iBMPlexSans select-none">TANGGAL</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-[#43474F] tracking-[0.05em] font-iBMPlexSans select-none">STATUS</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {tickets.map(t => (
-                  <tr key={t.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4">
-                      <Link href={`/dashboard/administrasi/tickets/${t.id}`} className="text-sm font-bold text-[#1E3A8A] hover:underline font-iBMPlexSans">
-                        {t.ticket_num || t.ticket_number || '–'}
-                      </Link>
-                    </td>
-                    <td className="px-6 py-4 text-sm font-medium text-[#1A1C1E] truncate max-w-[200px] font-iBMPlexSans">{t.subject}</td>
-                    <td className="px-6 py-4 text-sm text-[#43474F] font-iBMPlexSans">{t.category?.name || '-'}</td>
-                    <td className="px-6 py-4 text-sm text-[#43474F] font-iBMPlexSans">{new Date(t.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
-                    <td className="px-6 py-4">
-                      <StatusBadge status={t.status} />
-                    </td>
+        {activeTab === 'active' && (
+          activeTickets.length === 0 ? (
+            <div className="p-8 text-center text-[#43474F] font-medium font-iBMPlexSans">Tidak ada tiket yang sedang ditangani.</div>
+          ) : (
+            <div className="overflow-x-auto w-full">
+              <table className="w-full text-left">
+                <thead className="bg-[#F3F3F6] border-b border-[#C3C6D1]">
+                  <tr>
+                    <th className="px-6 py-4 text-xs font-semibold text-[#43474F] tracking-[0.05em] font-iBMPlexSans select-none">NO. TIKET</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-[#43474F] tracking-[0.05em] font-iBMPlexSans select-none">SUBJECT</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-[#43474F] tracking-[0.05em] font-iBMPlexSans select-none">KATEGORI</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-[#43474F] tracking-[0.05em] font-iBMPlexSans select-none">TANGGAL</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-[#43474F] tracking-[0.05em] font-iBMPlexSans select-none">STATUS</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {activeTickets.map(t => (
+                    <tr key={t.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-6 py-4">
+                        <Link href={`/dashboard/administrasi/tickets/${t.id}`} className="text-sm font-bold text-[#1E3A8A] hover:underline font-iBMPlexSans">
+                          {t.ticket_num || t.ticket_number || '–'}
+                        </Link>
+                      </td>
+                      <td className="px-6 py-4 text-sm font-medium text-[#1A1C1E] truncate max-w-[200px] font-iBMPlexSans">{t.subject}</td>
+                      <td className="px-6 py-4 text-sm text-[#43474F] font-iBMPlexSans">{t.category?.name || '-'}</td>
+                      <td className="px-6 py-4 text-sm text-[#43474F] font-iBMPlexSans">{new Date(t.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                      <td className="px-6 py-4">
+                        <StatusBadge status={t.status} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )
+        )}
+
+        {activeTab === 'resolved' && (
+          resolvedTickets.length === 0 ? (
+            <div className="p-8 text-center text-[#43474F] font-medium font-iBMPlexSans">Belum ada tiket yang diselesaikan.</div>
+          ) : (
+            <div className="overflow-x-auto w-full">
+              <table className="w-full text-left">
+                <thead className="bg-[#F3F3F6] border-b border-[#C3C6D1]">
+                  <tr>
+                    <th className="px-6 py-4 text-xs font-semibold text-[#43474F] tracking-[0.05em] font-iBMPlexSans select-none">NO. TIKET</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-[#43474F] tracking-[0.05em] font-iBMPlexSans select-none">SUBJECT</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-[#43474F] tracking-[0.05em] font-iBMPlexSans select-none">KATEGORI</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-[#43474F] tracking-[0.05em] font-iBMPlexSans select-none">TANGGAL</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-[#43474F] tracking-[0.05em] font-iBMPlexSans select-none">STATUS</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {resolvedTickets.map(t => (
+                    <tr key={t.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-6 py-4">
+                        <Link href={`/dashboard/administrasi/tickets/${t.id}`} className="text-sm font-bold text-[#1E3A8A] hover:underline font-iBMPlexSans">
+                          {t.ticket_num || t.ticket_number || '–'}
+                        </Link>
+                      </td>
+                      <td className="px-6 py-4 text-sm font-medium text-[#1A1C1E] truncate max-w-[200px] font-iBMPlexSans">{t.subject}</td>
+                      <td className="px-6 py-4 text-sm text-[#43474F] font-iBMPlexSans">{t.category?.name || '-'}</td>
+                      <td className="px-6 py-4 text-sm text-[#43474F] font-iBMPlexSans">{new Date(t.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                      <td className="px-6 py-4">
+                        <StatusBadge status={t.status} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )
         )}
       </div>
     </div>

@@ -1,8 +1,6 @@
 import SummaryCards from "@/components/admin/dashboard/SummaryCards";
 import TicketTrendChart from "@/components/admin/dashboard/TicketTrendChart";
-import DepartmentPerformanceTable from "@/components/admin/dashboard/DepartmentPerformanceTable";
 import RecentTicketActivityTable from "@/components/admin/dashboard/RecentTicketActivityTable";
-import SlaHealth from "@/components/admin/dashboard/SlaHealth";
 import TopHelpTopicsPieChart from "@/components/admin/dashboard/TopHelpTopicsPieChart";
 import { fetchServer } from "@/lib/apiServer";
 
@@ -43,9 +41,6 @@ export default async function PimpinanDashboard() {
           {/* Ticket Trend Chart */}
           <TicketTrendChart data={dashboardData.ticketTrend} />
           
-          {/* Department Performance Table */}
-          <DepartmentPerformanceTable data={dashboardData.departments} />
-          
           {/* Recent Ticket Activity */}
           <RecentTicketActivityTable data={dashboardData.recentLogs} />
         </div>
@@ -54,9 +49,6 @@ export default async function PimpinanDashboard() {
         <div className="flex flex-col gap-6 w-full">
           {/* Top Help Topics */}
           <TopHelpTopicsPieChart data={dashboardData.categories} />
-          
-          {/* SLA Health */}
-          <SlaHealth data={dashboardData.slaHealth} />
         </div>
 
       </div>

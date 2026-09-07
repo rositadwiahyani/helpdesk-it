@@ -23,9 +23,12 @@ interface TicketTableSectionProps {
   technicians?: any[];
   departments?: any[];
   onEditTicket?: (ticketId: string) => void;
+  onAcceptTicket?: (ticketId: string) => void;
+  onRejectTicket?: (ticketId: string) => void;
+  currentUserId?: string;
 }
 
-export default function TicketTableSection({ activeTab = 'all', tickets = [], newlyAddedTicket, selectedTickets = [], onSelectionChange, filters, searchQuery = '', categories = [], technicians = [], departments = [], onEditTicket }: TicketTableSectionProps) {
+export default function TicketTableSection({ activeTab = 'all', tickets = [], newlyAddedTicket, selectedTickets = [], onSelectionChange, filters, searchQuery = '', categories = [], technicians = [], departments = [], onEditTicket, onAcceptTicket, onRejectTicket, currentUserId }: TicketTableSectionProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [displayTickets, setDisplayTickets] = useState<any[]>([]);
   
@@ -38,7 +41,9 @@ export default function TicketTableSection({ activeTab = 'all', tickets = [], ne
     let filteredData = [...tickets];
     
     // 1. Filter by Status
-    if (activeTab !== 'all') {
+    if (activeTab === 'my_tickets') {
+      filteredData = filteredData.filter(t => t.tech_id === currentUserId);
+    } else if (activeTab !== 'all') {
       const statusMap: Record<string, string> = {
         'open': 'OPEN',
         'in_progress': 'IN PROGRESS',
@@ -333,13 +338,33 @@ export default function TicketTableSection({ activeTab = 'all', tickets = [], ne
                     </span>
                   </td>
                   <td className="px-4 py-4 text-center">
-                    <button 
-                      onClick={() => onEditTicket && onEditTicket(ticket.id)}
-                      className="p-1.5 text-[#1E3A8A] hover:bg-slate-100 rounded transition-colors inline-flex" 
-                      title="Edit Ticket"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                    </button>
+                    <div className="flex items-center justify-center gap-1">
+                      {ticket.status === 'WAITING VERIFICATION' && (
+                        <>
+                          <button 
+                            onClick={() => onAcceptTicket && onAcceptTicket(ticket.id)}
+                            className="p-1.5 text-green-600 hover:bg-green-50 rounded transition-colors inline-flex" 
+                            title="Terima Tiket"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                          </button>
+                          <button 
+                            onClick={() => onRejectTicket && onRejectTicket(ticket.id)}
+                            className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors inline-flex" 
+                            title="Tolak Tiket"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                          </button>
+                        </>
+                      )}
+                      <button 
+                        onClick={() => onEditTicket && onEditTicket(ticket.id)}
+                        className="p-1.5 text-[#1E3A8A] hover:bg-slate-100 rounded transition-colors inline-flex" 
+                        title="Edit Ticket"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
