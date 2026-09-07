@@ -24,10 +24,10 @@ const translations = {
     hoursDesc: 'Senin – Jumat, 08.00 – 16.00 WIB.',
     faqs: [
       { q: "Lupa kata sandi akun SSO Undip, bagaimana cara mengatur ulang?", a: "Buka halaman reset kata sandi SSO, lalu ikuti verifikasi lewat email alternatif atau nomor terdaftar." },
-      { q: "Tidak bisa masuk ke email mahasiswa atau dosen (Undip Mail), harus bagaimana?", a: "Periksa dulu apakah kata sandi SSO masih berlaku..." },
+      { q: "Tidak bisa masuk ke email mahasiswa atau dosen (Undip Mail), harus bagaimana?", a: "Periksa dulu apakah kata sandi SSO masih berlaku." },
       { q: "Kuliah Online (SIAP) tidak bisa diakses, ini kenapa?", a: "Kendala biasanya berasal dari sesi login yang kedaluwarsa atau jaringan tidak stabil." },
-      { q: "Berapa lama waktu respons setelah tiket dibuka?", a: "Rata-rata respons awal diberikan dalam 1×24 jam pada hari dan jam kerja." },
-      { q: "Bagaimana cara menghubungkan perangkat ke WiFi kampus?", a: "Gunakan kredensial SSO yang sama untuk masuk ke jaringan kampus." }
+      { q: "Kenapa Gentayu tidak menampilkan menu aplikasi saat dibuka?", a: "Coba untuk Logout aplikasi dan Login kembali menggunakan akun SSO terdaftar." },
+      { q: "UndipConnect tidak bisa terhubung, kenapa?", a: "Gunakan akun SSO yang terdaftar berupa email kampus dan password SSO untuk masuk ke jaringan kampus." }
     ]
   },
   EN: {
