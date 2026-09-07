@@ -20,16 +20,30 @@ export default function OperatorTicketWorkspace({
     mainCategories,
     technicians,
 }: OperatorTicketWorkspaceProps) {
-    const [activeTab, setActiveTab] = useState<'all' | 'verification' | 'processing' | 'resolved' | 'rejected'>('all');
+    const [activeTab, setActiveTab] = useState<'all' | 'my_tickets' | 'verification' | 'processing' | 'resolved' | 'rejected'>('all');
+    const [currentUser, setCurrentUser] = React.useState<any>(null);
+
+    React.useEffect(() => {
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+            try {
+                setCurrentUser(JSON.parse(userStr));
+            } catch (e) {
+                console.error('Failed to parse user', e);
+            }
+        }
+    }, []);
 
     const filteredTickets = useMemo(() => {
         switch (activeTab) {
+            case 'my_tickets':
+                return tickets.filter(t => t.tech_id === currentUser?.id && !['RESOLVED', 'CLOSED', 'RESOLVED_BY_SYSTEM', 'WAITING CONFIRMATION'].includes(t.status?.toUpperCase() || t.status));
             case 'verification':
                 return tickets.filter(t => t.status === 'WAITING VERIFICATION');
             case 'processing':
                 return tickets.filter(t => ['Open', 'NEW', 'IN PROGRESS', 'Diproses'].includes(t.status?.toUpperCase() || t.status));
             case 'resolved':
-                return tickets.filter(t => ['RESOLVED', 'CLOSED', 'RESOLVED_BY_SYSTEM'].includes(t.status?.toUpperCase() || t.status));
+                return tickets.filter(t => ['RESOLVED', 'CLOSED', 'RESOLVED_BY_SYSTEM', 'WAITING CONFIRMATION'].includes(t.status?.toUpperCase() || t.status));
             case 'rejected':
                 return tickets.filter(t => ['DITOLAK', 'REJECTED'].includes(t.status?.toUpperCase() || t.status));
             case 'all':
@@ -40,6 +54,7 @@ export default function OperatorTicketWorkspace({
 
     const getActionType = () => {
         if (activeTab === 'verification') return 'verify';
+        if (activeTab === 'my_tickets') return 'resolve';
         if (activeTab === 'rejected') return 'rollback';
         return 'readonly';
     };
@@ -83,7 +98,8 @@ export default function OperatorTicketWorkspace({
                     mainCategories={mainCategories}
                     technicians={technicians}
                     actionType={getActionType()}
-                    assignToType={activeTab === 'verification' ? undefined : (activeTab === 'resolved' ? 'resolver' : 'dept')}
+                    assignToType={activeTab === 'verification' ? undefined : (activeTab === 'resolved' ? 'resolver' : 'tech')}
+                    currentUserId={currentUser?.id}
                     tabsNode={
                         <div className="flex items-end gap-6 border-b border-b-[#C3C6D1] w-full overflow-x-auto mt-2">
                             <button
@@ -97,6 +113,18 @@ export default function OperatorTicketWorkspace({
                                 <p className={`font-iBMPlexSans text-sm leading-5 w-fit transition-colors ${
                                     activeTab === 'all' ? 'text-[#1E3A8A] font-semibold' : 'text-[#43474F]'
                                 }`}>Semua Tiket ({tickets.length})</p>
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('my_tickets')}
+                                className={`cursor-pointer text-nowrap flex pt-0 pr-1 pb-3 pl-1 flex-col justify-center items-center border-b-2 w-fit transition-colors ${
+                                    activeTab === 'my_tickets'
+                                        ? 'border-b-[#1E3A8A]'
+                                        : 'border-b-transparent hover:border-b-gray-300'
+                                }`}
+                            >
+                                <p className={`font-iBMPlexSans text-sm leading-5 w-fit transition-colors ${
+                                    activeTab === 'my_tickets' ? 'text-[#1E3A8A] font-semibold' : 'text-[#43474F]'
+                                }`}>Tugas Saya ({tickets.filter((t: any) => t.tech_id === currentUser?.id && !['RESOLVED', 'CLOSED', 'RESOLVED_BY_SYSTEM', 'WAITING CONFIRMATION'].includes(t.status?.toUpperCase() || t.status)).length})</p>
                             </button>
                             <button
                                 onClick={() => setActiveTab('verification')}
@@ -132,7 +160,7 @@ export default function OperatorTicketWorkspace({
                             >
                                 <p className={`font-iBMPlexSans text-sm leading-5 w-fit transition-colors ${
                                     activeTab === 'resolved' ? 'text-[#1E3A8A] font-semibold' : 'text-[#43474F]'
-                                }`}>Selesai ({tickets.filter((t: any) => ['RESOLVED', 'CLOSED', 'RESOLVED_BY_SYSTEM'].includes(t.status?.toUpperCase() || t.status)).length})</p>
+                                }`}>Selesai ({tickets.filter((t: any) => ['RESOLVED', 'CLOSED', 'RESOLVED_BY_SYSTEM', 'WAITING CONFIRMATION'].includes(t.status?.toUpperCase() || t.status)).length})</p>
                             </button>
                             <button
                                 onClick={() => setActiveTab('rejected')}

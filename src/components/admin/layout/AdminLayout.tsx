@@ -34,7 +34,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const getPageTitle = () => {
     if (!pathname) return 'Dashboard Administrator';
-    if (pathname.includes('/dashboard/administrasi/quick-replies')) return 'Template Jawaban Cepat';
     if (pathname.includes('/dashboard/administrasi/reports')) return 'Laporan & Ekspor';
     if (pathname.includes('/dashboard/administrasi/webhook')) return 'Log API Webhook';
     if (pathname.includes('/dashboard/administrasi/bot-settings')) return 'Manajemen Template Bot';

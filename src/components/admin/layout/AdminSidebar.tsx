@@ -37,10 +37,7 @@ export default function AdminSidebar({ isOpen = true, setIsOpen = () => {} }: Ad
     { name: 'Tickets', path: '/dashboard/administrasi/tickets', icon: Ticket },
     { name: 'Manajemen Pengguna', path: '/dashboard/administrasi/users', icon: Users },
     { name: 'Kategori Laporan', path: '/dashboard/administrasi/report-categories', icon: Layers },
-    { name: 'Manajemen SLA', path: '/dashboard/administrasi/sla', icon: ShieldCheck },
     { name: 'Manajemen Staff', path: '/dashboard/administrasi/staff', icon: UserCog },
-    { name: 'Jawaban Cepat', path: '/dashboard/administrasi/quick-replies', icon: MessageSquare },
-    { name: 'Basis Pengetahuan', path: '/dashboard/administrasi/knowledge-base', icon: BookOpen },
     { name: 'Manajemen Bot', path: '/dashboard/administrasi/bot-settings', icon: Webhook },
     { name: 'Profil', path: '/dashboard/administrasi/profile', icon: User },
   ];

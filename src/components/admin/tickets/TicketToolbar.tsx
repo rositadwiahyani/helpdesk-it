@@ -2,10 +2,11 @@
 
 import React from 'react';
 
-export type TabFilter = 'all' | 'waiting_verification' | 'open' | 'in_progress' | 'resolved' | 'rejected' | 'deleted';
+export type TabFilter = 'all' | 'my_tickets' | 'waiting_verification' | 'open' | 'in_progress' | 'resolved' | 'rejected' | 'deleted';
 
 interface TicketCounts {
   all: number;
+  myTickets: number;
   open: number;
   inProgress: number;
   waitingVerification: number;
@@ -31,6 +32,7 @@ interface TicketToolbarProps {
 
 const DEFAULT_COUNTS: TicketCounts = {
   all: 248,
+  myTickets: 0,
   waitingVerification: 8,
   open: 12,
   inProgress: 45,
@@ -177,6 +179,9 @@ export default function TicketToolbar({
       <div className="flex items-end gap-6 border-b border-b-[#C3C6D1] w-full overflow-x-auto mt-2">
         <button onClick={() => handleTabClick('all')} className={getBtnClass('all')}>
           <p className={getTextClass('all')}>Semua Tiket ({counts.all})</p>
+        </button>
+        <button onClick={() => handleTabClick('my_tickets')} className={getBtnClass('my_tickets')}>
+          <p className={getTextClass('my_tickets')}>Tugas Saya ({counts.myTickets})</p>
         </button>
         <button onClick={() => handleTabClick('waiting_verification')} className={getBtnClass('waiting_verification')}>
           <p className={getTextClass('waiting_verification')}>Menunggu Verifikasi ({counts.waitingVerification})</p>

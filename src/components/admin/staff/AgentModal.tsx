@@ -14,7 +14,7 @@ export default function AgentModal({ isOpen, onClose, onSuccess, showToast, agen
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [role, setRole] = useState("teknisi");
+  const [role, setRole] = useState("operator");
   const [deptId, setDeptId] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -24,14 +24,14 @@ export default function AgentModal({ isOpen, onClose, onSuccess, showToast, agen
       setName(agent.name || "");
       setEmail(agent.email || "");
       setPhone(agent.phone || "");
-      setRole(agent.role || "teknisi");
+      setRole(agent.role || "operator");
       setDeptId(agent.dept_id ? String(agent.dept_id) : "");
       setPassword("");
     } else {
       setName("");
       setEmail("");
       setPhone("");
-      setRole("teknisi");
+      setRole("operator");
       setDeptId("");
       setPassword("");
     }
@@ -109,7 +109,6 @@ export default function AgentModal({ isOpen, onClose, onSuccess, showToast, agen
             <select value={role} onChange={(e) => setRole(e.target.value)} className="w-full border border-gray-300 rounded p-2 text-sm">
               <option value="admin">Administrator</option>
               <option value="agent">Agent (Operator)</option>
-              <option value="teknisi">Teknisi</option>
             </select>
           </div>
           <div>

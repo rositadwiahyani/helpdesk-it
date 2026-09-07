@@ -41,13 +41,9 @@ type Message = {
 
 export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
   const [ticket, setTicket] = useState<Ticket | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'notes' | 'chatlog'>('notes');
-  const [messageText, setMessageText] = useState('');
   const [categories, setCategories] = useState<any[]>([]);
-  const [quickReplies, setQuickReplies] = useState<any[]>([]);
-  const [showQuickReplies, setShowQuickReplies] = useState(false);
+
   
   const isTeknisi = typeof window !== 'undefined' && window.location.pathname.includes('/teknisi');
   
@@ -59,6 +55,18 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
   const [isAssigning, setIsAssigning] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [toasts, setToasts] = useState<{id: number, message: string, type: 'success' | 'error'}[]>([]);
+
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
       const id = Date.now();
@@ -93,19 +101,10 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
           setTicket(foundTicket);
         }
 
-        const messagesResponse = await fetchClient(isOperator ? `/operator/tickets/${ticketId}/messages` : `/admin/tickets/${ticketId}/messages`).catch(() => ({ data: [] }));
-        setMessages(Array.isArray(messagesResponse.data) ? messagesResponse.data : []);
-
         // Fetch categories to build full path
         const catsResponse = await fetchClient('/admin/categories').catch(() => ({ data: [] }));
         if (Array.isArray(catsResponse.data)) {
           setCategories(catsResponse.data);
-        }
-
-        // Fetch quick replies
-        const qrResponse = await fetchClient('/admin/quick-replies').catch(() => []);
-        if (Array.isArray(qrResponse)) {
-          setQuickReplies(qrResponse);
         }
 
         // Fetch technicians for disposisi
@@ -127,30 +126,7 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
     loadTicket();
   }, [ticketId]);
 
-  const handleSubmitAction = async (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!ticket || !messageText.trim()) {
-      return;
-    }
 
-    try {
-      const isOperator = typeof window !== 'undefined' && window.location.pathname.includes('/operator');
-      await fetchClient(`/admin/tickets/${ticketId}/messages`, {
-        method: 'POST',
-        body: JSON.stringify({ message: messageText })
-      });
-
-      setMessageText('');
-      
-      // Refresh messages
-      const messagesResponse = await fetchClient(`/admin/tickets/${ticketId}/messages`).catch(() => ({ data: [] }));
-      setMessages(Array.isArray(messagesResponse.data) ? messagesResponse.data : []);
-      showToast('Catatan internal berhasil dikirim!', 'success');
-    } catch (error) {
-      console.error('Failed to submit action:', error);
-      showToast('Gagal mengirim catatan. Silakan coba lagi.', 'error');
-    }
-  };
 
   const handleDisposisi = async () => {
     if (!selectedDeptId) return;
@@ -177,74 +153,57 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
     }
   };
 
-  const sendQuickReply = async (reply: any) => {
-    if (!ticket) return;
-    if (!confirm('Pesan ini akan dikirimkan langsung ke WhatsApp pelapor. Lanjutkan?')) return;
-    
-    try {
-      const isOperator = typeof window !== 'undefined' && window.location.pathname.includes('/operator');
-      // Create a ticket message as internal log too
-      await fetchClient(`/admin/tickets/${ticketId}/messages`, {
-        method: 'POST',
-        body: JSON.stringify({ message: `[QUICK REPLY SENT]\n${reply.content}` })
-      });
 
-      // Send to WA via webhook (assuming the backend API sends it, or we call wasender directly)
-      // The current backend usually sends WA automatically on status change or we can do it here
-      await fetchClient(`/admin/tickets/${ticketId}/messages/wa`, {
-        method: 'POST',
-        body: JSON.stringify({ message: reply.content, phone: ticket.phone })
-      }).catch(e => console.warn('WA Webhook fail (expected if not implemented yet)', e));
 
-      setShowQuickReplies(false);
-      showToast('Jawaban cepat berhasil dikirim ke WA pelapor!', 'success');
-      
-      // Refresh messages
-      const messagesResponse = await fetchClient(`/admin/tickets/${ticketId}/messages`).catch(() => ({ data: [] }));
-      setMessages(Array.isArray(messagesResponse.data) ? messagesResponse.data : []);
-    } catch (error) {
-      console.error('Failed to send quick reply:', error);
-      showToast('Gagal mengirim jawaban cepat.', 'error');
-    }
-  };
-
-  const handleUpdateStatus = async (newStatus: string) => {
+  const handleUpdateStatus = (newStatus: string) => {
     const isResolving = newStatus === 'WAITING CONFIRMATION' || newStatus === 'RESOLVED';
-    if (!confirm(`Apakah Anda yakin ingin ${isResolving ? 'menyelesaikan' : 'membuka kembali'} tiket ini?`)) return;
+    const actionText = isResolving ? 'menyelesaikan' : 'membuka kembali';
 
-    setIsUpdatingStatus(true);
-    try {
-      const isOperator = typeof window !== 'undefined' && window.location.pathname.includes('/operator');
-      await fetchClient(isOperator ? `/operator/tickets/${ticketId}` : `/admin/tickets/${ticketId}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ status: newStatus })
-      });
+    setConfirmModal({
+      isOpen: true,
+      title: 'Konfirmasi Status',
+      message: `Apakah Anda yakin ingin ${actionText} tiket ini?`,
+      onConfirm: async () => {
+        setIsUpdatingStatus(true);
+        try {
+          const isOperator = typeof window !== 'undefined' && window.location.pathname.includes('/operator');
+          await fetchClient(isOperator ? `/operator/tickets/${ticketId}` : `/admin/tickets/${ticketId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ status: newStatus })
+          });
 
-
-      showToast(isResolving ? 'Tiket berhasil diselesaikan!' : 'Tiket berhasil dibuka kembali!', 'success');
-      setTimeout(() => window.location.reload(), 1500);
-    } catch (error) {
-      console.error('Gagal update status:', error);
-      showToast('Gagal mengubah status tiket.', 'error');
-    } finally {
-      setIsUpdatingStatus(false);
-    }
+          showToast(isResolving ? 'Tiket berhasil diselesaikan!' : 'Tiket berhasil dibuka kembali!', 'success');
+          setTimeout(() => window.location.reload(), 1500);
+        } catch (error) {
+          console.error('Gagal update status:', error);
+          showToast('Gagal mengubah status tiket.', 'error');
+        } finally {
+          setIsUpdatingStatus(false);
+        }
+      }
+    });
   };
 
-  const handleUpdateField = async (field: string, value: string | number) => {
-    if (!confirm(`Apakah Anda yakin ingin mengubah data ini?`)) return;
-    try {
-      const isOperator = typeof window !== 'undefined' && window.location.pathname.includes('/operator');
-      await fetchClient(isOperator ? `/operator/tickets/${ticketId}` : `/admin/tickets/${ticketId}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ [field]: value })
-      });
-      setTicket((prev) => prev ? { ...prev, [field]: value } : null);
-      showToast(`Berhasil memperbarui ${field}!`, 'success');
-    } catch (error) {
-      console.error(`Gagal update ${field}:`, error);
-      showToast(`Gagal memperbarui ${field}.`, 'error');
-    }
+  const handleUpdateField = (field: string, value: string | number) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Konfirmasi Perubahan',
+      message: 'Apakah Anda yakin ingin mengubah data ini?',
+      onConfirm: async () => {
+        try {
+          const isOperator = typeof window !== 'undefined' && window.location.pathname.includes('/operator');
+          await fetchClient(isOperator ? `/operator/tickets/${ticketId}` : `/admin/tickets/${ticketId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ [field]: value })
+          });
+          setTicket((prev) => prev ? { ...prev, [field]: value } : null);
+          showToast(`Berhasil memperbarui ${field}!`, 'success');
+        } catch (error) {
+          console.error(`Gagal update ${field}:`, error);
+          showToast(`Gagal memperbarui ${field}.`, 'error');
+        }
+      }
+    });
   };
 
   const formatDate = (value?: string) =>
@@ -314,38 +273,62 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
           <div className="px-3 py-1.5 rounded-full bg-gray-100 border border-gray-200">
             <span className="text-[11px] font-bold text-gray-600 uppercase tracking-wider">{ticket.priority}</span>
           </div>
+          
+          <div className="h-6 w-px bg-gray-300 mx-1"></div>
+          
+          {ticket.status === 'RESOLVED' || ticket.status === 'CLOSED' || ticket.status === 'WAITING CONFIRMATION' ? (
+            <button
+              onClick={() => handleUpdateStatus(ticket.tech_id || ticket.tech?.name ? 'IN PROGRESS' : 'OPEN')}
+              disabled={isUpdatingStatus}
+              className="px-4 py-1.5 bg-white border-2 border-[#1E3A8A] text-[#1E3A8A] hover:bg-blue-50 disabled:opacity-50 text-[11.5px] font-bold rounded-full transition-colors shadow-sm flex items-center gap-1.5"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+              {isUpdatingStatus ? 'MEMPROSES...' : 'BUKA KEMBALI'}
+            </button>
+          ) : (
+            <button
+              onClick={() => handleUpdateStatus('WAITING CONFIRMATION')}
+              disabled={isUpdatingStatus}
+              className="px-4 py-1.5 bg-[#1E3A8A] hover:bg-blue-900 disabled:opacity-50 text-white text-[11.5px] font-bold rounded-full transition-colors shadow-sm flex items-center gap-1.5"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+              {isUpdatingStatus ? 'MEMPROSES...' : 'SELESAIKAN TIKET'}
+            </button>
+          )}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 mt-2">
-        {/* LEFT COLUMN: Main Content */}
-        <div className="lg:col-span-2 flex flex-col gap-6">
+      <div className="flex flex-col gap-6 mt-2">
           
           {/* INFORMASI TIKET */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
-            <h2 className="text-[16px] font-bold text-gray-900 mb-5">Informasi Tiket</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 bg-gray-50/50">
+              <h2 className="text-[16px] font-bold text-gray-900">Informasi Tiket</h2>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-200">
               
-              <div className="flex flex-col gap-4">
-                <div className="flex items-start">
+              {/* Kolom 1 */}
+              <div className="flex flex-col divide-y divide-gray-100">
+                <div className="flex items-center px-6 py-4 hover:bg-gray-50/50 transition-colors">
                   <span className="w-28 text-[13.5px] font-medium text-gray-500 shrink-0">Status</span>
                   <span className="text-[13.5px] font-bold text-[#1E3A8A] uppercase">{displayStatus}</span>
                 </div>
-                <div className="flex items-start">
+                <div className="flex items-center px-6 py-4 hover:bg-gray-50/50 transition-colors">
                   <span className="w-28 text-[13.5px] font-medium text-gray-500 shrink-0">Department</span>
                   <span className="text-[13.5px] font-semibold text-gray-900">{ticket.dept?.name || '-'}</span>
                 </div>
-                <div className="flex items-start">
+                <div className="flex items-center px-6 py-4 hover:bg-gray-50/50 transition-colors">
                   <span className="w-28 text-[13.5px] font-medium text-gray-500 shrink-0">Assigned To</span>
                   <span className="text-[13.5px] font-semibold text-gray-900">{ticket.tech?.name ? ticket.tech.name : 'Not Assigned'}</span>
                 </div>
-                <div className="flex items-center">
+                <div className="flex items-center px-6 py-3 hover:bg-gray-50/50 transition-colors">
                   <span className="w-28 text-[13.5px] font-medium text-gray-500 shrink-0">Priority</span>
                   <select 
                     value={ticket.priority || ''}
                     onChange={(e) => handleUpdateField('priority', e.target.value)}
                     disabled={isTeknisi}
-                    className={`flex-1 min-w-0 py-1 px-2 -ml-2 rounded-md border-transparent text-[13.5px] font-semibold text-gray-900 bg-transparent hover:bg-gray-50 outline-none transition-colors focus:ring-2 focus:ring-gray-200 truncate ${isTeknisi ? 'opacity-90 cursor-not-allowed hover:bg-transparent appearance-none' : 'cursor-pointer'}`}
+                    className={`flex-1 min-w-0 py-1.5 px-2 -ml-2 rounded-lg border border-transparent text-[13.5px] font-semibold text-gray-900 bg-transparent hover:bg-gray-50 hover:border-gray-200 outline-none transition-all focus:border-[#1E3A8A] focus:ring-1 focus:ring-[#1E3A8A] truncate ${isTeknisi ? 'opacity-90 cursor-not-allowed hover:bg-transparent hover:border-transparent appearance-none' : 'cursor-pointer'}`}
                   >
                     <option value="CRITICAL">CRITICAL</option>
                     <option value="HIGH">HIGH</option>
@@ -353,13 +336,13 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
                     <option value="LOW">LOW</option>
                   </select>
                 </div>
-                <div className="flex items-center">
+                <div className="flex items-center px-6 py-3 hover:bg-gray-50/50 transition-colors">
                   <span className="w-28 text-[13.5px] font-medium text-gray-500 shrink-0">Category</span>
                   <select
                     value={ticket.category_id || ''}
                     onChange={(e) => handleUpdateField('category_id', Number(e.target.value))}
                     disabled={isTeknisi}
-                    className={`flex-1 min-w-0 py-1 px-2 -ml-2 rounded-md border-transparent text-[13.5px] font-semibold text-gray-900 bg-transparent hover:bg-gray-50 outline-none transition-colors focus:ring-2 focus:ring-gray-200 truncate ${isTeknisi ? 'opacity-90 cursor-not-allowed hover:bg-transparent appearance-none' : 'cursor-pointer'}`}
+                    className={`flex-1 min-w-0 py-1.5 px-2 -ml-2 rounded-lg border border-transparent text-[13.5px] font-semibold text-gray-900 bg-transparent hover:bg-gray-50 hover:border-gray-200 outline-none transition-all focus:border-[#1E3A8A] focus:ring-1 focus:ring-[#1E3A8A] truncate ${isTeknisi ? 'opacity-90 cursor-not-allowed hover:bg-transparent hover:border-transparent appearance-none' : 'cursor-pointer'}`}
                   >
                     <option value="">-- Pilih --</option>
                     {categories.map(cat => {
@@ -375,8 +358,9 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-4">
-                <div className="flex items-start">
+              {/* Kolom 2 */}
+              <div className="flex flex-col divide-y divide-gray-100">
+                <div className="flex items-center px-6 py-4 hover:bg-gray-50/50 transition-colors">
                   <span className="w-28 text-[13.5px] font-medium text-gray-500 shrink-0">Pelapor</span>
                   <span className="text-[13.5px] font-semibold text-gray-900 flex items-center gap-1.5">
                     <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
@@ -389,7 +373,7 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
                     )}
                   </span>
                 </div>
-                <div className="flex items-start">
+                <div className="flex items-center px-6 py-4 hover:bg-gray-50/50 transition-colors">
                   <span className="w-28 text-[13.5px] font-medium text-gray-500 shrink-0">No HP</span>
                   <span className="text-[13.5px] font-semibold text-gray-900 flex items-center gap-1.5">
                     {ticket.phone || '-'}
@@ -400,15 +384,15 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
                     )}
                   </span>
                 </div>
-                <div className="flex items-start">
+                <div className="flex items-center px-6 py-4 hover:bg-gray-50/50 transition-colors">
                   <span className="w-28 text-[13.5px] font-medium text-gray-500 shrink-0">Unit/Dep.</span>
                   <span className="text-[13.5px] font-semibold text-gray-900">{ticket.unit || ticket.reporter_type || '-'}</span>
                 </div>
-                <div className="flex items-start">
+                <div className="flex items-center px-6 py-4 hover:bg-gray-50/50 transition-colors">
                   <span className="w-28 text-[13.5px] font-medium text-gray-500 shrink-0">Created</span>
                   <span className="text-[13.5px] font-semibold text-gray-900">{formatDate(ticket.created_at)}</span>
                 </div>
-                <div className="flex items-start">
+                <div className="flex items-center px-6 py-4 hover:bg-gray-50/50 transition-colors">
                   <span className="w-28 text-[13.5px] font-medium text-gray-500 shrink-0">Updated</span>
                   <span className="text-[13.5px] font-semibold text-gray-900">{formatDate(ticket.updated_at || ticket.created_at)}</span>
                 </div>
@@ -416,282 +400,123 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
             </div>
           </div>
 
-          {/* TABS SECTION */}
-          <div className="flex flex-col gap-0">
-            <div className="flex items-center gap-1 border-b border-gray-300">
-              <button
-                onClick={() => setActiveTab('notes')}
-                className={`px-6 py-3.5 text-[14px] font-bold rounded-t-xl transition-all border-b-4 ${
-                  activeTab === 'notes'
-                    ? 'border-[#1E3A8A] text-[#1E3A8A]'
-                    : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50'
-                }`}
-              >
-                Notes ({messages.length})
-              </button>
-              <button
-                onClick={() => setActiveTab('chatlog')}
-                className={`px-6 py-3.5 text-[14px] font-bold rounded-t-xl transition-all border-b-4 ${
-                  activeTab === 'chatlog'
-                    ? 'border-[#1E3A8A] text-[#1E3A8A]'
-                    : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50'
-                }`}
-              >
-                Chat Log
-              </button>
+          {/* ISI TIKET SECTION */}
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 bg-gray-50/50">
+              <h2 className="text-[16px] font-bold text-gray-900">Isi Tiket</h2>
             </div>
             
-            {activeTab === 'notes' && (
-              <div className="bg-white rounded-b-2xl border border-t-0 border-gray-200 p-6 flex flex-col gap-6 shadow-sm">
-                <div className="flex flex-col gap-4 bg-gray-50 p-5 rounded-2xl border border-gray-200 max-h-[400px] overflow-y-auto">
-                  {messages.length === 0 ? (
-                    <div className="text-center p-8 text-sm text-gray-500">Belum ada catatan internal.</div>
-                  ) : (
-                    messages.map((msg) => (
-                      <div key={msg.id} className="flex flex-col self-end items-end max-w-[85%] z-10 w-full">
-                        <div className="px-5 py-4 rounded-2xl shadow-sm text-[14.5px] text-gray-800 bg-white border border-gray-200 whitespace-pre-wrap leading-relaxed w-full">
-                          <div className="font-bold text-[13px] text-gray-800 mb-2 flex items-center justify-between gap-2 border-b border-gray-100 pb-2">
-                            <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-gray-100 text-gray-500 tracking-wide">
-                              CATATAN INTERNAL
-                            </span>
-                            <span className="flex items-center gap-1.5">{msg.tech?.name || msg.sender_name || 'Staff'} <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg></span>
-                          </div>
-                          {msg.message}
-                        </div>
-                        <span className="text-[11px] font-semibold text-gray-400 mt-1.5 pr-1">{formatDate(msg.created_at)}</span>
-                      </div>
-                    ))
-                  )}
-                </div>
-
-                <div className="border-t border-gray-200 pt-5 mt-1">
-                  <h2 className="text-[14px] font-bold mb-3 text-gray-700">Tambah Catatan Internal</h2>
-                  <form onSubmit={handleSubmitAction} className="space-y-4">
-                    <textarea
-                      className="w-full min-h-[80px] max-h-[200px] rounded-xl border border-gray-300 bg-gray-50/50 p-4 text-[14.5px] text-gray-900 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all"
-                      value={messageText}
-                      onChange={(event) => setMessageText(event.target.value)}
-                      placeholder="Ketik catatan aktivitas atau progress perbaikan di sini..."
-                    />
-                    <div className="flex justify-end">
-                      <button
-                        type="submit"
-                        disabled={!messageText.trim()}
-                        className="rounded-xl bg-[#1E3A8A] px-6 py-3 text-[14px] font-bold text-white transition hover:bg-blue-900 shadow-sm disabled:opacity-50 flex items-center gap-2"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
-                        Kirim Catatan
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'chatlog' && (
-              <div className="bg-white rounded-b-2xl border border-t-0 border-gray-200 p-6 flex flex-col gap-6 shadow-sm">
-                <div className="flex flex-col gap-4 bg-gray-50 p-5 rounded-2xl border border-gray-200 max-h-[400px] overflow-y-auto">
-                  <div className="flex flex-col self-start items-start max-w-[85%] z-10 w-full">
-                    <div className="px-5 py-4 rounded-2xl shadow-sm text-[14.5px] text-gray-800 bg-white border border-gray-200 whitespace-pre-wrap leading-relaxed w-full">
-                      <div className="font-bold text-[13px] text-gray-800 mb-2 flex items-center gap-2 border-b border-gray-100 pb-2">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-gray-100 text-gray-500 tracking-wide">PELAPOR</span>
-                        <span className="flex items-center gap-1.5"><svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg> {requester}</span>
-                      </div>
-                      <span className="font-extrabold text-gray-900">Subjek: {ticket.subject}</span>
-                      <br/><br/>
-                      <span className="font-bold text-gray-700">Deskripsi:</span>
-                      <br/>
-                      {ticket.description || '-'}
-
-                      {(ticket.attachment || (ticket.attachments && ticket.attachments.length > 0)) && (
-                        <div className="mt-5 pt-4 border-t border-gray-100 w-full">
-                          <span className="font-bold text-[11px] text-gray-400 mb-3 uppercase tracking-wider flex items-center gap-1.5">
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
-                            Lampiran Pelapor
-                          </span>
-                          <div className="flex flex-wrap gap-3">
-                            {/* Single Attachment (if any) */}
-                            {ticket.attachment && (
-                              <a href={ticket.attachment} target="_blank" rel="noopener noreferrer" className="flex flex-col gap-1 w-[120px] sm:w-[150px] overflow-hidden rounded-xl border border-gray-200 hover:border-[#1E3A8A] hover:shadow-md transition-all bg-white group p-1.5">
-                                {/\.(jpeg|jpg|gif|png|webp)$/i.test(ticket.attachment) ? (
-                                  <div className="w-full h-24 bg-gray-50 rounded-lg overflow-hidden relative">
-                                    <img src={ticket.attachment} alt="Lampiran" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                                      <svg className="w-6 h-6 text-white opacity-0 group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg>
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <div className="w-full h-24 bg-blue-50 rounded-lg flex items-center justify-center text-[#1E3A8A] relative">
-                                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-[#1E3A8A]/5 transition-colors"></div>
-                                  </div>
-                                )}
-                                <div className="px-1 py-1 truncate text-[10.5px] font-bold text-gray-600 text-center">
-                                  {ticket.attachment.split('/').pop() || 'Lampiran'}
-                                </div>
-                              </a>
-                            )}
-                            
-                            {/* Multiple Attachments (ticket_attachments) */}
-                            {ticket.attachments && ticket.attachments.map((att, idx) => (
-                              <a key={idx} href={att.file_url} target="_blank" rel="noopener noreferrer" className="flex flex-col gap-1 w-[120px] sm:w-[150px] overflow-hidden rounded-xl border border-gray-200 hover:border-[#1E3A8A] hover:shadow-md transition-all bg-white group p-1.5">
-                                {/\.(jpeg|jpg|gif|png|webp)$/i.test(att.file_url) ? (
-                                  <div className="w-full h-24 bg-gray-50 rounded-lg overflow-hidden relative">
-                                    <img src={att.file_url} alt={att.file_name || 'Lampiran'} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                                      <svg className="w-6 h-6 text-white opacity-0 group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg>
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <div className="w-full h-24 bg-blue-50 rounded-lg flex items-center justify-center text-[#1E3A8A] relative">
-                                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-[#1E3A8A]/5 transition-colors"></div>
-                                  </div>
-                                )}
-                                <div className="px-1 py-1 truncate text-[10.5px] font-bold text-gray-600 text-center">
-                                  {att.file_name || att.file_url.split('/').pop() || 'Lampiran'}
-                                </div>
-                              </a>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <span className="text-[11px] font-semibold text-gray-400 mt-1.5 pl-1">{formatDate(ticket.created_at)}</span>
-                  </div>
-                  <div className="mt-4 pt-4 border-t border-gray-200 flex justify-center w-full">
-                    <div className="text-gray-400 text-[11px] font-bold tracking-widest">
-                      END OF LOG
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* RIGHT COLUMN: Sidebar */}
-        <div className="lg:col-span-1 flex flex-col gap-6">
-          
-          {/* DISPOSISI CARD */}
-          {isWaitingVerification && (
-            <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm flex flex-col gap-4">
-              <div className="flex gap-3 items-start">
-                <div className="mt-0.5 p-1.5 bg-blue-50 text-[#1E3A8A] rounded-lg">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+            <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-gray-200">
+              
+              <div className="md:col-span-2 p-6 flex flex-col gap-6">
+                <div>
+                  <h4 className="text-[12.5px] font-bold text-gray-400 uppercase tracking-wider mb-2">Subjek</h4>
+                  <div className="text-[16px] font-bold text-gray-900">{ticket.subject}</div>
                 </div>
                 <div>
-                  <h3 className="text-[15px] font-bold text-gray-900">Tiket Belum Ditugaskan</h3>
-                  <p className="text-[12px] text-gray-500 mt-1 leading-relaxed">Pilih departemen dan teknisi untuk memproses tiket ini.</p>
-                </div>
-              </div>
-              <div className="flex flex-col gap-3 mt-1">
-                <select
-                  value={selectedDeptId}
-                  onChange={(e) => {
-                    setSelectedDeptId(e.target.value);
-                    setSelectedTechId(''); // reset teknisi saat departemen berubah
-                  }}
-                  className="w-full rounded-xl border border-gray-200 bg-white p-3 text-[13.5px] font-semibold text-gray-900 outline-none focus:border-[#1E3A8A] focus:ring-2 focus:ring-[#1E3A8A]/20"
-                >
-                  <option value="">-- Pilih Departemen --</option>
-                  {departments.map(d => (
-                    <option key={d.id} value={d.id}>{d.name}</option>
-                  ))}
-                </select>
-
-                {selectedDeptId && (
-                  <select
-                    value={selectedTechId}
-                    onChange={(e) => setSelectedTechId(e.target.value)}
-                    className="w-full rounded-xl border border-gray-200 bg-white p-3 text-[13.5px] font-semibold text-gray-900 outline-none focus:border-[#1E3A8A] focus:ring-2 focus:ring-[#1E3A8A]/20"
-                  >
-                    <option value="">-- Pilih Teknisi --</option>
-                    {technicians.filter(t => String(t.dept_id) === String(selectedDeptId)).map(t => (
-                      <option key={t.id} value={t.id}>{t.name}</option>
-                    ))}
-                  </select>
-                )}
-                <button
-                  onClick={handleDisposisi}
-                  disabled={!selectedDeptId || isAssigning}
-                  className="w-full py-3 bg-[#1E3A8A] hover:bg-blue-900 disabled:opacity-50 text-white text-[13.5px] font-bold rounded-xl transition-colors shadow-sm mt-1"
-                >
-                  {isAssigning ? 'Memproses...' : 'DISPOSISI SEKARANG'}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* JAWABAN CEPAT CARD */}
-          {(ticket.status === 'WAITING VERIFICATION' || ticket.status === 'IN PROGRESS' || ticket.status === 'Diproses') && (
-            <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm flex flex-col gap-4 relative">
-              <div className="flex gap-3 items-start">
-                <div className="mt-0.5 p-1.5 bg-blue-50 text-[#1E3A8A] rounded-lg">
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                </div>
-                <div className="flex-1 flex items-center justify-between">
-                  <div>
-                    <h3 className="text-[15px] font-bold text-gray-900">Jawaban Cepat (Quick Reply)</h3>
-                    <p className="text-[12px] text-gray-500 mt-1 leading-relaxed">Pilih template pesan untuk dikirim langsung ke WhatsApp pelapor.</p>
+                  <h4 className="text-[12.5px] font-bold text-gray-400 uppercase tracking-wider mb-2">Deskripsi</h4>
+                  <div className="text-[14.5px] text-gray-700 whitespace-pre-wrap leading-relaxed">
+                    {ticket.description || '-'}
                   </div>
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2 mt-2 bg-slate-50 p-3 rounded-xl border border-slate-200 max-h-64 overflow-y-auto">
-                {quickReplies.length === 0 ? (
-                  <div className="text-center text-xs text-slate-500 p-2">Belum ada template. Buat di Dashboard Admin.</div>
+              <div className="md:col-span-1 p-6 bg-gray-50/50 flex flex-col gap-4">
+                <h4 className="text-[12.5px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
+                  Lampiran
+                </h4>
+                
+                {(!ticket.attachment && (!ticket.attachments || ticket.attachments.length === 0)) ? (
+                  <div className="text-[13px] text-gray-500 italic bg-white p-4 rounded-xl border border-gray-200 text-center shadow-sm">
+                    Tidak ada lampiran
+                  </div>
                 ) : (
-                  quickReplies.map(reply => (
-                    <div key={reply.id} className="bg-white p-3 rounded-lg border border-slate-200 hover:border-[#1E3A8A] hover:shadow-sm cursor-pointer transition-all flex flex-col gap-1" onClick={() => sendQuickReply(reply)}>
-                      <span className="font-bold text-xs text-slate-800">{reply.title}</span>
-                      <span className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">{reply.content}</span>
-                    </div>
-                  ))
+                  <div className="flex flex-col gap-3">
+                    {/* Single Attachment (if any) */}
+                    {ticket.attachment && (
+                      <a href={ticket.attachment} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 w-full overflow-hidden rounded-xl border border-gray-200 hover:border-[#1E3A8A] hover:shadow-md transition-all bg-white group p-2">
+                        {/\.(jpeg|jpg|gif|png|webp)$/i.test(ticket.attachment) ? (
+                          <div className="w-14 h-14 shrink-0 bg-gray-50 rounded-lg overflow-hidden relative">
+                            <img src={ticket.attachment} alt="Lampiran" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                          </div>
+                        ) : (
+                          <div className="w-14 h-14 shrink-0 bg-blue-50 rounded-lg flex items-center justify-center text-[#1E3A8A]">
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0 pr-2">
+                          <div className="truncate text-[12.5px] font-bold text-gray-800">
+                            {ticket.attachment.split('/').pop() || 'Lampiran'}
+                          </div>
+                          <div className="text-[11px] text-gray-400 mt-0.5">Lihat file</div>
+                        </div>
+                      </a>
+                    )}
+                    
+                    {/* Multiple Attachments (ticket_attachments) */}
+                    {ticket.attachments && ticket.attachments.map((att, idx) => (
+                      <a key={idx} href={att.file_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 w-full overflow-hidden rounded-xl border border-gray-200 hover:border-[#1E3A8A] hover:shadow-md transition-all bg-white group p-2">
+                        {/\.(jpeg|jpg|gif|png|webp)$/i.test(att.file_url) ? (
+                          <div className="w-14 h-14 shrink-0 bg-gray-50 rounded-lg overflow-hidden relative">
+                            <img src={att.file_url} alt={att.file_name || 'Lampiran'} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                          </div>
+                        ) : (
+                          <div className="w-14 h-14 shrink-0 bg-blue-50 rounded-lg flex items-center justify-center text-[#1E3A8A]">
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0 pr-2">
+                          <div className="truncate text-[12.5px] font-bold text-gray-800">
+                            {att.file_name || att.file_url.split('/').pop() || 'Lampiran'}
+                          </div>
+                          <div className="text-[11px] text-gray-400 mt-0.5">Lihat file</div>
+                        </div>
+                      </a>
+                    ))}
+                  </div>
                 )}
               </div>
-            </div>
-          )}
-
-          {/* TINDAKAN TIKET CARD */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm flex flex-col gap-4">
-            <div className="flex gap-3 items-start">
-              <div className="mt-0.5 p-1.5 bg-blue-50 text-[#1E3A8A] rounded-lg">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-              </div>
-              <div>
-                <h3 className="text-[15px] font-bold text-gray-900">
-                  {ticket.status === 'RESOLVED' || ticket.status === 'CLOSED' ? 'Buka Kembali Tiket' : 'Selesaikan Tiket'}
-                </h3>
-                <p className="text-[12px] text-gray-500 mt-1 leading-relaxed">
-                  {ticket.status === 'RESOLVED' || ticket.status === 'CLOSED' ? 'Buka kembali tiket ini jika masih ada kendala yang belum terselesaikan.' : 'Tandai tiket ini sebagai selesai (RESOLVED) jika perbaikan sudah tuntas dilakukan.'}
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-col gap-3 mt-1">
-              {ticket.status === 'RESOLVED' || ticket.status === 'CLOSED' || ticket.status === 'WAITING CONFIRMATION' ? (
-                <button
-                  onClick={() => handleUpdateStatus(ticket.tech_id || ticket.tech?.name ? 'IN PROGRESS' : 'OPEN')}
-                  disabled={isUpdatingStatus}
-                  className="w-full py-3 bg-white border-2 border-[#1E3A8A] text-[#1E3A8A] hover:bg-blue-50 disabled:opacity-50 text-[13.5px] font-bold rounded-xl transition-colors shadow-sm"
-                >
-                  {isUpdatingStatus ? 'Memproses...' : 'BUKA KEMBALI (REOPEN)'}
-                </button>
-              ) : (
-                <button
-                  onClick={() => handleUpdateStatus('WAITING CONFIRMATION')}
-                  disabled={isUpdatingStatus}
-                  className="w-full py-3 bg-[#1E3A8A] hover:bg-blue-900 disabled:opacity-50 text-white text-[13.5px] font-bold rounded-xl transition-colors shadow-sm"
-                >
-                  {isUpdatingStatus ? 'Memproses...' : 'TANDAI SELESAI'}
-                </button>
-              )}
+              
             </div>
           </div>
 
-        </div>
+
+
       </div>
       
+      {/* Confirmation Modal */}
+      {confirmModal.isOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6">
+              <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-[#1E3A8A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              </div>
+              <h3 className="text-[17px] font-bold text-gray-900 mb-2">{confirmModal.title}</h3>
+              <p className="text-[14px] text-gray-600 leading-relaxed">{confirmModal.message}</p>
+            </div>
+            <div className="px-6 py-4 bg-gray-50/80 border-t border-gray-100 flex justify-end gap-3">
+              <button
+                onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+                className="px-4 py-2.5 text-[13px] font-bold text-gray-600 hover:text-gray-900 hover:bg-gray-200 bg-gray-100 rounded-xl transition-colors"
+              >
+                Batal
+              </button>
+              <button
+                onClick={() => {
+                  setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                  confirmModal.onConfirm();
+                }}
+                className="px-4 py-2.5 text-[13px] font-bold text-white bg-[#1E3A8A] hover:bg-blue-900 rounded-xl transition-colors shadow-sm flex items-center justify-center"
+              >
+                Ya, Lanjutkan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Toast Notifications */}
       <div className="fixed top-24 right-8 flex flex-col gap-3 z-50 pointer-events-none">
           {toasts.map(toast => (

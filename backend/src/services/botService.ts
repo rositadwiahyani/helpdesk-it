@@ -294,6 +294,17 @@ async function handleMainMenu(sender: string, input: string) {
     const selectedMenu = menus[selectedIndex];
 
     if (selectedMenu.action_type === 'CREATE_TICKET') {
+      // 1. Anti-Spam Check: Max 2 active tickets
+      const { data: activeTickets } = await supabase
+        .from('tickets')
+        .select('id')
+        .eq('phone', sender)
+        .in('status', ['WAITING VERIFICATION', 'OPEN', 'IN PROGRESS', 'NEW', 'ESCALATED']);
+        
+      if (activeTickets && activeTickets.length >= 2) {
+          return sendMessage(sender, "⚠️ *Batas Tiket Tercapai*\n\nMaaf, Anda saat ini memiliki laporan yang sedang diproses. Sistem membatasi maksimal 2 laporan aktif secara bersamaan untuk mencegah spam.\n\nMohon tunggu hingga tiket sebelumnya diselesaikan, atau gunakan menu *Cek Status Tiket*.");
+      }
+
       await supabase.from('wa_sessions').update({
         step: 'SELECT_CATEGORY',
         data: {},
@@ -317,6 +328,17 @@ async function handleMainMenu(sender: string, input: string) {
   } else {
     // Fallback manual lama
     if (input === '1') {
+      // 1. Anti-Spam Check: Max 2 active tickets
+      const { data: activeTickets } = await supabase
+        .from('tickets')
+        .select('id')
+        .eq('phone', sender)
+        .in('status', ['WAITING VERIFICATION', 'OPEN', 'IN PROGRESS', 'NEW', 'ESCALATED']);
+        
+      if (activeTickets && activeTickets.length >= 2) {
+          return sendMessage(sender, "⚠️ *Batas Tiket Tercapai*\n\nMaaf, Anda saat ini memiliki laporan yang sedang diproses. Sistem membatasi maksimal 2 laporan aktif secara bersamaan untuk mencegah spam.\n\nMohon tunggu hingga tiket sebelumnya diselesaikan, atau balas *2* untuk *Cek Status Tiket*.");
+      }
+
       await supabase.from('wa_sessions').update({
         step: 'SELECT_CATEGORY',
         data: {},

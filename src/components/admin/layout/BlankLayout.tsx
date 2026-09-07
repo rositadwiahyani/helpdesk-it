@@ -15,7 +15,6 @@ export default function BlankLayout({ children }: { children: React.ReactNode })
     if (pathname.includes('/dashboard/administrasi/sla')) return 'Manajemen SLA';
     if (pathname.includes('/dashboard/administrasi/staff')) return 'Manajemen Staff';
     if (pathname.includes('/dashboard/administrasi/reports')) return 'Laporan & Ekspor';
-    if (pathname.includes('/dashboard/administrasi/quick-replies')) return 'Template Jawaban Cepat';
     if (pathname.includes('/dashboard/administrasi/webhook')) return 'Log API Webhook';
     if (pathname.includes('/dashboard/administrasi/settings')) return 'Pengaturan Sistem';
     if (pathname.includes('/dashboard/administrasi/profile')) return 'Profil Administrator';
