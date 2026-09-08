@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { fetchClient } from '@/lib/apiClient';
+import { fetchClient, API_BASE_URL } from '@/lib/apiClient';
 
 export default function ProfilePage() {
   const [currentUser, setCurrentUser] = useState<any>({});
@@ -66,7 +66,7 @@ export default function ProfilePage() {
       const token = localStorage.getItem('access_token');
       if (!token) throw new Error('Akses token tidak ditemukan, silakan login ulang.');
 
-      const response = await fetch('http://localhost:5000/api/auth/profile', {
+      const response = await fetch(`${API_BASE_URL}/auth/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

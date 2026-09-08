@@ -42,3 +42,7 @@ next-env.d.ts
 
 # simulator page (ignored intentionally)
 /src/app/simulator/
+
+# backend dist
+backend/dist/
+dist/

@@ -1,6 +1,8 @@
+import { API_BASE_URL } from './apiClient';
+
 export const loginUser = async (email: string, password: string) => {
   try {
-    const response = await fetch('http://localhost:5000/api/auth/login', {
+    const response = await fetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -26,4 +28,6 @@ export const logoutUser = async () => {
   localStorage.removeItem('user');
   localStorage.removeItem('access_token');
   document.cookie = 'isLoggedIn=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+  document.cookie = 'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+  document.cookie = 'userRole=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
 };

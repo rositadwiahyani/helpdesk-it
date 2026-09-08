@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { fetchClient } from '@/lib/apiClient';
+import { fetchClient, API_BASE_URL } from '@/lib/apiClient';
 
 export default function TicketConfirmationPage() {
     const params = useParams();
@@ -37,7 +37,7 @@ export default function TicketConfirmationPage() {
             // Kita bisa menggunakan supabase client public langsung jika RLS mengizinkan UPDATE oleh anon (bahaya).
             // Atau kita buat endpoint public di backend: POST /api/tickets/public/:id/confirm
             // Karena ini MVP, kita asumsikan kita panggil backend endpoint baru.
-            const res = await fetch(`http://localhost:5000/api/tickets/public/${ticketId}/confirm`, {
+            const res = await fetch(`${API_BASE_URL}/tickets/public/${ticketId}/confirm`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action })

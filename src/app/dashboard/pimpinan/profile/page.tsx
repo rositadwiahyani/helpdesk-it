@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { User, Lock, Phone, Mail, Shield, CheckCircle2, AlertCircle } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/apiClient';
 
 export default function PimpinanProfilePage() {
   const [currentUser, setCurrentUser] = useState<any>({});
@@ -59,7 +60,7 @@ export default function PimpinanProfilePage() {
       const token = localStorage.getItem('access_token');
       if (!token) throw new Error('Akses token tidak ditemukan, silakan login ulang.');
 
-      const response = await fetch('http://localhost:5000/api/auth/profile', {
+      const response = await fetch(`${API_BASE_URL}/auth/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

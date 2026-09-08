@@ -30,6 +30,7 @@ app.use(express.json());
 app.use('/webhook', webhookRoutes);
 app.use('/api/simulator', simulatorRoutes); // Rute untuk simulasi testing
 app.use('/api/auth', authRoutes);
+app.use('/api/tickets', ticketRoutes);
 app.use('/api/admin/tickets', ticketRoutes);
 app.use('/api/admin/reporters', reporterRoutes);
 app.use('/api/admin', adminRoutes);
