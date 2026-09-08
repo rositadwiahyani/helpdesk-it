@@ -215,61 +215,6 @@ export const getAdminDashboard = async (req: Request, res: Response): Promise<vo
   }
 };
 
-export const getQuickReplies = async (req: Request, res: Response) => {
-  try {
-    const { data, error } = await supabaseAdmin.from('quick_replies').select('*').order('created_at', { ascending: false });
-    if (error) throw error;
-    res.json(data);
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-export const createQuickReply = async (req: Request, res: Response) => {
-  try {
-    const { title, content } = req.body;
-    
-    // Workaround for permission denied on sequence
-    const { data: maxData, error: maxError } = await supabaseAdmin
-      .from('quick_replies')
-      .select('id')
-      .order('id', { ascending: false })
-      .limit(1);
-      
-    if (maxError) throw maxError;
-    
-    const nextId = (maxData && maxData.length > 0) ? maxData[0].id + 1 : 1;
-
-    const { data, error } = await supabaseAdmin.from('quick_replies').insert([{ id: nextId, title, content }]).select().single();
-    if (error) throw error;
-    res.json(data);
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-export const updateQuickReply = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const { title, content } = req.body;
-    const { data, error } = await supabaseAdmin.from('quick_replies').update({ title, content, updated_at: new Date().toISOString() }).eq('id', id).select().single();
-    if (error) throw error;
-    res.json(data);
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-export const deleteQuickReply = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const { error } = await supabaseAdmin.from('quick_replies').delete().eq('id', id);
-    if (error) throw error;
-    res.json({ message: 'Deleted successfully' });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-};
 
 export const createStaff = async (req: Request, res: Response) => {
   try {
