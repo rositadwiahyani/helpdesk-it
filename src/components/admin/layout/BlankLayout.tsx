@@ -3,23 +3,25 @@ import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import AdminTopbar from './AdminTopbar';
 import AdminSidebar from './AdminSidebar';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function BlankLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+    const { t } = useLanguage();
   // State drawer sidebar untuk mobile (di desktop sidebar selalu tampil lewat lg:translate-x-0)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Helper to determine page title from pathname
   const getPageTitle = () => {
-    if (!pathname) return 'Dashboard Administrasi';
-    if (pathname.includes('/dashboard/administrasi/sla')) return 'Manajemen SLA';
-    if (pathname.includes('/dashboard/administrasi/staff')) return 'Manajemen Staff';
-    if (pathname.includes('/dashboard/administrasi/reports')) return 'Laporan & Ekspor';
-    if (pathname.includes('/dashboard/administrasi/webhook')) return 'Log API Webhook';
-    if (pathname.includes('/dashboard/administrasi/settings')) return 'Pengaturan Sistem';
-    if (pathname.includes('/dashboard/administrasi/profile')) return 'Profil Administrator';
-    if (pathname.includes('/dashboard/administrasi')) return 'Dashboard Administrasi';
-    return 'Dashboard';
+    if (!pathname) return t('topbar.dashboard_admin');
+    if (pathname.includes('/dashboard/administrasi/sla')) return t('menu.sla');
+    if (pathname.includes('/dashboard/administrasi/staff')) return t('menu.staff');
+    if (pathname.includes('/dashboard/administrasi/reports')) return t('menu.reports');
+    if (pathname.includes('/dashboard/administrasi/webhook')) return t('admin.webhook_title');
+    if (pathname.includes('/dashboard/administrasi/settings')) return t('menu.settings');
+    if (pathname.includes('/dashboard/administrasi/profile')) return t('profile.title');
+    if (pathname.includes('/dashboard/administrasi')) return t('topbar.dashboard_admin');
+    return t('topbar.dashboard');
   };
 
   return (

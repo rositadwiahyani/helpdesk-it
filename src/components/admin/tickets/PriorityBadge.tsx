@@ -1,11 +1,13 @@
 import React from 'react';
 import { TicketPriority } from '@/lib/mock/tickets';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface PriorityBadgeProps {
   priority: TicketPriority;
 }
 
 export default function PriorityBadge({ priority }: PriorityBadgeProps) {
+  const { language } = useLanguage();
   let colorClass = '';
 
   switch (priority) {
@@ -26,7 +28,9 @@ export default function PriorityBadge({ priority }: PriorityBadgeProps) {
 
   return (
     <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-bold border tracking-wide whitespace-nowrap ${colorClass}`}>
-      {priority.toUpperCase()}
+      {language === 'en'
+        ? priority.toUpperCase()
+        : ({ Urgent: 'MENDESAK', Critical: 'KRITIS', High: 'TINGGI', Medium: 'SEDANG', Low: 'RENDAH' } as Record<string, string>)[priority] || priority.toUpperCase()}
     </span>
   );
 }

@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { fetchClient } from '@/lib/apiClient';
 import { supabase } from '@/lib/supabase';
+import { useLanguage } from '@/context/LanguageContext';
+import { translateTicketSubject } from '@/lib/translations';
 
 type Ticket = any; // simplified for this example
 type Category = { id: string | number, name: string };
@@ -34,6 +36,7 @@ export default function OperatorTicketTable({
     tabsNode?: React.ReactNode,
     currentUserId?: string
 }) {
+    const { t, language } = useLanguage();
     const router = useRouter();
     // Local state for tickets to support optimistic updates
     const [tickets, setTickets] = useState<Ticket[]>(initialTickets);
@@ -356,7 +359,9 @@ export default function OperatorTicketTable({
         return (
           <div className={`flex py-0.5 px-2 items-center rounded-sm ${bg} w-fit`}>
             <p className={`${text} font-iBMPlexSans text-[11px] font-bold leading-5 w-fit tracking-[0.025em]`}>
-              {p}
+                            {language === 'en'
+                                ? p
+                                : ({ URGENT: 'MENDESAK', CRITICAL: 'KRITIS', HIGH: 'TINGGI', MEDIUM: 'SEDANG', LOW: 'RENDAH' } as Record<string, string>)[p] || p}
             </p>
           </div>
         );
@@ -394,7 +399,7 @@ export default function OperatorTicketTable({
                     <div className="relative">
                         <input 
                             type="text" 
-                            placeholder="Search tickets..." 
+                            placeholder={t('tickets.search_placeholder', 'Search tickets...')} 
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="pl-9 pr-4 py-2 text-sm border border-[#C3C6D1] rounded focus:outline-none focus:border-[#0059BB] w-full md:w-64"
@@ -412,7 +417,7 @@ export default function OperatorTicketTable({
                         >
                             <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                             <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 max-w-[120px] truncate">
-                                {selectedCategory ? mainCategories.find(c => c.id === selectedCategory)?.name || 'Kategori' : 'Kategori'}
+                                {selectedCategory ? mainCategories.find(c => c.id === selectedCategory)?.name || t('tickets.category_btn', 'Kategori') : t('tickets.category_btn', 'Kategori')}
                             </span>
                         </button>
                         
@@ -423,7 +428,7 @@ export default function OperatorTicketTable({
                                     className={`px-3 py-2 text-[13px] font-semibold rounded cursor-pointer whitespace-nowrap transition-colors ${!selectedCategory ? 'bg-[#F4F7FF] text-[#1E3A8A]' : 'text-slate-700 hover:bg-slate-50'}`}
                                     onClick={() => { setSelectedCategory(''); setShowCategoryPopup(false); }}
                                 >
-                                    All Categories
+                                    {t('tickets.all_categories', 'All Categories')}
                                 </div>
                                 {mainCategories.map((cat) => (
                                     <div 
@@ -446,7 +451,7 @@ export default function OperatorTicketTable({
                                     disabled={isBulkRejecting}
                                     className="h-[38px] px-3.5 border border-red-200 rounded text-[13px] font-medium text-red-600 bg-red-50 hover:bg-red-100 transition-colors disabled:opacity-50"
                                 >
-                                    {isBulkRejecting ? 'Memproses...' : `Hapus (${selectedTickets.length})`}
+                                    {isBulkRejecting ? t('operator.processing', 'Memproses...') : `${t('common.delete', 'Hapus')} (${selectedTickets.length})`}
                                 </button>
                             )}
                             <button 
@@ -458,7 +463,7 @@ export default function OperatorTicketTable({
                                         : 'text-red-600 bg-red-50 hover:bg-red-100 hover:border-red-200'
                                 }`}
                             >
-                                {isBulkRejecting ? 'Memproses...' : `${actionType === 'rollback' ? 'Rollback' : 'Tolak'} (${selectedTickets.length})`}
+                                {isBulkRejecting ? t('operator.processing', 'Memproses...') : `${actionType === 'rollback' ? t('operator.rollback', 'Rollback') : t('operator.reject', 'Tolak')} (${selectedTickets.length})`}
                             </button>
                         </>
                     )}
@@ -472,15 +477,15 @@ export default function OperatorTicketTable({
                             className={`flex h-[38px] px-3.5 items-center gap-2 rounded border border-[#C3C6D1] bg-white cursor-pointer transition-colors ${showAdvanced ? "bg-slate-50" : "hover:bg-slate-50"}`}
                         >
                             <svg width="14" height="9" viewBox="0 0 14 9" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.25 9V7.5H8.25V9H5.25ZM2.25 5.25V3.75H11.25V5.25H2.25ZM0 1.5V0H13.5V1.5H0Z" fill="#43474F" /></svg>
-                            <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4">Advanced</span>
+                            <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4">{t('tickets.advanced_filter', 'Advanced')}</span>
                         </button>
                         
                         {/* Advanced Filter Popup */}
                         {showAdvanced && (
                             <div className="absolute left-0 top-[40px] z-50 flex flex-col gap-3 p-4 bg-white border border-[#C3C6D1] rounded shadow-lg animate-in fade-in slide-in-from-top-2 w-64">
-                                <div className="text-[13px] font-semibold text-slate-700">Filter by Date</div>
+                                <div className="text-[13px] font-semibold text-slate-700">{t('operator.filter_date', 'Filter by Date')}</div>
                                 <div className="flex flex-col gap-1.5">
-                                    <label className="text-[11px] text-slate-500 uppercase font-bold">Start Date</label>
+                                    <label className="text-[11px] text-slate-500 uppercase font-bold">{t('operator.start_date', 'Start Date')}</label>
                                     <input 
                                         type="date" 
                                         value={startDate}
@@ -489,7 +494,7 @@ export default function OperatorTicketTable({
                                     />
                                 </div>
                                 <div className="flex flex-col gap-1.5">
-                                    <label className="text-[11px] text-slate-500 uppercase font-bold">End Date</label>
+                                    <label className="text-[11px] text-slate-500 uppercase font-bold">{t('operator.end_date', 'End Date')}</label>
                                     <input 
                                         type="date" 
                                         value={endDate}
@@ -504,16 +509,16 @@ export default function OperatorTicketTable({
                         onClick={() => { setStartDate(''); setEndDate(''); setSelectedCategory(''); }}
                         className="h-[38px] px-4 bg-white text-slate-600 border border-[#C3C6D1] text-[13px] font-medium rounded hover:bg-slate-50 hover:text-slate-900 transition-colors"
                     >
-                        Reset
+                        {t('common.reset', 'Reset')}
                     </button>
                     <div onClick={() => handleExportCSV()} className="flex h-[38px] px-3.5 items-center gap-2 rounded border border-[#C3C6D1] bg-[#FFF] cursor-pointer hover:bg-gray-50 transition-colors">
                         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 9L2.25 5.25L3.3 4.1625L5.25 6.1125V0H6.75V6.1125L8.7 4.1625L9.75 5.25L6 9ZM1.5 12C1.0875 12 0.734375 11.8531 0.440625 11.5594C0.146875 11.2656 0 10.9125 0 10.5V8.25H1.5V10.5H10.5V8.25H12V10.5C12 10.9125 11.8531 11.2656 11.5594 11.5594C11.2656 11.8531 10.9125 12 10.5 12H1.5Z" fill="#43474F" /></svg>
-                        <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4">Ekspor CSV</span>
+                        <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4">{t('tickets.export_csv', 'Ekspor CSV')}</span>
                     </div>
                     
                     <div onClick={() => alert("Fitur pembuatan tiket akan dibuat!")} className="flex h-[38px] px-4 items-center gap-2 rounded bg-[#1E3A8A] shadow-[01px2px0rgba(0,0,0,0.05)] cursor-pointer hover:bg-blue-900 transition-colors">
                         <svg width="11" height="11" viewBox="0 0 11 11" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.5 6H0V4.5H4.5V0H6V4.5H10.5V6H6V10.5H4.5V6Z" fill="white" /></svg>
-                        <span className="text-[#FFF] font-iBMPlexSans text-xs font-semibold leading-4">Buat Tiket</span>
+                        <span className="text-[#FFF] font-iBMPlexSans text-xs font-semibold leading-4">{t('tickets.create_ticket', 'Buat Tiket')}</span>
                     </div>
                 </div>
             </div>
@@ -538,43 +543,43 @@ export default function OperatorTicketTable({
                             )}
                             <th className="px-4 py-4 select-none hover:bg-gray-200 transition-colors cursor-pointer w-28" onClick={() => requestSort('ticket_num')}>
                                 <div className="flex items-center group">
-                                    <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">NO. TIKET</span>
+                                    <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">{t('tickets.col_ticket_num', 'NO. TIKET')}</span>
                                     {getSortArrow('ticket_num')}
                                 </div>
                             </th>
                             <th className="px-4 py-4 select-none hover:bg-gray-200 transition-colors cursor-pointer w-36" onClick={() => requestSort('created_at')}>
                                 <div className="flex items-center group">
-                                    <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">LAST UPDATE</span>
+                                    <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">{t('tickets.col_last_update', 'LAST UPDATE')}</span>
                                     {getSortArrow('created_at')}
                                 </div>
                             </th>
                             <th className="px-4 py-4 select-none hover:bg-gray-200 transition-colors cursor-pointer" onClick={() => requestSort('subject')}>
                                 <div className="flex items-center group">
-                                    <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">SUBJECT</span>
+                                    <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">{t('tickets.col_subject', 'SUBJECT')}</span>
                                     {getSortArrow('subject')}
                                 </div>
                             </th>
                             <th className="px-4 py-4 select-none hover:bg-gray-200 transition-colors cursor-pointer w-32" onClick={() => requestSort('reporter')}>
                                 <div className="flex items-center group">
-                                    <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">FROM</span>
+                                    <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">{t('tickets.col_from', 'FROM')}</span>
                                     {getSortArrow('reporter')}
                                 </div>
                             </th>
                             <th className="px-4 py-4 select-none w-48">
-                                <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">CATEGORY</span>
+                                <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">{t('tickets.col_category', 'CATEGORY')}</span>
                             </th>
                             <th className="px-4 py-4 select-none hover:bg-gray-200 transition-colors cursor-pointer w-32" onClick={() => requestSort('priority')}>
                                 <div className="flex items-center group">
-                                    <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">PRIORITY</span>
+                                    <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">{t('tickets.col_priority', 'PRIORITY')}</span>
                                     {getSortArrow('priority')}
                                 </div>
                             </th>
                             <th className="px-4 py-4 select-none w-44">
-                                <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">{assignToHeader || 'ASSIGN TO'}</span>
+                                <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">{assignToHeader || t('tickets.col_assigned_to', 'ASSIGN TO')}</span>
                             </th>
                             {actionType !== 'readonly' && (
                                 <th className="px-4 py-4 select-none text-right w-40">
-                                    <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">ACTION</span>
+                                    <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">{t('tickets.col_action', 'ACTION')}</span>
                                 </th>
                             )}
                         </tr>
@@ -583,7 +588,7 @@ export default function OperatorTicketTable({
                         {paginatedTickets.length === 0 ? (
                             <tr>
                                 <td colSpan={actionType !== 'readonly' ? 9 : 8} className="text-center py-20 text-[#43474F] text-sm">
-                                    Tidak ada tiket yang sesuai dengan filter.
+                                    {t('operator.no_tickets_filter', 'Tidak ada tiket yang sesuai dengan filter.')}
                                 </td>
                             </tr>
                         ) : (
@@ -616,7 +621,7 @@ export default function OperatorTicketTable({
                                     <td className="px-4 py-4 max-w-xs">
                                         <Link href={`/dashboard/operator/tickets/${ticket.id}`} className="block">
                                             <p className="text-[#1A1C1E] font-iBMPlexSans text-sm font-medium truncate mb-0.5 hover:text-[#0059BB]">
-                                                {(ticket.subject || ticket.category?.name || 'Tanpa Subjek').replace(/ > /g, ' / ').replace(/>/g, '/')}
+                                                {translateTicketSubject((ticket.subject || ticket.category?.name || t('tickets.no_subject')).replace(/ > /g, ' / ').replace(/>/g, '/'), language)}
                                             </p>
                                         </Link>
                                     </td>
@@ -692,13 +697,13 @@ export default function OperatorTicketTable({
                                                             onClick={() => handleTicketAction(ticket.id, formattedTicketNum, 'accept')}
                                                             className="py-1.5 px-4 bg-white border border-[#1E3A8A] rounded text-xs font-semibold text-[#1E3A8A] hover:bg-[#1E3A8A] hover:text-white transition-colors"
                                                         >
-                                                            Terima
+                                                            {t('operator.accept', 'Terima')}
                                                         </button>
                                                         <button 
                                                             onClick={() => handleTicketAction(ticket.id, formattedTicketNum, 'reject')}
                                                             className="py-1.5 px-4 bg-white border border-[#1E3A8A] rounded text-xs font-semibold text-[#1E3A8A] hover:bg-slate-100 transition-colors"
                                                         >
-                                                            Tolak
+                                                            {t('operator.reject', 'Tolak')}
                                                         </button>
                                                     </>
                                                 ) : actionType === 'resolve' ? (
@@ -706,14 +711,14 @@ export default function OperatorTicketTable({
                                                         onClick={() => handleTicketAction(ticket.id, formattedTicketNum, 'resolve')}
                                                         className="py-1.5 px-4 bg-[#1E3A8A] border border-[#1E3A8A] rounded text-xs font-semibold text-white hover:bg-blue-900 transition-colors"
                                                     >
-                                                        Tandai Selesai
+                                                        {t('operator.mark_resolved', 'Tandai Selesai')}
                                                     </button>
                                                 ) : (
                                                     <button 
                                                         onClick={() => handleTicketAction(ticket.id, formattedTicketNum, 'rollback')}
                                                         className="py-1.5 px-4 bg-white border border-orange-500 rounded text-xs font-semibold text-orange-600 hover:bg-orange-100 transition-colors"
                                                     >
-                                                        Rollback
+                                                        {t('operator.rollback', 'Rollback')}
                                                     </button>
                                                 )}
                                             </div>
@@ -735,14 +740,14 @@ export default function OperatorTicketTable({
                         onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
                         className="text-[13px] border border-[#C3C6D1] rounded px-2 py-1 outline-none focus:border-[#1E3A8A] text-[#1A1C1E]"
                     >
-                        <option value={8}>8 / page</option>
-                        <option value={10}>10 / page</option>
-                        <option value={15}>15 / page</option>
-                        <option value={25}>25 / page</option>
-                        <option value={50}>50 / page</option>
+                        <option value={8}>8 / {t('tickets.per_page', 'page')}</option>
+                        <option value={10}>10 / {t('tickets.per_page', 'page')}</option>
+                        <option value={15}>15 / {t('tickets.per_page', 'page')}</option>
+                        <option value={25}>25 / {t('tickets.per_page', 'page')}</option>
+                        <option value={50}>50 / {t('tickets.per_page', 'page')}</option>
                     </select>
                     <p className="text-[#1A1C1E] font-iBMPlexSans text-[13px]">
-                        Showing {totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} tickets
+                        {t('tickets.showing', 'Showing')} {totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, totalItems)} {t('tickets.of', 'of')} {totalItems} {t('tickets.tickets_count', 'tickets')}
                     </p>
                 </div>
                 <div className="flex items-center gap-2">

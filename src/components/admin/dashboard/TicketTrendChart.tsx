@@ -2,12 +2,14 @@
 
 import { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Cell } from "recharts";
+import { useLanguage } from '@/context/LanguageContext';
 
 interface TicketTrendChartProps {
   data?: { name: string; value: number; active?: boolean }[];
 }
 
 export default function TicketTrendChart({ data = [] }: TicketTrendChartProps) {
+  const { t } = useLanguage();
   const [range, setRange] = useState('This Week');
 
   let displayData = data;
@@ -24,15 +26,15 @@ export default function TicketTrendChart({ data = [] }: TicketTrendChartProps) {
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
       <div className="flex justify-between items-center mb-6">
-        <h3 className="text-lg font-bold text-slate-800">Tren Tiket Masuk</h3>
+        <h3 className="text-lg font-bold text-slate-800">{t('charts.trend_title')}</h3>
         <select 
           className="bg-slate-50 border border-slate-200 text-slate-600 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block px-3 py-1.5 outline-none cursor-pointer"
           value={range}
           onChange={(e) => setRange(e.target.value)}
         >
-          <option value="This Week">This Week</option>
-          <option value="Last Week">Last Week</option>
-          <option value="This Month">This Month</option>
+          <option value="This Week">{t('charts.this_week')}</option>
+          <option value="Last Week">{t('charts.last_week')}</option>
+          <option value="This Month">{t('charts.this_month')}</option>
         </select>
       </div>
       <div className="w-full h-[250px]">

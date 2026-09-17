@@ -25,10 +25,12 @@ export type TreeContextType = {
 };
 
 import { supabase } from "@/lib/supabase";
+import { useLanguage } from "@/context/LanguageContext";
 
 export const TreeContext = createContext<TreeContextType | null>(null);
 
 export default function Workspace() {
+  const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
   const [treeData, setTreeData] = useState<any[]>([]);
   const [expandedNodes, setExpandedNodes] = useState<string[]>([]);
@@ -72,7 +74,7 @@ export default function Workspace() {
               id: c.id.toString(),
               realId: c.id,
               title: c.name,
-              count: `${children.length} Items`,
+              count: t('categories.items_count').replace('{count}', String(children.length)),
               status: c.is_active ? "AKTIF" : "NONAKTIF",
               type: isBranch ? "branch" : "leaf-bordered",
               childrenWrapperClassName: "flex flex-col border-l border-gray-200 ml-10 w-[calc(100%-40px)]",
@@ -122,16 +124,16 @@ export default function Workspace() {
     setIsEditModalOpen(true);
   };
   const handleDeleteItem = async (id: string, type: 'category' | 'subcategory') => {
-    if (!window.confirm(`Apakah Anda yakin ingin menghapus data ini?`)) return;
+    if (!window.confirm(t('categories.confirm_delete'))) return;
     
     const { fetchClient } = await import('@/lib/apiClient');
     try {
       await fetchClient(`/admin/categories/${id}`, { method: 'DELETE' });
       fetchData();
-      showToast('Data berhasil dihapus', 'success');
+      showToast(t('categories.deleted'), 'success');
     } catch (err) {
       console.error(err);
-      showToast('Gagal menghapus data', 'error');
+      showToast(t('categories.delete_failed'), 'error');
     }
   };
 
@@ -161,14 +163,14 @@ export default function Workspace() {
       });
       if (!res.success) {
         console.error("Failed to update sort_order", res.message);
-        showToast('Gagal menyimpan urutan ke server.', 'error');
+        showToast(t('categories.order_failed'), 'error');
         fetchData(); // revert UI if failed
       } else {
-        showToast('Urutan berhasil disimpan', 'success');
+        showToast(t('categories.order_saved'), 'success');
       }
     } catch (err: any) {
       console.error("Error updating sort_order", err);
-      showToast('Terjadi kesalahan saat menyimpan urutan.', 'error');
+      showToast(t('categories.order_failed'), 'error');
       fetchData(); // revert UI if failed
     }
   };

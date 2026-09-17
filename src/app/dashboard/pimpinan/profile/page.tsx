@@ -1,9 +1,11 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { User, Lock, Phone, Mail, Shield, CheckCircle2, AlertCircle } from 'lucide-react';
+import { User, Lock, Phone, Mail, Shield, CheckCircle2, AlertCircle, Globe } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/apiClient';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function PimpinanProfilePage() {
+  const { language, setLanguage, t } = useLanguage();
   const [currentUser, setCurrentUser] = useState<any>({});
   const [isLoaded, setIsLoaded] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -58,7 +60,7 @@ export default function PimpinanProfilePage() {
 
     try {
       const token = localStorage.getItem('access_token');
-      if (!token) throw new Error('Akses token tidak ditemukan, silakan login ulang.');
+      if (!token) throw new Error(t('profile.token_error'));
 
       const response = await fetch(`${API_BASE_URL}/auth/profile`, {
         method: 'PUT',
@@ -78,9 +80,9 @@ export default function PimpinanProfilePage() {
       });
 
       const result = await response.json();
-      if (!response.ok) throw new Error(result.error || 'Gagal menyimpan profil');
+      if (!response.ok) throw new Error(result.error || t('profile.save_error'));
 
-      setMessage({ type: 'success', text: 'Profil Pimpinan berhasil diperbarui!' });
+      setMessage({ type: 'success', text: t('profile.save_success') });
       
       const updatedUser = { ...currentUser, ...formData };
       delete updatedUser.password;
@@ -108,15 +110,78 @@ export default function PimpinanProfilePage() {
     <div className="flex flex-col gap-6 max-w-4xl mx-auto pb-10 animate-in fade-in slide-in-from-bottom-2 duration-300">
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-bold text-[var(--ink)] tracking-tight">Profil Pengguna</h1>
-        <p className="text-[var(--text-dim)] text-sm font-medium">Kelola informasi akun dan pengaturan autentikasi Pimpinan.</p>
+        <h1 className="text-2xl font-bold text-[var(--ink)] tracking-tight">{t('profile.pimpinan_title')}</h1>
+        <p className="text-[var(--text-dim)] text-sm font-medium">{t('profile.pimpinan_desc')}</p>
       </div>
 
+      {/* Preferensi Bahasa (Language Preference) Card */}
+      <div className="bg-white rounded-2xl border border-[var(--line)] shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <div className="p-6 border-b border-[var(--line)] flex items-center justify-between">
+          <div>
+            <h3 className="font-bold text-base text-[var(--ink)] flex items-center gap-2">
+              <Globe className="w-5 h-5 text-[var(--gold)]" />
+              {t('language.title')}
+            </h3>
+            <p className="text-[var(--text-dim)] text-xs mt-1">
+              {t('language.desc')}
+            </p>
+          </div>
+        </div>
+        <div className="p-6 flex flex-col sm:flex-row gap-4">
+          <button
+            type="button"
+            onClick={() => setLanguage('id')}
+            className={`flex-1 flex items-center justify-between p-4 rounded-xl border-2 transition-all cursor-pointer ${
+              language === 'id'
+                ? 'border-[var(--gold)] bg-[var(--gold)]/5 shadow-xs'
+                : 'border-[var(--line-dark)] hover:border-slate-300 bg-white'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🇮🇩</span>
+              <div className="text-left">
+                <div className="font-bold text-[14px] text-[var(--ink)]">Bahasa Indonesia</div>
+                <div className="text-xs text-[var(--text-dim)]">Indonesian language</div>
+              </div>
+            </div>
+            {language === 'id' && (
+              <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[var(--gold)] text-white">
+                {t('language.active')}
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setLanguage('en')}
+            className={`flex-1 flex items-center justify-between p-4 rounded-xl border-2 transition-all cursor-pointer ${
+              language === 'en'
+                ? 'border-[var(--gold)] bg-[var(--gold)]/5 shadow-xs'
+                : 'border-[var(--line-dark)] hover:border-slate-300 bg-white'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🇬🇧</span>
+              <div className="text-left">
+                <div className="font-bold text-[14px] text-[var(--ink)]">English</div>
+                <div className="text-xs text-[var(--text-dim)]">English language</div>
+              </div>
+            </div>
+            {language === 'en' && (
+              <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[var(--gold)] text-white">
+                {t('language.active')}
+              </span>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Account Info Card */}
       <div className="bg-white rounded-2xl border border-[var(--line)] shadow-sm overflow-hidden">
         <div className="p-6 border-b border-[var(--line)] flex items-center justify-between">
-          <h3 className="font-bold text-base text-[var(--ink)]">Informasi Akun Pimpinan</h3>
+          <h3 className="font-bold text-base text-[var(--ink)]">{t('profile.card_title')}</h3>
           <span className="px-3 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-xs font-bold">
-            Executive Access
+            {t('profile.executive_badge')}
           </span>
         </div>
 
@@ -137,13 +202,13 @@ export default function PimpinanProfilePage() {
                 <div className="w-24 h-24 rounded-full bg-[var(--gold)] flex items-center justify-center text-white text-3xl font-bold shadow-md uppercase ring-4 ring-slate-50">
                   {initials}
                 </div>
-                <span className="text-xs font-bold text-[var(--text-dim)]">Avatar Akun</span>
+                <span className="text-xs font-bold text-[var(--text-dim)]">{t('profile.avatar_title')}</span>
               </div>
 
               {/* Fields */}
               <div className="md:col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-[var(--ink)]">Nama Lengkap</label>
+                  <label className="text-xs font-bold text-[var(--ink)]">{t('profile.full_name')}</label>
                   <input 
                     type="text" 
                     name="name" 
@@ -154,16 +219,16 @@ export default function PimpinanProfilePage() {
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-[var(--ink)]">Peran Sistem (Role)</label>
+                  <label className="text-xs font-bold text-[var(--ink)]">{t('profile.role')}</label>
                   <input 
                     type="text" 
-                    value="Pimpinan (Executive / Read-Only)" 
+                    value={t('topbar.pimpinan') + " (Executive)"} 
                     disabled 
                     className="bg-slate-100 opacity-80 cursor-not-allowed border border-[var(--line-dark)] rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700" 
                   />
                 </div>
                 <div className="flex flex-col gap-1.5 sm:col-span-2">
-                  <label className="text-xs font-bold text-[var(--ink)]">Alamat Email Resmi</label>
+                  <label className="text-xs font-bold text-[var(--ink)]">{t('profile.email')}</label>
                   <input 
                     type="email" 
                     value={currentUser.email || ""} 
@@ -172,7 +237,7 @@ export default function PimpinanProfilePage() {
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-[var(--ink)]">Nomor Telepon</label>
+                  <label className="text-xs font-bold text-[var(--ink)]">{t('profile.phone')}</label>
                   <div className="flex gap-2">
                     <input 
                       type="text" 
@@ -185,7 +250,7 @@ export default function PimpinanProfilePage() {
                     <input 
                       type="text" 
                       name="ext" 
-                      placeholder="Ext" 
+                      placeholder={t('profile.ext')} 
                       value={formData.ext} 
                       onChange={handleChange} 
                       className="bg-[var(--paper)] border border-[var(--line-dark)] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[var(--gold)] focus:bg-white transition-colors w-20 text-center" 
@@ -193,7 +258,7 @@ export default function PimpinanProfilePage() {
                   </div>
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-[var(--ink)]">Nomor WhatsApp / Mobile</label>
+                  <label className="text-xs font-bold text-[var(--ink)]">{t('profile.mobile')}</label>
                   <input 
                     type="text" 
                     name="mobile" 
@@ -212,28 +277,28 @@ export default function PimpinanProfilePage() {
             <div className="flex flex-col gap-4">
               <h4 className="font-bold text-sm text-[var(--ink)] flex items-center gap-2">
                 <Lock className="w-4 h-4 text-[var(--text-dim)]" />
-                Pengaturan Autentikasi & Login
+                Authentication
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-[var(--ink)]">Username Login</label>
+                  <label className="text-xs font-bold text-[var(--ink)]">{t('profile.username')}</label>
                   <input 
                     type="text" 
                     name="username" 
                     value={formData.username} 
                     onChange={handleChange} 
-                    placeholder="Username untuk login" 
+                    placeholder="Username" 
                     className="bg-[var(--paper)] border border-[var(--line-dark)] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[var(--gold)] focus:bg-white transition-colors" 
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-[var(--ink)]">Ganti Password (Kosongkan jika tidak diubah)</label>
+                  <label className="text-xs font-bold text-[var(--ink)]">{t('profile.password')}</label>
                   <input 
                     type="password" 
                     name="password" 
                     value={formData.password} 
                     onChange={handleChange} 
-                    placeholder="Password baru..." 
+                    placeholder="••••••••" 
                     className="bg-[var(--paper)] border border-[var(--line-dark)] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[var(--gold)] focus:bg-white transition-colors" 
                   />
                 </div>
@@ -247,14 +312,14 @@ export default function PimpinanProfilePage() {
               onClick={() => window.location.reload()} 
               className="bg-white border border-[var(--line)] text-[var(--text-dim)] px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-[var(--paper-2)] transition-colors active:scale-95 shadow-sm"
             >
-              Batal
+              {t('common.reset')}
             </button>
             <button 
               type="submit" 
               disabled={isSaving} 
               className="bg-[var(--ink)] text-white px-7 py-2.5 rounded-xl text-sm font-bold shadow-sm hover:bg-[var(--text)] hover:shadow-md transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}
+              {isSaving ? t('common.saving') : t('common.save')}
             </button>
           </div>
         </form>

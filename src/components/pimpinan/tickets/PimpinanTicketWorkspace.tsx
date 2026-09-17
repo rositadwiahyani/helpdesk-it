@@ -3,8 +3,10 @@ import React, { useState, useEffect, useMemo } from 'react';
 import PimpinanTicketTable from "./PimpinanTicketTable";
 import { fetchClient } from '@/lib/apiClient';
 import { Search, Printer, AlertTriangle, CheckCircle2, Clock, Inbox } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function PimpinanTicketWorkspace() {
+  const { t } = useLanguage();
   const [tickets, setTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -64,15 +66,15 @@ export default function PimpinanTicketWorkspace() {
       {/* Page Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end w-full gap-4">
         <div className="flex flex-col items-start gap-1">
-          <h1 className="text-2xl font-bold text-[var(--ink)] tracking-tight">Laporan Tiket</h1>
-          <p className="text-[var(--text-dim)] text-sm font-medium">Pemantauan seluruh tiket pengaduan IT Helpdesk secara real-time.</p>
+          <h1 className="text-2xl font-bold text-[var(--ink)] tracking-tight">{t('pimpinan.report_title', 'Laporan Tiket')}</h1>
+          <p className="text-[var(--text-dim)] text-sm font-medium">{t('pimpinan.report_desc', 'Pemantauan seluruh tiket pengaduan IT Helpdesk secara real-time.')}</p>
         </div>
         <button 
           onClick={() => window.print()}
           className="flex items-center gap-2 px-4 py-2.5 bg-white border border-[var(--line)] rounded-xl text-sm font-semibold text-[var(--ink)] hover:bg-[var(--paper-2)] transition-colors shadow-sm active:scale-95"
         >
           <Printer className="w-4 h-4 text-[var(--text-dim)]" />
-          Cetak Laporan
+          {t('pimpinan.print_report', 'Cetak Laporan')}
         </button>
       </div>
 
@@ -89,7 +91,7 @@ export default function PimpinanTicketWorkspace() {
             }`}
           >
             <Inbox className="w-4 h-4" />
-            Semua Tiket ({tickets.length})
+            {t('tickets.tab_all', 'Semua Tiket')} ({tickets.length})
           </button>
           <button
             onClick={() => setActiveTab('unhandled')}
@@ -100,7 +102,7 @@ export default function PimpinanTicketWorkspace() {
             }`}
           >
             <Clock className="w-4 h-4" />
-            Belum Ditangani ({tickets.filter(t => ['WAITING VERIFICATION', 'NEW', 'OPEN'].includes(t.status)).length})
+            {t('pimpinan.tab_unhandled', 'Belum Ditangani')} ({tickets.filter(t => ['WAITING VERIFICATION', 'NEW', 'OPEN'].includes(t.status)).length})
           </button>
           <button
             onClick={() => setActiveTab('inprogress')}
@@ -111,7 +113,7 @@ export default function PimpinanTicketWorkspace() {
             }`}
           >
             <Clock className="w-4 h-4 text-blue-500" />
-            Sedang Diproses ({tickets.filter(t => ['IN PROGRESS', 'DIPROSES', 'WAITING CONFIRMATION'].includes(t.status?.toUpperCase() || '')).length})
+            {t('pimpinan.tab_inprogress', 'Sedang Diproses')} ({tickets.filter(t => ['IN PROGRESS', 'DIPROSES', 'WAITING CONFIRMATION'].includes(t.status?.toUpperCase() || '')).length})
           </button>
           <button
             onClick={() => setActiveTab('resolved')}
@@ -122,7 +124,7 @@ export default function PimpinanTicketWorkspace() {
             }`}
           >
             <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-            Selesai ({tickets.filter(t => ['RESOLVED', 'CLOSED', 'RESOLVED_BY_SYSTEM'].includes(t.status?.toUpperCase() || '')).length})
+            {t('pimpinan.tab_resolved', 'Selesai')} ({tickets.filter(t => ['RESOLVED', 'CLOSED', 'RESOLVED_BY_SYSTEM'].includes(t.status?.toUpperCase() || '')).length})
           </button>
           <button
             onClick={() => setActiveTab('escalated')}
@@ -133,7 +135,7 @@ export default function PimpinanTicketWorkspace() {
             }`}
           >
             <AlertTriangle className="w-4 h-4 text-red-500" />
-            Tiket Eskalasi & Overdue
+            {t('pimpinan.tab_escalated', 'Tiket Eskalasi & Overdue')}
             {escalatedCount > 0 && (
               <span className="bg-red-100 text-red-700 text-[11px] font-bold px-2 py-0.5 rounded-full">
                 {escalatedCount}
@@ -147,7 +149,7 @@ export default function PimpinanTicketWorkspace() {
           <div className="relative w-full sm:w-80">
             <input 
               type="text" 
-              placeholder="Cari No. Tiket, pelapor, subjek..."
+              placeholder={t('pimpinan.search_placeholder', 'Cari No. Tiket, pelapor, subjek...')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2 text-sm border border-[var(--line-dark)] rounded-xl bg-[var(--paper)] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-all"
@@ -155,7 +157,7 @@ export default function PimpinanTicketWorkspace() {
             <Search className="w-4 h-4 absolute left-3.5 top-3 text-[var(--text-dim)]" />
           </div>
           <div className="text-xs font-semibold text-[var(--text-dim)]">
-            Total {filteredTickets.length} tiket ditampilkan
+            {t('tickets.showing', 'Menampilkan')} {filteredTickets.length} {t('tickets.tickets_count', 'tiket')}
           </div>
         </div>
         
@@ -163,7 +165,7 @@ export default function PimpinanTicketWorkspace() {
         {loading ? (
           <div className="p-16 flex flex-col items-center justify-center gap-3">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--gold)]"></div>
-            <p className="text-xs font-semibold text-[var(--text-dim)]">Memuat data tiket...</p>
+            <p className="text-xs font-semibold text-[var(--text-dim)]">{t('pimpinan.loading_tickets', 'Memuat data tiket...')}</p>
           </div>
         ) : (
           <PimpinanTicketTable 

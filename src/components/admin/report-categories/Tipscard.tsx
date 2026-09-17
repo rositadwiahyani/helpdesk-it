@@ -1,4 +1,7 @@
+import { useLanguage } from '@/context/LanguageContext';
+
 export default function TipsCard() {
+  const { t } = useLanguage();
   return (
     <div className="flex p-6 flex-col justify-between items-start rounded-lg bg-[#001E40] w-full overflow-hidden relative">
       <div className="flex flex-col items-start gap-2 w-full">
@@ -17,21 +20,19 @@ export default function TipsCard() {
         </svg>
         <div className="flex pt-2 flex-col items-start w-full">
           <p className="text-[#FFF] font-iBMPlexSans text-xl font-medium leading-7 w-full">
-            Tips Hierarki
+            {t('categories.tips_title')}
           </p>
         </div>
         <div className="flex flex-col items-start w-full">
           <p className="text-[rgba(255,255,255,0.80)] font-iBMPlexSans text-sm leading-5 w-full">
-            Struktur kategori yang baik membantu teknisi menemukan tiket
-            lebih cepat. Gunakan maksimal 3 level kedalaman untuk
-            menghindari kebingungan navigasi.
+            {t('categories.tips_desc')}
           </p>
         </div>
       </div>
       <div className="flex pt-6 flex-col items-start w-fit">
         <div className="flex pr-[222px] items-center gap-2 w-fit">
           <p className="text-[#D8E2FF] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">
-            Lihat Panduan Taksonomi
+            {t('categories.tips_link')}
           </p>
           <svg
             width="12"

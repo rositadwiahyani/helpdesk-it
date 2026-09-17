@@ -1,4 +1,6 @@
+'use client';
 import React from 'react';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface UsersToolbarProps {
   searchQuery?: string;
@@ -21,6 +23,7 @@ export default function UsersToolbar({
   selectedCount = 0,
   onBulkDeleteClick,
 }: UsersToolbarProps) {
+  const { t } = useLanguage();
   return (
     <div className="flex flex-col md:flex-row gap-4 justify-between items-center w-full">
       {/* Search Bar & Bulk Actions */}
@@ -28,7 +31,7 @@ export default function UsersToolbar({
         <div className="relative w-full md:w-[350px]">
           <input 
             type="text" 
-            placeholder="Cari nama atau NIM/NIP pelapor..." 
+            placeholder={t('users.search_placeholder', 'Cari nama atau NIM/NIP pelapor...')} 
             value={searchQuery}
             onChange={(e) => onSearchChange?.(e.target.value)}
             className="pl-9 pr-4 py-2 text-sm border border-[#C3C6D1] rounded focus:outline-none focus:border-[#0059BB] w-full"
@@ -46,26 +49,26 @@ export default function UsersToolbar({
         </div>
 
         {selectedCount > 0 && (
-          <span className="text-xs font-bold text-[#1E3A8A] bg-blue-50 px-2 py-1 rounded ml-1">{selectedCount} selected</span>
+          <span className="text-xs font-bold text-[#1E3A8A] bg-blue-50 px-2 py-1 rounded ml-1">{selectedCount} {t('tickets.selected', 'selected')}</span>
         )}
       </div>
 
       {/* Tombol aksi dengan shrink-0 agar tidak bisa digeser/wrap */}
       <div className="flex items-center gap-3 w-full md:w-auto shrink-0">
         <button onClick={onResetFilterClick} title="Reset Filter" className="h-[38px] px-4 bg-white text-slate-600 border border-[#C3C6D1] text-[13px] font-medium rounded hover:bg-slate-50 hover:text-slate-900 transition-colors">
-          Reset
+          {t('common.reset', 'Reset')}
         </button>
         <button onClick={onFilterClick} className="flex items-center gap-2 px-3 py-2 border border-[#C3C6D1] rounded bg-white hover:bg-gray-50 text-sm text-[#43474F] font-iBMPlexSans">
           <svg width="16" height="16" viewBox="0 0 18 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 12V10H11V12H7ZM3 7V5H15V7H3ZM0 2V0H18V2H0Z" fill="currentColor"/></svg>
-          Advanced
+          {t('tickets.advanced_filter', 'Advanced')}
         </button>
         <button onClick={onExportClick} className="flex items-center gap-2 px-3 py-2 border border-[#C3C6D1] rounded bg-white hover:bg-gray-50 text-sm text-[#43474F] font-iBMPlexSans">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 12L3 7L4.4 5.55L7 8.15V0H9V8.15L11.6 5.55L13 7L8 12ZM2 16C1.45 16 0.979167 15.8042 0.5875 15.4125C0.195833 15.0208 0 14.55 0 14V11H2V14H14V11H16V14C16 14.55 15.8042 15.0208 15.4125 15.4125C15.0208 15.8042 14.55 16 14 16H2Z" fill="currentColor"/></svg>
-          Export CSV
+          {t('tickets.export_csv', 'Export CSV')}
         </button>
         <button onClick={onAddClick} title="Tambah Pelapor" className="flex items-center gap-2 px-4 py-2 bg-[#001E40] text-white rounded hover:bg-[#00142d] text-sm font-iBMPlexSans">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/></svg>
-          Tambah Pelapor
+          {t('users.add_reporter', 'Tambah Pelapor')}
         </button>
       </div>
     </div>

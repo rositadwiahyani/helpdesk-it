@@ -3,6 +3,7 @@ import CountBadge from "./CountBadge";
 import StatusBadge from "./StatusBadge";
 import ActionMenu from "./ActionMenu";
 import { TreeContext } from "./Workspace";
+import { useLanguage } from "@/context/LanguageContext";
 
 type RowProps = {
   nodeId?: string; // Menambahkan Prop ID untuk mendeteksi baris 
@@ -10,6 +11,7 @@ type RowProps = {
   icon: ReactNode;
   iconBgClassName: string;
   title: ReactNode;
+  originalTitle?: ReactNode;
   count: ReactNode;
   status: ReactNode;
   childrenWrapperClassName: string;
@@ -22,12 +24,14 @@ export default function Row({
   icon,
   iconBgClassName,
   title,
+  originalTitle,
   count,
   status,
   childrenWrapperClassName,
   children,
 }: RowProps) {
   const ctx = useContext(TreeContext);
+  const { t } = useLanguage();
   const [isActionOpen, setIsActionOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -93,12 +97,12 @@ export default function Row({
           {(status === 'AKTIF' || status === 'Aktif') ? (
             <span className="bg-[#EEF4FF] text-blue-600 px-2.5 py-0.5 rounded-full text-[11px] font-semibold flex items-center gap-1.5 border border-[#D1E0FF] shadow-sm">
               <span className="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
-              Aktif
+              {t('categories.active')}
             </span>
           ) : (
              <span className="bg-[#F3F4F6] text-gray-600 px-2.5 py-0.5 rounded-full text-[11px] font-semibold flex items-center gap-1.5 border border-[#E5E7EB] shadow-sm">
               <span className="w-1.5 h-1.5 rounded-full bg-gray-500"></span>
-              Nonaktif
+              {t('categories.inactive')}
             </span>
           )}
         </div>
@@ -125,20 +129,20 @@ export default function Row({
                   onClick={(e) => { e.stopPropagation(); setIsActionOpen(false); ctx?.onAddSubcategory?.(nodeId!); }}
                   className="px-4 py-2 text-sm text-left hover:bg-gray-50 text-[#1A1C1E] transition-colors"
                 >
-                  Tambah Subkategori
+                  {t('categories.add_subcategory')}
                 </button>
                 <button
-                  onClick={(e) => { e.stopPropagation(); setIsActionOpen(false); ctx?.onEditItem?.({ id: nodeId, title }, 'category'); }}
+                  onClick={(e) => { e.stopPropagation(); setIsActionOpen(false); ctx?.onEditItem?.({ id: nodeId, title: originalTitle ?? title }, 'category'); }}
                   className="px-4 py-2 text-sm text-left hover:bg-gray-50 text-[#1A1C1E] transition-colors"
                 >
-                  Edit Data
+                  {t('categories.edit')}
                 </button>
                 <div className="h-px bg-gray-100 w-full my-1"></div>
                 <button
                   onClick={(e) => { e.stopPropagation(); setIsActionOpen(false); ctx?.onDeleteItem?.(nodeId!, 'category'); }}
                   className="px-4 py-2 text-sm text-left hover:bg-red-50 text-red-600 transition-colors"
                 >
-                  Hapus
+                  {t('categories.delete')}
                 </button>
               </div>
             )}

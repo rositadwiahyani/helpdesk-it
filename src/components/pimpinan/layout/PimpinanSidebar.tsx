@@ -13,6 +13,8 @@ import {
   LogOut 
 } from 'lucide-react';
 
+import { useLanguage } from '@/context/LanguageContext';
+
 interface PimpinanSidebarProps {
   isOpen?: boolean;
   setIsOpen?: (isOpen: boolean) => void;
@@ -21,6 +23,7 @@ interface PimpinanSidebarProps {
 export default function PimpinanSidebar({ isOpen = true, setIsOpen = () => {} }: PimpinanSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { t } = useLanguage();
 
   const handleLogout = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -29,12 +32,12 @@ export default function PimpinanSidebar({ isOpen = true, setIsOpen = () => {} }:
   };
 
   const MENU_ITEMS = [
-    { name: 'Executive Summary', path: '/dashboard/pimpinan', icon: LayoutDashboard },
-    { name: 'Laporan Tiket', path: '/dashboard/pimpinan/tickets', icon: Ticket },
-    { name: 'Laporan Performa', path: '/dashboard/pimpinan/performance', icon: TrendingUp },
-    { name: 'Laporan SLA', path: '/dashboard/pimpinan/sla', icon: ShieldCheck },
-    { name: 'Rekap Laporan', path: '/dashboard/pimpinan/reports', icon: FileText },
-    { name: 'Profil', path: '/dashboard/pimpinan/profile', icon: User },
+    { name: t('menu.executive_summary'), path: '/dashboard/pimpinan', icon: LayoutDashboard },
+    { name: t('menu.ticket_reports'), path: '/dashboard/pimpinan/tickets', icon: Ticket },
+    { name: t('menu.performance_reports'), path: '/dashboard/pimpinan/performance', icon: TrendingUp },
+    { name: t('menu.sla_reports'), path: '/dashboard/pimpinan/sla', icon: ShieldCheck },
+    { name: t('menu.summary_reports'), path: '/dashboard/pimpinan/reports', icon: FileText },
+    { name: t('menu.profile'), path: '/dashboard/pimpinan/profile', icon: User },
   ];
 
   return (
@@ -127,12 +130,12 @@ export default function PimpinanSidebar({ isOpen = true, setIsOpen = () => {} }:
                 <LogOut className="w-5 h-5" strokeWidth={1.8} />
               </div>
               <span className={`transition-opacity duration-200 ${isOpen ? 'opacity-100' : 'opacity-0 hidden'}`}>
-                Logout
+                {t('common.logout')}
               </span>
             </button>
             {!isOpen && (
               <div className="absolute left-full ml-4 top-1/2 -translate-y-1/2 px-2 py-1.5 bg-gray-900 text-white text-xs font-semibold rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50">
-                Logout
+                {t('common.logout')}
                 <div className="absolute top-1/2 -left-1 -translate-y-1/2 border-y-4 border-y-transparent border-r-4 border-r-gray-900"></div>
               </div>
             )}

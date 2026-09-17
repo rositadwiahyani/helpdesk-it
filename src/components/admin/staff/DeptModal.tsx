@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import { useLanguage } from '@/context/LanguageContext';
 
 interface DeptModalProps {
   isOpen: boolean;
@@ -10,6 +11,7 @@ interface DeptModalProps {
 }
 
 export default function DeptModal({ isOpen, onClose, onSuccess, dept, showToast }: DeptModalProps) {
+  const { t } = useLanguage();
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -39,10 +41,10 @@ export default function DeptModal({ isOpen, onClose, onSuccess, dept, showToast 
           method: 'PUT',
           body: JSON.stringify(payload)
         });
-        if (showToast) showToast("Departemen berhasil diperbarui", "success");
+        if (showToast) showToast(t('staff.updated'), "success");
         onSuccess();
       } catch (err: any) {
-        if (showToast) showToast("Gagal mengupdate departemen: " + err.message, "error");
+        if (showToast) showToast(t('staff.update_failed') + ': ' + err.message, "error");
       }
     } else {
       // Add
@@ -52,10 +54,10 @@ export default function DeptModal({ isOpen, onClose, onSuccess, dept, showToast 
           method: 'POST',
           body: JSON.stringify(payload)
         });
-        if (showToast) showToast("Departemen berhasil ditambahkan", "success");
+        if (showToast) showToast(t('staff.added'), "success");
         onSuccess();
       } catch (err: any) {
-        if (showToast) showToast("Gagal menambah departemen: " + err.message, "error");
+        if (showToast) showToast(t('staff.add_failed') + ': ' + err.message, "error");
       }
     }
     setLoading(false);
@@ -66,17 +68,17 @@ export default function DeptModal({ isOpen, onClose, onSuccess, dept, showToast 
       <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none p-4">
         <div className="bg-white rounded-lg shadow-xl p-6 w-[400px] pointer-events-auto border border-[#C3C6D1]">
-          <h2 className="text-lg font-bold mb-4">{dept ? "Edit Departemen" : "Tambah Departemen Baru"}</h2>
+          <h2 className="text-lg font-bold mb-4">{dept ? t('staff.edit_dept_title') : t('staff.add_dept_title')}</h2>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Nama Departemen / Layanan</label>
+            <label className="block text-sm text-gray-600 mb-1">{t('staff.department')}</label>
             <input required type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full border border-gray-300 rounded p-2 text-sm" />
           </div>
           
           <div className="flex justify-end gap-3 mt-4">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded hover:bg-gray-100">Batal</button>
+            <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded hover:bg-gray-100">{t('staff.cancel')}</button>
             <button type="submit" disabled={loading} className="px-4 py-2 text-sm text-white bg-[#001E40] rounded hover:bg-[#00142d] disabled:opacity-50">
-              {loading ? "Menyimpan..." : "Simpan"}
+              {loading ? t('staff.saving') : t('staff.save')}
             </button>
           </div>
         </form>

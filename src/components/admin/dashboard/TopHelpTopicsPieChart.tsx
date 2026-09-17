@@ -1,6 +1,7 @@
 "use client";
 
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface TopHelpTopicsPieChartProps {
   data?: { name: string; value: number; fill?: string }[];
@@ -9,9 +10,10 @@ interface TopHelpTopicsPieChartProps {
 const DEFAULT_COLORS = ['#0369a1', '#0ea5e9', '#38bdf8', '#7dd3fc', '#e0f2fe'];
 
 export default function TopHelpTopicsPieChart({ data = [] }: TopHelpTopicsPieChartProps) {
+  const { t } = useLanguage();
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col h-[350px]">
-      <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Top Help Topics</h3>
+      <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{t('charts.top_topics')}</h3>
       
       <div className="flex-1 w-full relative -mt-4">
         <ResponsiveContainer width="100%" height="100%">

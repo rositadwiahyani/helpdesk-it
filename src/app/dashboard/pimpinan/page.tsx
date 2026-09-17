@@ -3,6 +3,7 @@ import TicketTrendChart from "@/components/admin/dashboard/TicketTrendChart";
 import RecentTicketActivityTable from "@/components/admin/dashboard/RecentTicketActivityTable";
 import TopHelpTopicsPieChart from "@/components/admin/dashboard/TopHelpTopicsPieChart";
 import { fetchServer } from "@/lib/apiServer";
+import DashboardHeader from "@/components/common/DashboardHeader";
 
 export const dynamic = 'force-dynamic';
 
@@ -21,12 +22,12 @@ export default async function PimpinanDashboard() {
   return (
     <div className="flex flex-col items-start gap-6 w-full max-w-[1440px] mx-auto pb-10 animate-in fade-in slide-in-from-bottom-2 duration-300">
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end w-full gap-4">
-        <div className="flex flex-col items-start gap-1">
-          <h1 className="text-2xl font-bold text-[var(--ink)] tracking-tight">Executive Summary</h1>
-          <p className="text-[var(--text-dim)] text-sm font-medium">Ringkasan analitik dan performa layanan IT Helpdesk.</p>
-        </div>
-      </div>
+      <DashboardHeader 
+        titleKey="dashboard.pimpinan_title"
+        defaultTitle="Executive Summary"
+        descKey="dashboard.pimpinan_desc"
+        defaultDesc="Ringkasan analitik dan performa layanan IT Helpdesk."
+      />
 
       {/* Row 1: Summary Cards */}
       <div className="w-full">

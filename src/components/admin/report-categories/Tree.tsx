@@ -2,11 +2,97 @@ import { useContext, useMemo, useState } from "react";
 import Row from "./Row";
 import SubRow from "./SubRow";
 import { TreeContext } from "./Workspace";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function Tree() {
   const ctx = useContext(TreeContext);
+  const { t, language } = useLanguage();
   const treeData = ctx?.treeData || [];
   const [draggedId, setDraggedId] = useState<string | null>(null);
+
+  const translateCategoryName = (name: string) => {
+    if (language === 'id') return name;
+    const translations: Array<[string, string]> = [
+      ['Failed Sinkronisasi Pembayaran', 'Failed Payment Synchronization'],
+      ['Error Sinkronisasi KRS', 'KRS Synchronization Error'],
+      ['Indikasi Malware / Script Ilegal', 'Malware / Illegal Script Indication'],
+      ['Akses Tidak Dikenal', 'Unknown Access'],
+      ['Akses Not Dikenal', 'Unknown Access'],
+      ['Access Not Dikenal', 'Unknown Access'],
+      ['Serangan DDoS', 'DDoS Attack'],
+      ['Kebocoran Data (Data Breach)', 'Data Breach'],
+      ['Server Not Bisa Diremote (RDP/SSH)', 'Cannot Remotely Access Server (RDP/SSH)'],
+      ['Failed Login VPN', 'VPN Login Failed'],
+      ['Application Internal Not Bisa DiAccess', 'Cannot Access Internal Application'],
+      ['Not Bisa Connect (Auth Error)', 'Cannot Connect (Auth Error)'],
+      ['Sering Putus / Disconnect', 'Frequent Disconnections'],
+      ['Inbox Penuh / Bouncing', 'Full Inbox / Bouncing'],
+      ['Terkena Spam / Phishing', 'Spam / Phishing'],
+      ['Request Lisensi Zoom / Office 365', 'Zoom / Office 365 License Request'],
+      ['Halaman Website Error / Blank', 'Website Error / Blank Page'],
+      ['Permintaan Pembuatan Subdomain', 'Subdomain Creation Request'],
+      ['Sinkronisasi Pembayaran', 'Payment Synchronization'],
+      ['Tidak Bisa Diremote', 'Cannot Be Remotely Accessed'],
+      ['Tidak Bisa DiAccess', 'Cannot Access'],
+      ['Tidak Bisa Connect', 'Cannot Connect'],
+      ['Sering Putus', 'Frequent Disconnections'],
+      ['Pembuatan Subdomain', 'Subdomain Creation'],
+      ['Lisensi', 'Licensing'],
+      ['Wifi', 'Wi-Fi'],
+      ['Layanan Website & Email', 'Website & Email Services'],
+      ['Layanan Sistem Informasi', 'Information Systems Services'],
+      ['Layanan Jaringan & Infrastruktur', 'Network & Infrastructure Services'],
+      ['Gagal TTE (Tanda Tangan Elektronik)', 'Failed E-Signature'],
+      ['Tanda Tangan Elektronik', 'Electronic Signature'],
+      ['Pembuatan Akun', 'Account Creation'],
+      ['Koneksi Internet', 'Internet Connection'],
+      ['Perangkat Keras', 'Hardware'],
+      ['Perangkat Lunak', 'Software'],
+      ['Akses Sistem', 'System Access'],
+      ['Bantuan Teknis', 'Technical Support'],
+      ['Panduan Pengguna', 'User Guide'],
+      ['Informasi Kampus', 'Campus Information'],
+      ['Tidak Kompatibel di Browser', 'Browser Incompatibility'],
+      ['Data Tidak Sinkron', 'Data Synchronization Issue'],
+      ['Aplikasi Down', 'Application Down'],
+      ['Ubah Email Recovery', 'Change Recovery Email'],
+      ['Lupa kata sandi', 'Forgot Password'],
+      ['Lupa Password', 'Forgot Password'],
+      ['Reset Akun', 'Reset Account'],
+      ['Buat Tiket', 'Create Ticket'],
+      ['Cek Status Tiket', 'Check Ticket Status'],
+      ['Aplikasi', 'Application'],
+      ['Layanan', 'Services'],
+      ['Jaringan', 'Network'],
+      ['Infrastruktur', 'Infrastructure'],
+      ['Sistem Informasi', 'Information Systems'],
+      ['Sistem', 'System'],
+      ['Keamanan', 'Security'],
+      ['Informasi', 'Information'],
+      ['Koneksi', 'Connection'],
+      ['Perangkat', 'Device'],
+      ['Akses', 'Access'],
+      ['Bantuan', 'Support'],
+      ['Panduan', 'Guide'],
+      ['Pengguna', 'User'],
+      ['Pelapor', 'Reporter'],
+      ['Teknisi', 'Technician'],
+      ['Petugas', 'Officer'],
+      ['Kampus', 'Campus'],
+      ['Kendala', 'Issue'],
+      ['Lainnya', 'Others'],
+      ['Gagal', 'Failed'],
+      ['Tidak', 'Not'],
+      ['Ubah', 'Change'],
+      ['Akun', 'Account'],
+      ['Kata Sandi', 'Password'],
+      ['Kategori', 'Category'],
+    ];
+
+    return translations.reduce((translated, [source, target]) => (
+      translated.replace(new RegExp(source.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), target)
+    ), name);
+  };
 
   const handleDragStart = (id: string, e: React.DragEvent) => {
     if (ctx?.searchQuery) {
@@ -144,7 +230,8 @@ export default function Tree() {
             outerWrapperClassName={`flex flex-col items-end w-full ${index > 0 ? "border-t border-gray-200" : ""}`}
             iconBgClassName={node.iconBgClassName}
             icon={node.icon}
-            title={node.title}
+            title={translateCategoryName(node.title)}
+            originalTitle={node.title}
             count={node.count}
             status={node.status}
             childrenWrapperClassName={node.childrenWrapperClassName}
@@ -170,7 +257,8 @@ export default function Tree() {
             variant="branch"
             nodeId={node.id}
             headerClassName={`w-full relative ${index > 0 ? "border-t border-gray-200" : ""}`}
-            title={node.title}
+            title={translateCategoryName(node.title)}
+            originalTitle={node.title}
             count={node.count}
             status={node.status}
             childrenWrapperClassName={node.childrenWrapperClassName}
@@ -194,7 +282,8 @@ export default function Tree() {
         ) : (
           <SubRow
             variant={node.type as any}
-            title={node.title}
+            title={translateCategoryName(node.title)}
+            originalTitle={node.title}
             nodeId={node.id}
             hasDivider={node.type === "leaf-bordered" ? true : undefined}
             onMoveUp={index > 0 && !ctx?.searchQuery ? () => {
@@ -240,7 +329,7 @@ export default function Tree() {
 
         {filteredData.length === 0 && (
           <div className="p-8 w-full flex justify-center text-center text-[#6B7280] text-sm">
-            Tidak ada kategori yang sesuai dengan pencarian &quot;{ctx?.searchQuery}&quot;.
+            {t('categories.empty_search').replace('{query}', ctx?.searchQuery || '')}
           </div>
         )}
       </div>

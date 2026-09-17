@@ -3,21 +3,23 @@ import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import OperatorSidebar from './OperatorSidebar';
 import AdminTopbar from '@/components/admin/layout/AdminTopbar';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function OperatorLayout({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const pathname = usePathname();
+  const { t } = useLanguage();
 
   const getPageTitle = () => {
-    if (!pathname) return 'Dashboard Operator';
-    if (pathname.includes('/dashboard/operator/tickets-rejected')) return 'Tiket Ditolak';
-    if (pathname.includes('/dashboard/operator/tickets-unhandled')) return 'Tiket Belum Ditangani';
-    if (pathname.includes('/dashboard/operator/tickets-inprogress')) return 'Tiket In Progress';
-    if (pathname.includes('/dashboard/operator/tickets-resolved')) return 'Tiket Selesai';
-    if (pathname.includes('/dashboard/operator/tickets')) return 'Tiket Masuk';
-    if (pathname.includes('/dashboard/operator/profile')) return 'Profil';
-    if (pathname.includes('/dashboard/operator')) return 'Dashboard Operator';
-    return 'Dashboard Operator';
+    if (!pathname) return t('topbar.dashboard_operator');
+    if (pathname.includes('/dashboard/operator/tickets-rejected')) return t('tickets.tab_rejected');
+    if (pathname.includes('/dashboard/operator/tickets-unhandled')) return t('tickets.tab_waiting');
+    if (pathname.includes('/dashboard/operator/tickets-inprogress')) return t('tickets.tab_in_progress');
+    if (pathname.includes('/dashboard/operator/tickets-resolved')) return t('tickets.tab_resolved');
+    if (pathname.includes('/dashboard/operator/tickets')) return t('menu.all_tickets');
+    if (pathname.includes('/dashboard/operator/profile')) return t('profile.title');
+    if (pathname.includes('/dashboard/operator')) return t('topbar.dashboard_operator');
+    return t('topbar.dashboard_operator');
   };
 
   const isHideableOnDesktop = pathname?.includes('/tickets') || false;

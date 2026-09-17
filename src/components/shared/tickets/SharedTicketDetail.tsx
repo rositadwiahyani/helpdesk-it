@@ -6,6 +6,7 @@ import { fetchClient } from '@/lib/apiClient';
 import StatusBadge from '@/components/admin/tickets/StatusBadge';
 import PriorityBadge from '@/components/admin/tickets/PriorityBadge';
 import { FaWhatsapp } from 'react-icons/fa';
+import { useLanguage } from '@/context/LanguageContext';
 
 type Ticket = {
   id: string;
@@ -40,6 +41,7 @@ type Message = {
 };
 
 export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
+  const { t } = useLanguage();
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [categories, setCategories] = useState<any[]>([]);
@@ -143,11 +145,11 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
         })
       });
 
-      showToast('Tiket berhasil di-disposisi!', 'success');
+      showToast(t('ticket_detail.toast_disposisi_ok', 'Tiket berhasil di-disposisi!'), 'success');
       setTimeout(() => window.location.reload(), 1500);
     } catch (error) {
       console.error('Failed to assign ticket:', error);
-      showToast('Gagal melakukan disposisi.', 'error');
+      showToast(t('ticket_detail.toast_disposisi_fail', 'Gagal melakukan disposisi.'), 'error');
     } finally {
       setIsAssigning(false);
     }
@@ -157,12 +159,13 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
 
   const handleUpdateStatus = (newStatus: string) => {
     const isResolving = newStatus === 'WAITING CONFIRMATION' || newStatus === 'RESOLVED';
-    const actionText = isResolving ? 'menyelesaikan' : 'membuka kembali';
 
     setConfirmModal({
       isOpen: true,
-      title: 'Konfirmasi Status',
-      message: `Apakah Anda yakin ingin ${actionText} tiket ini?`,
+      title: t('ticket_detail.confirm_status', 'Konfirmasi Status'),
+      message: isResolving
+        ? t('ticket_detail.confirm_msg_resolve', 'Apakah Anda yakin ingin menyelesaikan tiket ini?')
+        : t('ticket_detail.confirm_msg_reopen', 'Apakah Anda yakin ingin membuka kembali tiket ini?'),
       onConfirm: async () => {
         setIsUpdatingStatus(true);
         try {
@@ -172,11 +175,11 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
             body: JSON.stringify({ status: newStatus })
           });
 
-          showToast(isResolving ? 'Tiket berhasil diselesaikan!' : 'Tiket berhasil dibuka kembali!', 'success');
+          showToast(isResolving ? t('ticket_detail.toast_resolved', 'Tiket berhasil diselesaikan!') : t('ticket_detail.toast_reopened', 'Tiket berhasil dibuka kembali!'), 'success');
           setTimeout(() => window.location.reload(), 1500);
         } catch (error) {
           console.error('Gagal update status:', error);
-          showToast('Gagal mengubah status tiket.', 'error');
+          showToast(t('ticket_detail.toast_update_fail', 'Gagal mengubah status tiket.'), 'error');
         } finally {
           setIsUpdatingStatus(false);
         }
@@ -187,8 +190,8 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
   const handleUpdateField = (field: string, value: string | number) => {
     setConfirmModal({
       isOpen: true,
-      title: 'Konfirmasi Perubahan',
-      message: 'Apakah Anda yakin ingin mengubah data ini?',
+      title: t('ticket_detail.confirm_change', 'Konfirmasi Perubahan'),
+      message: t('ticket_detail.confirm_msg_change', 'Apakah Anda yakin ingin mengubah data ini?'),
       onConfirm: async () => {
         try {
           const isOperator = typeof window !== 'undefined' && window.location.pathname.includes('/operator');
@@ -240,9 +243,9 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
   if (!ticket) {
     return (
       <div className="p-16 text-center">
-        <h2 className="text-xl font-bold">Ticket not found</h2>
+        <h2 className="text-xl font-bold">{t('ticket_detail.not_found', 'Tiket tidak ditemukan')}</h2>
         <Link href="/dashboard" className="text-[var(--gold)] font-bold mt-2 inline-block">
-          Back to Dashboard
+          {t('ticket_detail.back_to_dashboard', 'Kembali ke Dashboard')}
         </Link>
       </div>
     );
@@ -256,10 +259,10 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center gap-2 text-[12px] font-bold text-gray-500 mb-1">
             <button onClick={() => window.history.back()} className="hover:text-gray-900 transition-colors">
-              Back
+              {t('ticket_detail.back', 'Kembali')}
             </button>
             <span>/</span>
-            <span className="text-gray-900">Ticket Detail</span>
+            <span className="text-gray-900">{t('ticket_detail.detail', 'Detail Tiket')}</span>
           </div>
           <span className="text-[13px] font-mono font-medium text-gray-400">#{ticketNumber}</span>
           <h1 className="text-2xl md:text-[28px] font-extrabold text-gray-900 tracking-tight leading-tight">{ticket.subject}</h1>
@@ -283,7 +286,7 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
               className="px-4 py-1.5 bg-white border-2 border-[#1E3A8A] text-[#1E3A8A] hover:bg-blue-50 disabled:opacity-50 text-[11.5px] font-bold rounded-full transition-colors shadow-sm flex items-center gap-1.5"
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-              {isUpdatingStatus ? 'MEMPROSES...' : 'BUKA KEMBALI'}
+              {isUpdatingStatus ? t('ticket_detail.processing', 'MEMPROSES...') : t('ticket_detail.reopen', 'BUKA KEMBALI')}
             </button>
           ) : (
             <button
@@ -292,7 +295,7 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
               className="px-4 py-1.5 bg-[#1E3A8A] hover:bg-blue-900 disabled:opacity-50 text-white text-[11.5px] font-bold rounded-full transition-colors shadow-sm flex items-center gap-1.5"
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
-              {isUpdatingStatus ? 'MEMPROSES...' : 'SELESAIKAN TIKET'}
+              {isUpdatingStatus ? t('ticket_detail.processing', 'MEMPROSES...') : t('ticket_detail.resolve', 'SELESAIKAN TIKET')}
             </button>
           )}
         </div>
@@ -303,7 +306,7 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
           {/* INFORMASI TIKET */}
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-200 bg-gray-50/50">
-              <h2 className="text-[16px] font-bold text-gray-900">Informasi Tiket</h2>
+              <h2 className="text-[16px] font-bold text-gray-900">{t('ticket_detail.info_title', 'Informasi Tiket')}</h2>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-200">
@@ -311,19 +314,19 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
               {/* Kolom 1 */}
               <div className="flex flex-col divide-y divide-gray-100">
                 <div className="flex items-center px-6 py-4 hover:bg-gray-50/50 transition-colors">
-                  <span className="w-28 text-[13.5px] font-medium text-gray-500 shrink-0">Status</span>
+                  <span className="w-28 text-[13.5px] font-medium text-gray-500 shrink-0">{t('ticket_detail.status_label', 'Status')}</span>
                   <span className="text-[13.5px] font-bold text-[#1E3A8A] uppercase">{displayStatus}</span>
                 </div>
                 <div className="flex items-center px-6 py-4 hover:bg-gray-50/50 transition-colors">
-                  <span className="w-28 text-[13.5px] font-medium text-gray-500 shrink-0">Department</span>
+                  <span className="w-28 text-[13.5px] font-medium text-gray-500 shrink-0">{t('ticket_detail.dept_label', 'Departemen')}</span>
                   <span className="text-[13.5px] font-semibold text-gray-900">{ticket.dept?.name || '-'}</span>
                 </div>
                 <div className="flex items-center px-6 py-4 hover:bg-gray-50/50 transition-colors">
-                  <span className="w-28 text-[13.5px] font-medium text-gray-500 shrink-0">Assigned To</span>
-                  <span className="text-[13.5px] font-semibold text-gray-900">{ticket.tech?.name ? ticket.tech.name : 'Not Assigned'}</span>
+                  <span className="w-28 text-[13.5px] font-medium text-gray-500 shrink-0">{t('ticket_detail.assigned_label', 'Ditugaskan ke')}</span>
+                  <span className="text-[13.5px] font-semibold text-gray-900">{ticket.tech?.name ? ticket.tech.name : t('ticket_detail.not_assigned', 'Belum Ditugaskan')}</span>
                 </div>
                 <div className="flex items-center px-6 py-3 hover:bg-gray-50/50 transition-colors">
-                  <span className="w-28 text-[13.5px] font-medium text-gray-500 shrink-0">Priority</span>
+                  <span className="w-28 text-[13.5px] font-medium text-gray-500 shrink-0">{t('ticket_detail.priority_label', 'Prioritas')}</span>
                   <select 
                     value={ticket.priority || ''}
                     onChange={(e) => handleUpdateField('priority', e.target.value)}
@@ -337,14 +340,14 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
                   </select>
                 </div>
                 <div className="flex items-center px-6 py-3 hover:bg-gray-50/50 transition-colors">
-                  <span className="w-28 text-[13.5px] font-medium text-gray-500 shrink-0">Category</span>
+                  <span className="w-28 text-[13.5px] font-medium text-gray-500 shrink-0">{t('ticket_detail.category_label', 'Kategori')}</span>
                   <select
                     value={ticket.category_id || ''}
                     onChange={(e) => handleUpdateField('category_id', Number(e.target.value))}
                     disabled={isTeknisi}
                     className={`flex-1 min-w-0 py-1.5 px-2 -ml-2 rounded-lg border border-transparent text-[13.5px] font-semibold text-gray-900 bg-transparent hover:bg-gray-50 hover:border-gray-200 outline-none transition-all focus:border-[#1E3A8A] focus:ring-1 focus:ring-[#1E3A8A] truncate ${isTeknisi ? 'opacity-90 cursor-not-allowed hover:bg-transparent hover:border-transparent appearance-none' : 'cursor-pointer'}`}
                   >
-                    <option value="">-- Pilih --</option>
+                    <option value="">{t('ticket_detail.select_category', '-- Pilih --')}</option>
                     {categories.map(cat => {
                       let path = cat.name;
                       let curr = cat;
@@ -361,7 +364,7 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
               {/* Kolom 2 */}
               <div className="flex flex-col divide-y divide-gray-100">
                 <div className="flex items-center px-6 py-4 hover:bg-gray-50/50 transition-colors">
-                  <span className="w-28 text-[13.5px] font-medium text-gray-500 shrink-0">Pelapor</span>
+                  <span className="w-28 text-[13.5px] font-medium text-gray-500 shrink-0">{t('ticket_detail.reporter_label', 'Pelapor')}</span>
                   <span className="text-[13.5px] font-semibold text-gray-900 flex items-center gap-1.5">
                     <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                     {ticket.phone ? (
@@ -374,7 +377,7 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
                   </span>
                 </div>
                 <div className="flex items-center px-6 py-4 hover:bg-gray-50/50 transition-colors">
-                  <span className="w-28 text-[13.5px] font-medium text-gray-500 shrink-0">No HP</span>
+                  <span className="w-28 text-[13.5px] font-medium text-gray-500 shrink-0">{t('ticket_detail.phone_label', 'No HP')}</span>
                   <span className="text-[13.5px] font-semibold text-gray-900 flex items-center gap-1.5">
                     {ticket.phone || '-'}
                     {ticket.phone && (
@@ -385,15 +388,15 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
                   </span>
                 </div>
                 <div className="flex items-center px-6 py-4 hover:bg-gray-50/50 transition-colors">
-                  <span className="w-28 text-[13.5px] font-medium text-gray-500 shrink-0">Unit/Dep.</span>
+                  <span className="w-28 text-[13.5px] font-medium text-gray-500 shrink-0">{t('ticket_detail.unit_label', 'Unit/Dep.')}</span>
                   <span className="text-[13.5px] font-semibold text-gray-900">{ticket.unit || ticket.reporter_type || '-'}</span>
                 </div>
                 <div className="flex items-center px-6 py-4 hover:bg-gray-50/50 transition-colors">
-                  <span className="w-28 text-[13.5px] font-medium text-gray-500 shrink-0">Created</span>
+                  <span className="w-28 text-[13.5px] font-medium text-gray-500 shrink-0">{t('ticket_detail.created_label', 'Dibuat')}</span>
                   <span className="text-[13.5px] font-semibold text-gray-900">{formatDate(ticket.created_at)}</span>
                 </div>
                 <div className="flex items-center px-6 py-4 hover:bg-gray-50/50 transition-colors">
-                  <span className="w-28 text-[13.5px] font-medium text-gray-500 shrink-0">Updated</span>
+                  <span className="w-28 text-[13.5px] font-medium text-gray-500 shrink-0">{t('ticket_detail.updated_label', 'Diperbarui')}</span>
                   <span className="text-[13.5px] font-semibold text-gray-900">{formatDate(ticket.updated_at || ticket.created_at)}</span>
                 </div>
               </div>
@@ -403,18 +406,18 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
           {/* ISI TIKET SECTION */}
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-200 bg-gray-50/50">
-              <h2 className="text-[16px] font-bold text-gray-900">Isi Tiket</h2>
+              <h2 className="text-[16px] font-bold text-gray-900">{t('ticket_detail.content_title', 'Isi Tiket')}</h2>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-gray-200">
               
               <div className="md:col-span-2 p-6 flex flex-col gap-6">
                 <div>
-                  <h4 className="text-[12.5px] font-bold text-gray-400 uppercase tracking-wider mb-2">Subjek</h4>
+                  <h4 className="text-[12.5px] font-bold text-gray-400 uppercase tracking-wider mb-2">{t('ticket_detail.subject_label', 'Subjek')}</h4>
                   <div className="text-[16px] font-bold text-gray-900">{ticket.subject}</div>
                 </div>
                 <div>
-                  <h4 className="text-[12.5px] font-bold text-gray-400 uppercase tracking-wider mb-2">Deskripsi</h4>
+                  <h4 className="text-[12.5px] font-bold text-gray-400 uppercase tracking-wider mb-2">{t('ticket_detail.desc_label', 'Deskripsi')}</h4>
                   <div className="text-[14.5px] text-gray-700 whitespace-pre-wrap leading-relaxed">
                     {ticket.description || '-'}
                   </div>
@@ -424,12 +427,12 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
               <div className="md:col-span-1 p-6 bg-gray-50/50 flex flex-col gap-4">
                 <h4 className="text-[12.5px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
-                  Lampiran
+                  {t('ticket_detail.attachment_label', 'Lampiran')}
                 </h4>
                 
                 {(!ticket.attachment && (!ticket.attachments || ticket.attachments.length === 0)) ? (
                   <div className="text-[13px] text-gray-500 italic bg-white p-4 rounded-xl border border-gray-200 text-center shadow-sm">
-                    Tidak ada lampiran
+                    {t('ticket_detail.no_attachment', 'Tidak ada lampiran')}
                   </div>
                 ) : (
                   <div className="flex flex-col gap-3">
@@ -438,7 +441,7 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
                       <a href={ticket.attachment} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 w-full overflow-hidden rounded-xl border border-gray-200 hover:border-[#1E3A8A] hover:shadow-md transition-all bg-white group p-2">
                         {/\.(jpeg|jpg|gif|png|webp)$/i.test(ticket.attachment) ? (
                           <div className="w-14 h-14 shrink-0 bg-gray-50 rounded-lg overflow-hidden relative">
-                            <img src={ticket.attachment} alt="Lampiran" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                            <img src={ticket.attachment} alt={t('ticket_detail.attachment_label', 'Lampiran')} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                           </div>
                         ) : (
                           <div className="w-14 h-14 shrink-0 bg-blue-50 rounded-lg flex items-center justify-center text-[#1E3A8A]">
@@ -447,9 +450,9 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
                         )}
                         <div className="flex-1 min-w-0 pr-2">
                           <div className="truncate text-[12.5px] font-bold text-gray-800">
-                            {ticket.attachment.split('/').pop() || 'Lampiran'}
+                            {ticket.attachment.split('/').pop() || t('ticket_detail.attachment_label', 'Lampiran')}
                           </div>
-                          <div className="text-[11px] text-gray-400 mt-0.5">Lihat file</div>
+                          <div className="text-[11px] text-gray-400 mt-0.5">{t('ticket_detail.view_file', 'Lihat file')}</div>
                         </div>
                       </a>
                     )}
@@ -459,7 +462,7 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
                       <a key={idx} href={att.file_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 w-full overflow-hidden rounded-xl border border-gray-200 hover:border-[#1E3A8A] hover:shadow-md transition-all bg-white group p-2">
                         {/\.(jpeg|jpg|gif|png|webp)$/i.test(att.file_url) ? (
                           <div className="w-14 h-14 shrink-0 bg-gray-50 rounded-lg overflow-hidden relative">
-                            <img src={att.file_url} alt={att.file_name || 'Lampiran'} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                            <img src={att.file_url} alt={att.file_name || t('ticket_detail.attachment_label', 'Lampiran')} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                           </div>
                         ) : (
                           <div className="w-14 h-14 shrink-0 bg-blue-50 rounded-lg flex items-center justify-center text-[#1E3A8A]">
@@ -468,9 +471,9 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
                         )}
                         <div className="flex-1 min-w-0 pr-2">
                           <div className="truncate text-[12.5px] font-bold text-gray-800">
-                            {att.file_name || att.file_url.split('/').pop() || 'Lampiran'}
+                            {att.file_name || att.file_url.split('/').pop() || t('ticket_detail.attachment_label', 'Lampiran')}
                           </div>
-                          <div className="text-[11px] text-gray-400 mt-0.5">Lihat file</div>
+                          <div className="text-[11px] text-gray-400 mt-0.5">{t('ticket_detail.view_file', 'Lihat file')}</div>
                         </div>
                       </a>
                     ))}
@@ -501,7 +504,7 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
                 onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
                 className="px-4 py-2.5 text-[13px] font-bold text-gray-600 hover:text-gray-900 hover:bg-gray-200 bg-gray-100 rounded-xl transition-colors"
               >
-                Batal
+                {t('common.cancel', 'Batal')}
               </button>
               <button
                 onClick={() => {
@@ -510,7 +513,7 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
                 }}
                 className="px-4 py-2.5 text-[13px] font-bold text-white bg-[#1E3A8A] hover:bg-blue-900 rounded-xl transition-colors shadow-sm flex items-center justify-center"
               >
-                Ya, Lanjutkan
+                {t('ticket_detail.confirm_yes', 'Ya, Lanjutkan')}
               </button>
             </div>
           </div>

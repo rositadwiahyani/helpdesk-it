@@ -1,27 +1,29 @@
 import { FiFolder, FiGrid, FiCheckCircle } from "react-icons/fi";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function Stats() {
+  const { t } = useLanguage();
   const cardData = [
     {
-      title: "TOTAL KATEGORI",
+      title: t('categories.total'),
       value: "24",
-      growth: "Kategori Utama",
+      growth: t('categories.main_count'),
       icon: <FiFolder className="w-5 h-5" />,
       color: "text-[#0059BB]",
       pillBg: "bg-[#D5E3FF]",
     },
     {
-      title: "SUB-KATEGORI",
+      title: t('categories.subcategories'),
       value: "18",
-      growth: "Subkategori",
+      growth: t('categories.sub_count'),
       icon: <FiGrid className="w-5 h-5 text-[#2563EB]" />,
       color: "text-[#2563EB]",
       pillBg: "bg-[#FFF8E7]",
     },
     {
-      title: "STATUS AKTIF",
+      title: t('categories.active_status'),
       value: "22",
-      growth: "Dari 42 Total Item",
+      growth: t('categories.total_items').replace('{count}', '42'),
       icon: <FiCheckCircle className="w-5 h-5 text-[#93000A]" />,
       color: "text-[#93000A]",
       pillBg: "bg-[#FFDAD6]",

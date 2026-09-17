@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { fetchClient } from '@/lib/apiClient';
 import { TreeContext } from './Workspace';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface ModalProps {
   isOpen: boolean;
@@ -10,6 +11,7 @@ interface ModalProps {
 }
 
 export function AddCategoryModal({ isOpen, onClose, onSuccess }: ModalProps) {
+  const { t } = useLanguage();
   const [name, setName] = useState('');
   const [parentId, setParentId] = useState('');
   const [botContent, setBotContent] = useState('');
@@ -56,10 +58,10 @@ export function AddCategoryModal({ isOpen, onClose, onSuccess }: ModalProps) {
       setParentId('');
       setBotContent('');
       setDefaultPriority('MEDIUM');
-      if (showToast) showToast('Kategori berhasil ditambahkan', 'success');
+      if (showToast) showToast(t('categories.added'), 'success');
     } catch (err) {
       console.error(err);
-      if (showToast) showToast('Gagal menambah kategori', 'error');
+      if (showToast) showToast(t('categories.add_failed'), 'error');
     } finally {
       setLoading(false);
     }
@@ -70,7 +72,7 @@ export function AddCategoryModal({ isOpen, onClose, onSuccess }: ModalProps) {
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" onClick={onClose} />
       <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white rounded-xl shadow-xl z-50 overflow-hidden flex flex-col max-h-[90vh]">
         <div className="flex justify-between items-center p-6 border-b border-[#C3C6D1]">
-          <h2 className="text-xl font-bold text-[#1A1C1E]">Tambah Kategori</h2>
+          <h2 className="text-xl font-bold text-[#1A1C1E]">{t('categories.add')}</h2>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M14 1.41L12.59 0L7 5.59L1.41 0L0 1.41L5.59 7L0 12.59L1.41 14L7 8.41L12.59 14L14 12.59L8.41 7L14 1.41Z" fill="#1A1C1E"/>
@@ -79,17 +81,17 @@ export function AddCategoryModal({ isOpen, onClose, onSuccess }: ModalProps) {
         </div>
         <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4 overflow-y-auto">
           <div>
-            <label className="block text-sm font-medium text-[#43474F] mb-1">Nama Kategori</label>
-            <input type="text" value={name} onChange={e => setName(e.target.value)} required className="w-full px-4 py-2 border border-[#C3C6D1] rounded focus:outline-none focus:border-[#0059BB]" placeholder="Masukkan nama kategori" />
+            <label className="block text-sm font-medium text-[#43474F] mb-1">{t('categories.name_label')}</label>
+            <input type="text" value={name} onChange={e => setName(e.target.value)} required className="w-full px-4 py-2 border border-[#C3C6D1] rounded focus:outline-none focus:border-[#0059BB]" placeholder={t('categories.name_label')} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-[#43474F] mb-1">Parent Kategori (Opsional)</label>
+            <label className="block text-sm font-medium text-[#43474F] mb-1">{t('categories.parent_label')}</label>
             <select 
               value={parentId} 
               onChange={e => setParentId(e.target.value)} 
               className="w-full px-4 py-2 border border-[#C3C6D1] rounded focus:outline-none focus:border-[#0059BB] bg-white"
             >
-              <option value="">-- Kategori Utama (Root) --</option>
+              <option value="">{t('categories.root_option')}</option>
               {categories.map(c => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
@@ -97,34 +99,34 @@ export function AddCategoryModal({ isOpen, onClose, onSuccess }: ModalProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-[#43474F] mb-1">Prioritas Default</label>
-            <p className="text-xs text-slate-500 mb-2">Jika pelapor memilih kategori ini, tiket otomatis mendapat prioritas ini.</p>
+            <label className="block text-sm font-medium text-[#43474F] mb-1">{t('categories.priority_label')}</label>
+            <p className="text-xs text-slate-500 mb-2">{t('categories.priority_help')}</p>
             <select 
               value={defaultPriority} 
               onChange={e => setDefaultPriority(e.target.value)} 
               className="w-full px-4 py-2 border border-[#C3C6D1] rounded focus:outline-none focus:border-[#0059BB] bg-white"
             >
-              <option value="LOW">Rendah (Low)</option>
-              <option value="MEDIUM">Sedang (Medium)</option>
-              <option value="HIGH">Tinggi (High)</option>
-              <option value="CRITICAL">Kritis (Critical)</option>
+              <option value="LOW">{t('categories.priority_low')}</option>
+              <option value="MEDIUM">{t('categories.priority_medium')}</option>
+              <option value="HIGH">{t('categories.priority_high')}</option>
+              <option value="CRITICAL">{t('categories.priority_critical')}</option>
             </select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-[#43474F] mb-1">Tutorial / Solusi Mandiri (Bot WA)</label>
-            <p className="text-xs text-slate-500 mb-2">Isi jika ini adalah menu terakhir (leaf node) dan Anda ingin bot membalas dengan link/teks tutorial tanpa langsung membuat tiket.</p>
+            <label className="block text-sm font-medium text-[#43474F] mb-1">{t('categories.tutorial_label')}</label>
+            <p className="text-xs text-slate-500 mb-2">{t('categories.tutorial_help')}</p>
             <textarea 
               value={botContent} 
               onChange={e => setBotContent(e.target.value)} 
               className="w-full px-4 py-2 border border-[#C3C6D1] rounded focus:outline-none focus:border-[#0059BB] min-h-[100px]"
-              placeholder="Contoh: Silakan ikuti panduan reset password pada link berikut: https://sso.undip.ac.id/help"
+              placeholder={t('categories.tutorial_placeholder')}
             />
           </div>
 
           <div className="flex justify-end gap-3 mt-4">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-semibold text-[#43474F] hover:bg-gray-100 rounded transition-colors">Batal</button>
-            <button type="submit" disabled={loading} className="px-4 py-2 text-sm font-semibold text-white bg-[#001E40] hover:bg-[#00142d] rounded transition-colors disabled:opacity-50">Simpan</button>
+            <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-semibold text-[#43474F] hover:bg-gray-100 rounded transition-colors">{t('categories.cancel')}</button>
+            <button type="submit" disabled={loading} className="px-4 py-2 text-sm font-semibold text-white bg-[#001E40] hover:bg-[#00142d] rounded transition-colors disabled:opacity-50">{loading ? t('categories.saving') : t('categories.save')}</button>
           </div>
         </form>
       </div>
@@ -133,6 +135,7 @@ export function AddCategoryModal({ isOpen, onClose, onSuccess }: ModalProps) {
 }
 
 export function AddSubcategoryModal({ isOpen, onClose, onSuccess, categoryId }: ModalProps & { categoryId: string | null }) {
+  const { t } = useLanguage();
   const [name, setName] = useState('');
   const [botContent, setBotContent] = useState('');
   const [defaultPriority, setDefaultPriority] = useState('MEDIUM');
@@ -163,10 +166,10 @@ export function AddSubcategoryModal({ isOpen, onClose, onSuccess, categoryId }: 
       setName('');
       setBotContent('');
       setDefaultPriority('MEDIUM');
-      if (showToast) showToast('Subkategori berhasil ditambahkan', 'success');
+      if (showToast) showToast(t('categories.sub_added'), 'success');
     } catch (err) {
       console.error(err);
-      if (showToast) showToast('Gagal menambah subkategori', 'error');
+      if (showToast) showToast(t('categories.sub_add_failed'), 'error');
     } finally {
       setLoading(false);
     }
@@ -177,7 +180,7 @@ export function AddSubcategoryModal({ isOpen, onClose, onSuccess, categoryId }: 
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" onClick={onClose} />
       <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white rounded-xl shadow-xl z-50 overflow-hidden flex flex-col max-h-[90vh]">
         <div className="flex justify-between items-center p-6 border-b border-[#C3C6D1]">
-          <h2 className="text-xl font-bold text-[#1A1C1E]">Tambah Subkategori</h2>
+          <h2 className="text-xl font-bold text-[#1A1C1E]">{t('categories.add_sub')}</h2>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M14 1.41L12.59 0L7 5.59L1.41 0L0 1.41L5.59 7L0 12.59L1.41 14L7 8.41L12.59 14L14 12.59L8.41 7L14 1.41Z" fill="#1A1C1E"/>
@@ -186,39 +189,39 @@ export function AddSubcategoryModal({ isOpen, onClose, onSuccess, categoryId }: 
         </div>
         <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4 overflow-y-auto">
           <div>
-            <label className="block text-sm font-medium text-[#43474F] mb-1">Nama Subkategori</label>
+            <label className="block text-sm font-medium text-[#43474F] mb-1">{t('categories.sub_name_label')}</label>
             <input type="text" value={name} onChange={e => setName(e.target.value)} required className="w-full px-4 py-2 border border-[#C3C6D1] rounded focus:outline-none focus:border-[#0059BB]" />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-[#43474F] mb-1">Prioritas Default</label>
-            <p className="text-xs text-slate-500 mb-2">Jika pelapor memilih kategori ini, tiket otomatis mendapat prioritas ini.</p>
+            <label className="block text-sm font-medium text-[#43474F] mb-1">{t('categories.priority_label')}</label>
+            <p className="text-xs text-slate-500 mb-2">{t('categories.priority_help')}</p>
             <select 
               value={defaultPriority} 
               onChange={e => setDefaultPriority(e.target.value)} 
               className="w-full px-4 py-2 border border-[#C3C6D1] rounded focus:outline-none focus:border-[#0059BB] bg-white"
             >
-              <option value="LOW">Rendah (Low)</option>
-              <option value="MEDIUM">Sedang (Medium)</option>
-              <option value="HIGH">Tinggi (High)</option>
-              <option value="CRITICAL">Kritis (Critical)</option>
+              <option value="LOW">{t('categories.priority_low')}</option>
+              <option value="MEDIUM">{t('categories.priority_medium')}</option>
+              <option value="HIGH">{t('categories.priority_high')}</option>
+              <option value="CRITICAL">{t('categories.priority_critical')}</option>
             </select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-[#43474F] mb-1">Tutorial / Solusi Mandiri (Bot WA)</label>
-            <p className="text-xs text-slate-500 mb-2">Isi jika ini adalah menu terakhir (leaf node) dan Anda ingin bot membalas dengan link/teks tutorial tanpa langsung membuat tiket.</p>
+            <label className="block text-sm font-medium text-[#43474F] mb-1">{t('categories.tutorial_label')}</label>
+            <p className="text-xs text-slate-500 mb-2">{t('categories.tutorial_help')}</p>
             <textarea 
               value={botContent} 
               onChange={e => setBotContent(e.target.value)} 
               className="w-full px-4 py-2 border border-[#C3C6D1] rounded focus:outline-none focus:border-[#0059BB] min-h-[100px]"
-              placeholder="Contoh: Silakan ikuti panduan reset password pada link berikut: https://sso.undip.ac.id/help"
+              placeholder={t('categories.tutorial_placeholder')}
             />
           </div>
 
           <div className="flex justify-end gap-3 mt-4">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-semibold text-[#43474F] hover:bg-gray-100 rounded transition-colors">Batal</button>
-            <button type="submit" disabled={loading} className="px-4 py-2 text-sm font-semibold text-white bg-[#001E40] hover:bg-[#00142d] rounded transition-colors disabled:opacity-50">Simpan</button>
+            <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-semibold text-[#43474F] hover:bg-gray-100 rounded transition-colors">{t('categories.cancel')}</button>
+            <button type="submit" disabled={loading} className="px-4 py-2 text-sm font-semibold text-white bg-[#001E40] hover:bg-[#00142d] rounded transition-colors disabled:opacity-50">{loading ? t('categories.saving') : t('categories.save')}</button>
           </div>
         </form>
       </div>
@@ -227,6 +230,7 @@ export function AddSubcategoryModal({ isOpen, onClose, onSuccess, categoryId }: 
 }
 
 export function EditItemModal({ isOpen, onClose, onSuccess, target }: ModalProps & { target: any }) {
+  const { t } = useLanguage();
   const [name, setName] = useState('');
   const [botContent, setBotContent] = useState('');
   const [defaultPriority, setDefaultPriority] = useState('MEDIUM');
@@ -267,10 +271,10 @@ export function EditItemModal({ isOpen, onClose, onSuccess, target }: ModalProps
       });
       onSuccess();
       onClose();
-      if (showToast) showToast('Data berhasil diubah', 'success');
+      if (showToast) showToast(t('categories.updated'), 'success');
     } catch (err) {
       console.error(err);
-      if (showToast) showToast('Gagal mengubah data', 'error');
+      if (showToast) showToast(t('categories.update_failed'), 'error');
     } finally {
       setLoading(false);
     }
@@ -281,7 +285,7 @@ export function EditItemModal({ isOpen, onClose, onSuccess, target }: ModalProps
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" onClick={onClose} />
       <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white rounded-xl shadow-xl z-50 overflow-hidden flex flex-col max-h-[90vh]">
         <div className="flex justify-between items-center p-6 border-b border-[#C3C6D1]">
-          <h2 className="text-xl font-bold text-[#1A1C1E]">Edit {target.type === 'category' ? 'Kategori' : 'Subkategori'}</h2>
+          <h2 className="text-xl font-bold text-[#1A1C1E]">{t('categories.edit_title').replace('{type}', target.type === 'category' ? t('categories.name_label') : t('categories.sub_name_label'))}</h2>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M14 1.41L12.59 0L7 5.59L1.41 0L0 1.41L5.59 7L0 12.59L1.41 14L7 8.41L12.59 14L14 12.59L8.41 7L14 1.41Z" fill="#1A1C1E"/>
@@ -290,39 +294,39 @@ export function EditItemModal({ isOpen, onClose, onSuccess, target }: ModalProps
         </div>
         <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4 overflow-y-auto">
           <div>
-            <label className="block text-sm font-medium text-[#43474F] mb-1">Nama</label>
+            <label className="block text-sm font-medium text-[#43474F] mb-1">{t('categories.name_label')}</label>
             <input type="text" value={name} onChange={e => setName(e.target.value)} required className="w-full px-4 py-2 border border-[#C3C6D1] rounded focus:outline-none focus:border-[#0059BB]" />
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-[#43474F] mb-1">Prioritas Default</label>
-            <p className="text-xs text-slate-500 mb-2">Jika pelapor memilih kategori ini, tiket otomatis mendapat prioritas ini.</p>
+            <label className="block text-sm font-medium text-[#43474F] mb-1">{t('categories.priority_label')}</label>
+            <p className="text-xs text-slate-500 mb-2">{t('categories.priority_help')}</p>
             <select 
               value={defaultPriority} 
               onChange={e => setDefaultPriority(e.target.value)} 
               className="w-full px-4 py-2 border border-[#C3C6D1] rounded focus:outline-none focus:border-[#0059BB] bg-white"
             >
-              <option value="LOW">Rendah (Low)</option>
-              <option value="MEDIUM">Sedang (Medium)</option>
-              <option value="HIGH">Tinggi (High)</option>
-              <option value="CRITICAL">Kritis (Critical)</option>
+              <option value="LOW">{t('categories.priority_low')}</option>
+              <option value="MEDIUM">{t('categories.priority_medium')}</option>
+              <option value="HIGH">{t('categories.priority_high')}</option>
+              <option value="CRITICAL">{t('categories.priority_critical')}</option>
             </select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-[#43474F] mb-1">Tutorial / Solusi Mandiri (Bot WA)</label>
-            <p className="text-xs text-slate-500 mb-2">Isi jika ini adalah menu terakhir (leaf node) dan Anda ingin bot membalas dengan link/teks tutorial tanpa langsung membuat tiket.</p>
+            <label className="block text-sm font-medium text-[#43474F] mb-1">{t('categories.tutorial_label')}</label>
+            <p className="text-xs text-slate-500 mb-2">{t('categories.tutorial_help')}</p>
             <textarea 
               value={botContent} 
               onChange={e => setBotContent(e.target.value)} 
               className="w-full px-4 py-2 border border-[#C3C6D1] rounded focus:outline-none focus:border-[#0059BB] min-h-[100px]"
-              placeholder="Contoh: Silakan ikuti panduan reset password pada link berikut: https://sso.undip.ac.id/help"
+              placeholder={t('categories.tutorial_placeholder')}
             />
           </div>
 
           <div className="flex justify-end gap-3 mt-4">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-semibold text-[#43474F] hover:bg-gray-100 rounded transition-colors">Batal</button>
-            <button type="submit" disabled={loading} className="px-4 py-2 text-sm font-semibold text-white bg-[#001E40] hover:bg-[#00142d] rounded transition-colors disabled:opacity-50">Simpan</button>
+            <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-semibold text-[#43474F] hover:bg-gray-100 rounded transition-colors">{t('categories.cancel')}</button>
+            <button type="submit" disabled={loading} className="px-4 py-2 text-sm font-semibold text-white bg-[#001E40] hover:bg-[#00142d] rounded transition-colors disabled:opacity-50">{loading ? t('categories.saving') : t('categories.save')}</button>
           </div>
         </form>
       </div>

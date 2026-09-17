@@ -46,7 +46,7 @@ export default function PimpinanLayout({ children }: { children: React.ReactNode
         {/* Topbar (Atas) */}
         <AdminTopbar
           onMenuClick={handleSidebarToggle}
-          breadcrumbParent="Dashboard Pimpinan"
+          breadcrumbParent="Dashboard"
           pageTitle={getPageTitle()}
           showMenuButtonOnDesktop={true}
         />

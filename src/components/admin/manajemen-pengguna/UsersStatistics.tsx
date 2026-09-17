@@ -1,4 +1,6 @@
+'use client';
 import React from 'react';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface UsersStatisticsProps {
   totalUsers?: number;
@@ -9,13 +11,14 @@ export default function UsersStatistics({
   totalUsers = 0,
   todayUsers = 0,
 }: UsersStatisticsProps) {
+  const { t } = useLanguage();
   return (
     <div className="flex flex-col md:flex-row justify-start items-stretch gap-6 w-full">
       {/* Box 1 */}
       <div className="flex p-4 justify-between items-center rounded-lg border border-[#C3C6D1] bg-[#FFF] w-full max-w-sm">
         <div className="flex flex-col items-start gap-1 w-fit">
           <div className="flex flex-col items-start w-full">
-            <p className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">Total Pelapor</p>
+            <p className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">{t('users.total_reporters', 'Total Pelapor')}</p>
           </div>
           <div className="flex flex-col items-start w-full">
             <p className="text-[#001E40] font-iBMPlexSans text-2xl font-semibold leading-8 w-fit tracking-[-0.01em]">{totalUsers.toLocaleString('en-US')}</p>
@@ -32,7 +35,7 @@ export default function UsersStatistics({
       <div className="flex p-4 justify-between items-center rounded-lg border border-[#C3C6D1] bg-[#FFF] w-full max-w-sm">
         <div className="flex flex-col items-start gap-1 w-fit">
           <div className="flex flex-col items-start w-full">
-            <p className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">Melapor Hari Ini</p>
+            <p className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">{t('users.reported_today', 'Melapor Hari Ini')}</p>
           </div>
           <div className="flex flex-col items-start w-full">
             <p className="text-[#001E40] font-iBMPlexSans text-2xl font-semibold leading-8 w-fit tracking-[-0.01em]">{todayUsers.toLocaleString('en-US')}</p>

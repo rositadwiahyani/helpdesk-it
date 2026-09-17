@@ -3,6 +3,9 @@ import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 
+import { useLanguage } from '@/context/LanguageContext';
+import { Globe } from 'lucide-react';
+
 interface AdminTopbarProps {
   onMenuClick?: () => void;
   pageTitle?: string;
@@ -13,42 +16,16 @@ interface AdminTopbarProps {
   showMenuButtonOnDesktop?: boolean;
 }
 
-const routeMapping: Record<string, string> = {
-  '/dashboard': 'Dashboard Administrator',
-  '/dashboard/administrasi': 'Dashboard Administrator',
-  '/dashboard/administrasi/tickets': 'Tickets',
-  '/dashboard/administrasi/users': 'Manajemen Pengguna',
-  '/dashboard/administrasi/report-categories': 'Kategori Laporan',
-  '/dashboard/administrasi/reports': 'Laporan & Ekspor',
-  '/dashboard/administrasi/sla': 'Manajemen SLA',
-  '/dashboard/administrasi/staff': 'Manajemen Staff',
-  '/dashboard/administrasi/webhook': 'API Logs & Webhooks',
-  '/dashboard/administrasi/bot-settings': 'Manajemen Template Bot',
-  '/dashboard/administrasi/settings': 'Pengaturan Sistem',
-  '/dashboard/administrasi/profile': 'Profil Saya',
-  '/dashboard/pimpinan': 'Executive Summary',
-  '/dashboard/pimpinan/tickets': 'Laporan Tiket',
-  '/dashboard/pimpinan/performance': 'Laporan Performa',
-  '/dashboard/pimpinan/sla': 'Laporan SLA',
-  '/dashboard/pimpinan/reports': 'Rekap Laporan',
-  '/dashboard/pimpinan/profile': 'Profil Pimpinan',
-  '/dashboard/teknisi': 'Dashboard Teknisi',
-  '/dashboard/teknisi/tickets': 'Tiket Masuk',
-  '/dashboard/teknisi/profile': 'Profil Teknisi',
-  '/dashboard/operator': 'Dashboard Operator',
-  '/dashboard/operator/tickets': 'Tiket Masuk',
-  '/dashboard/operator/profile': 'Profil Operator',
-};
-
 export default function AdminTopbar({
   onMenuClick,
-  pageTitle = 'Dashboard Administrator',
-  breadcrumbParent = 'Menu',
-  userName = 'Admin User',
-  userRole = 'Super Administrator',
+  pageTitle,
+  breadcrumbParent,
+  userName,
+  userRole,
   avatarSrc = '/avatar-admin.jpg',
   showMenuButtonOnDesktop = false,
 }: AdminTopbarProps) {
+  const { language, setLanguage, t } = useLanguage();
   const [currentUser, setCurrentUser] = useState<any>({});
   const [showNotifications, setShowNotifications] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -87,28 +64,58 @@ export default function AdminTopbar({
   if (!displayUserName && currentUser.email) {
     displayUserName = currentUser.email.split('@')[0];
   }
-  displayUserName = displayUserName || userName;
+  displayUserName = displayUserName || userName || (language === 'id' ? 'Pengguna' : 'User');
 
   let displayUserRole = currentUser.role || currentUser.user_metadata?.role || userRole;
   if (displayUserRole === 'authenticated') {
-    if (currentUser.email?.includes('operator')) displayUserRole = 'Operator Helpdesk';
-    else if (currentUser.email?.includes('teknisi')) displayUserRole = 'Teknisi Helpdesk';
-    else if (currentUser.email?.includes('pimpinan')) displayUserRole = 'Pimpinan';
-    else displayUserRole = 'Administrator';
+    if (currentUser.email?.includes('operator')) displayUserRole = t('topbar.operator');
+    else if (currentUser.email?.includes('teknisi')) displayUserRole = t('topbar.teknisi');
+    else if (currentUser.email?.includes('pimpinan')) displayUserRole = t('topbar.pimpinan');
+    else displayUserRole = t('topbar.super_admin');
   } else if (displayUserRole === 'pimpinan') {
-    displayUserRole = 'Pimpinan';
+    displayUserRole = t('topbar.pimpinan');
   } else if (displayUserRole === 'admin') {
-    displayUserRole = 'Administrator';
+    displayUserRole = t('topbar.super_admin');
   } else if (displayUserRole === 'teknisi') {
-    displayUserRole = 'Teknisi Helpdesk';
+    displayUserRole = t('topbar.teknisi');
   } else if (displayUserRole === 'operator') {
-    displayUserRole = 'Operator Helpdesk';
+    displayUserRole = t('topbar.operator');
   }
 
   const initials = displayUserName.substring(0, 2).toUpperCase();
 
   const pathname = usePathname();
-  const activeTitle = routeMapping[pathname || ''] || pageTitle;
+
+  const getDynamicPageTitle = () => {
+    const path = pathname || '';
+    if (path === '/dashboard' || path === '/dashboard/administrasi') return t('topbar.dashboard_admin');
+    if (path.startsWith('/dashboard/administrasi/tickets')) return t('menu.tickets');
+    if (path.startsWith('/dashboard/administrasi/users')) return t('menu.users');
+    if (path.startsWith('/dashboard/administrasi/report-categories')) return t('menu.report_categories');
+    if (path.startsWith('/dashboard/administrasi/reports')) return t('menu.reports');
+    if (path.startsWith('/dashboard/administrasi/sla')) return t('menu.sla');
+    if (path.startsWith('/dashboard/administrasi/staff')) return t('menu.staff');
+    if (path.startsWith('/dashboard/administrasi/webhook')) return language === 'id' ? 'Log API & Webhook' : 'API Logs & Webhooks';
+    if (path.startsWith('/dashboard/administrasi/bot-settings')) return t('menu.bot');
+    if (path.startsWith('/dashboard/administrasi/settings')) return t('menu.settings');
+    if (path.startsWith('/dashboard/administrasi/profile')) return t('profile.title');
+    if (path.startsWith('/dashboard/pimpinan/tickets')) return t('menu.ticket_reports');
+    if (path.startsWith('/dashboard/pimpinan/performance')) return t('menu.performance_reports');
+    if (path.startsWith('/dashboard/pimpinan/sla')) return t('menu.sla_reports');
+    if (path.startsWith('/dashboard/pimpinan/reports')) return t('menu.summary_reports');
+    if (path.startsWith('/dashboard/pimpinan/profile')) return t('profile.pimpinan_title');
+    if (path.startsWith('/dashboard/operator/tickets')) return t('menu.all_tickets');
+    if (path.startsWith('/dashboard/operator/profile')) return t('profile.title');
+    if (path === '/dashboard/pimpinan' || path.startsWith('/dashboard/pimpinan/')) return t('menu.executive_summary');
+    if (path === '/dashboard/operator' || path.startsWith('/dashboard/operator/')) return t('topbar.dashboard_operator');
+    return pageTitle || t('topbar.dashboard');
+  };
+
+  const activeTitle = getDynamicPageTitle();
+
+  const translatedBreadcrumb = (breadcrumbParent || 'Menu') === 'Menu' 
+    ? t('topbar.menu') 
+    : (breadcrumbParent === 'Dashboard' ? t('topbar.dashboard') : breadcrumbParent);
 
   return (
     <div className="sticky top-0 z-40 h-20 w-full bg-white border-b border-[var(--line)]">
@@ -121,16 +128,16 @@ export default function AdminTopbar({
           <button
             onClick={onMenuClick}
             className={`${showMenuButtonOnDesktop ? 'block' : 'lg:opacity-0 lg:pointer-events-none'} -ml-2 p-2 rounded-xl text-[var(--text-dim)] hover:bg-[var(--paper-2)] hover:text-[var(--ink)] transition-colors`}
-            aria-label="Buka menu"
+            aria-label={language === 'id' ? 'Buka menu' : 'Open menu'}
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
 
-          {/* Breadcrumb. Margin left ditambahkan agar teks selaras dengan page title yang terdorong padding halaman md:p-10 (40px) */}
+          {/* Breadcrumb */}
           <div className="flex items-center gap-2 text-[15px] ml-4 md:ml-2">
-            <span className="text-[var(--text-dim)]">{breadcrumbParent}</span>
+            <span className="text-[var(--text-dim)]">{translatedBreadcrumb}</span>
             <svg className="w-4 h-4 text-[var(--text-dim)]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
             </svg>
@@ -140,12 +147,22 @@ export default function AdminTopbar({
           </div>
         </div>
 
-        <div className="flex items-center gap-4 lg:gap-5">
+        <div className="flex items-center gap-3 lg:gap-5">
+          {/* Quick Language Toggle Pill */}
+          <button
+            onClick={() => setLanguage(language === 'id' ? 'en' : 'id')}
+            title={t('topbar.lang_switch')}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-slate-200 hover:border-slate-300 bg-slate-50 hover:bg-slate-100 text-xs font-bold text-slate-700 transition-all cursor-pointer shadow-2xs"
+          >
+            <Globe className="w-3.5 h-3.5 text-slate-500" />
+            <span>{language === 'id' ? '🇮🇩 ID' : '🇬🇧 EN'}</span>
+          </button>
+
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setShowNotifications(!showNotifications)}
               className="relative p-2 text-[var(--ink)] hover:text-[var(--gold-soft)] transition-colors focus:outline-none"
-              aria-label="Notifikasi"
+              aria-label={t('topbar.notifications')}
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -161,13 +178,13 @@ export default function AdminTopbar({
             {showNotifications && (
               <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden z-50 animate-in slide-in-from-top-2 fade-in duration-200">
                 <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50/80">
-                  <h3 className="font-bold text-slate-800 text-[14px]">Notifikasi</h3>
+                  <h3 className="font-bold text-slate-800 text-[14px]">{t('topbar.notifications')}</h3>
                   {unreadCount > 0 && (
                     <button 
                       onClick={() => setNotifications(prev => prev.map(n => ({...n, isRead: true})))}
                       className="text-[12px] font-semibold text-blue-600 hover:text-blue-800 transition-colors"
                     >
-                      Tandai semua dibaca
+                      {t('notifications.mark_read')}
                     </button>
                   )}
                 </div>
@@ -181,8 +198,12 @@ export default function AdminTopbar({
                           {notif.type === 'rejected' && <div className="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className={`text-[13px] font-bold ${!notif.isRead ? 'text-slate-900' : 'text-slate-700'}`}>{notif.title}</p>
-                          <p className="text-[13px] text-slate-500 mt-0.5 leading-snug line-clamp-2">{notif.desc}</p>
+                          <p className={`text-[13px] font-bold ${!notif.isRead ? 'text-slate-900' : 'text-slate-700'}`}>
+                            {notif.type === 'new' ? t('notifications.new_ticket') : (notif.type === 'warning' ? t('notifications.sla_warning') : t('notifications.returned'))}
+                          </p>
+                          <p className="text-[13px] text-slate-500 mt-0.5 leading-snug line-clamp-2">
+                            {notif.type === 'new' ? `${language === 'id' ? 'Tiket' : 'Ticket'} #000143 ${t('notifications.new_ticket_desc')}` : (notif.type === 'warning' ? t('notifications.sla_warning_desc') : t('notifications.returned_desc'))}
+                          </p>
                           <p className="text-[11px] font-semibold text-slate-400 mt-1.5">{notif.time}</p>
                         </div>
                         {!notif.isRead && (
@@ -191,12 +212,12 @@ export default function AdminTopbar({
                       </div>
                     ))
                   ) : (
-                    <div className="p-8 text-center text-slate-400 text-sm">Belum ada notifikasi.</div>
+                    <div className="p-8 text-center text-slate-400 text-sm">{t('topbar.no_notifications')}</div>
                   )}
                 </div>
                 <div className="p-2 border-t border-slate-100 bg-slate-50 text-center">
                   <button className="text-[12px] font-bold text-slate-600 hover:text-slate-900 transition-colors w-full py-1">
-                    Lihat Semua Notifikasi
+                    {t('notifications.view_all')}
                   </button>
                 </div>
               </div>

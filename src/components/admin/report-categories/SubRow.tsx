@@ -3,6 +3,7 @@ import CountBadge from "./CountBadge";
 import StatusBadge from "./StatusBadge";
 import ActionMenu from "./ActionMenu";
 import { TreeContext } from "./Workspace";
+import { useLanguage } from "@/context/LanguageContext";
 
 type SubRowProps =
   | {
@@ -10,6 +11,7 @@ type SubRowProps =
       nodeId?: string; // ID untuk trigger expand/collapse sub kategori
       headerClassName: string;
       title: ReactNode;
+      originalTitle?: ReactNode;
       count: ReactNode;
       status: ReactNode;
       childrenWrapperClassName?: string;
@@ -17,11 +19,12 @@ type SubRowProps =
       onMoveUp?: () => void;
       onMoveDown?: () => void;
     }
-  | { variant: "leaf-compact"; title: ReactNode; nodeId?: string; onMoveUp?: () => void; onMoveDown?: () => void; }
-  | { variant: "leaf-bordered"; hasDivider: boolean; title: ReactNode; nodeId?: string; onMoveUp?: () => void; onMoveDown?: () => void; };
+  | { variant: "leaf-compact"; title: ReactNode; originalTitle?: ReactNode; nodeId?: string; onMoveUp?: () => void; onMoveDown?: () => void; }
+  | { variant: "leaf-bordered"; hasDivider: boolean; title: ReactNode; originalTitle?: ReactNode; nodeId?: string; onMoveUp?: () => void; onMoveDown?: () => void; };
 
 export default function SubRow(props: SubRowProps) {
   const ctx = useContext(TreeContext);
+  const { t } = useLanguage();
   const [isActionOpen, setIsActionOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -86,12 +89,12 @@ export default function SubRow(props: SubRowProps) {
             {(props.status === 'AKTIF' || props.status === 'Aktif') ? (
               <span className="bg-[#EEF4FF] text-blue-600 px-2.5 py-0.5 rounded-full text-[11px] font-semibold flex items-center gap-1.5 border border-[#D1E0FF] shadow-sm">
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
-                Aktif
+                {t('categories.active')}
               </span>
             ) : (
                <span className="bg-[#F3F4F6] text-gray-600 px-2.5 py-0.5 rounded-full text-[11px] font-semibold flex items-center gap-1.5 border border-[#E5E7EB] shadow-sm">
                 <span className="w-1.5 h-1.5 rounded-full bg-gray-500"></span>
-                Nonaktif
+                {t('categories.inactive')}
               </span>
             )}
           </div>
@@ -116,27 +119,27 @@ export default function SubRow(props: SubRowProps) {
                 {props.onMoveUp && (
                   <button onClick={(e) => { e.stopPropagation(); setIsActionOpen(false); props.onMoveUp?.(); }} className="px-4 py-2 text-sm text-left hover:bg-gray-50 text-[#1A1C1E] transition-colors flex items-center gap-2">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
-                    Pindah ke Atas
+                    {t('categories.move_up')}
                   </button>
                 )}
                 {props.onMoveDown && (
                   <button onClick={(e) => { e.stopPropagation(); setIsActionOpen(false); props.onMoveDown?.(); }} className="px-4 py-2 text-sm text-left hover:bg-gray-50 text-[#1A1C1E] transition-colors flex items-center gap-2">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
-                    Pindah ke Bawah
+                    {t('categories.move_down')}
                   </button>
                 )}
                 <button
-                  onClick={(e) => { e.stopPropagation(); setIsActionOpen(false); ctx?.onEditItem?.({ id: props.nodeId, title: props.title }, 'category'); }}
+                  onClick={(e) => { e.stopPropagation(); setIsActionOpen(false); ctx?.onEditItem?.({ id: props.nodeId, title: props.originalTitle ?? props.title }, 'category'); }}
                   className="px-4 py-2 text-sm text-left hover:bg-gray-50 text-[#1A1C1E] transition-colors"
                 >
-                  Edit Data
+                  {t('categories.edit')}
                 </button>
                 <div className="h-px bg-gray-100 w-full my-1"></div>
                 <button
                   onClick={(e) => { e.stopPropagation(); setIsActionOpen(false); ctx?.onDeleteItem?.(props.nodeId!, 'category'); }}
                   className="px-4 py-2 text-sm text-left hover:bg-red-50 text-red-600 transition-colors"
                 >
-                  Hapus
+                  {t('categories.delete')}
                 </button>
               </div>
             )}
@@ -177,7 +180,7 @@ export default function SubRow(props: SubRowProps) {
         {/* Subkategori biasanya mewarisi aktif/nonaktif dari API, default kita anggap AKTIF di mock jika tidak ada prop */}
         <span className="bg-[#EEF4FF] text-blue-600 px-2.5 py-0.5 rounded-full text-[11px] font-semibold flex items-center gap-1.5 border border-[#D1E0FF] shadow-sm">
           <span className="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
-          Aktif
+          {t('categories.active')}
         </span>
       </div>
 
@@ -200,27 +203,27 @@ export default function SubRow(props: SubRowProps) {
               {props.onMoveUp && (
                 <button onClick={(e) => { e.stopPropagation(); setIsActionOpen(false); props.onMoveUp?.(); }} className="px-4 py-2 text-sm text-left hover:bg-gray-50 text-[#1A1C1E] transition-colors flex items-center gap-2">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
-                  Pindah ke Atas
+                  {t('categories.move_up')}
                 </button>
               )}
               {props.onMoveDown && (
                 <button onClick={(e) => { e.stopPropagation(); setIsActionOpen(false); props.onMoveDown?.(); }} className="px-4 py-2 text-sm text-left hover:bg-gray-50 text-[#1A1C1E] transition-colors flex items-center gap-2">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
-                  Pindah ke Bawah
+                  {t('categories.move_down')}
                 </button>
               )}
               <button
-                onClick={(e) => { e.stopPropagation(); setIsActionOpen(false); ctx?.onEditItem?.({ id: (props as any).nodeId, title: props.title }, 'subcategory'); }}
+                onClick={(e) => { e.stopPropagation(); setIsActionOpen(false); ctx?.onEditItem?.({ id: (props as any).nodeId, title: (props as any).originalTitle ?? props.title }, 'subcategory'); }}
                 className="px-4 py-2 text-sm text-left hover:bg-gray-50 text-[#1A1C1E] transition-colors"
               >
-                Edit Data
+                {t('categories.edit')}
               </button>
               <div className="h-px bg-gray-100 w-full my-1"></div>
               <button
                 onClick={(e) => { e.stopPropagation(); setIsActionOpen(false); ctx?.onDeleteItem?.((props as any).nodeId, 'subcategory'); }}
                 className="px-4 py-2 text-sm text-left hover:bg-red-50 text-red-600 transition-colors"
               >
-                Hapus
+                {t('categories.delete')}
               </button>
             </div>
           )}

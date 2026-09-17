@@ -1,5 +1,7 @@
+'use client';
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useLanguage } from '@/context/LanguageContext';
 
 export interface UserItem {
   id: string;
@@ -43,6 +45,7 @@ export default function UsersTableSection({
   onEditUser,
   onDeleteUser,
 }: UsersTableSectionProps) {
+  const { t } = useLanguage();
   const isAllSelected = users.length > 0 && users.every((u) => selectedUserIds.includes(u.id));
   const startDisplay = totalUsers === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
   const endDisplay = Math.min(currentPage * itemsPerPage, totalUsers);
@@ -103,19 +106,19 @@ export default function UsersTableSection({
                 />
               </th>
               <th className="px-4 py-4 select-none">
-                <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">NAMA</span>
+                <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">{t('users.col_name', 'NAMA')}</span>
               </th>
               <th className="px-4 py-4 select-none">
-                <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">NIM / NIP</span>
+                <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">{t('users.col_nim_nip', 'NIM / NIP')}</span>
               </th>
               <th className="px-4 py-4 select-none">
-                <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">FAKULTAS / UNIT KERJA</span>
+                <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">{t('users.col_unit', 'FAKULTAS / UNIT KERJA')}</span>
               </th>
               <th className="px-4 py-4 select-none">
-                <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">CREATED</span>
+                <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">{t('users.col_created', 'CREATED')}</span>
               </th>
               <th className="px-4 py-4 select-none text-center w-24">
-                <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">AKSI</span>
+                <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">{t('users.col_action', 'AKSI')}</span>
               </th>
             </tr>
           </thead>
@@ -125,14 +128,14 @@ export default function UsersTableSection({
                 <td colSpan={6} className="py-16 text-center">
                   <div className="flex flex-col items-center gap-4">
                     <div className="w-8 h-8 border-4 border-[#1E3A8A] border-t-transparent rounded-full animate-spin"></div>
-                    <p className="text-[#43474F] font-iBMPlexSans text-sm">Memuat data pelapor...</p>
+                    <p className="text-[#43474F] font-iBMPlexSans text-sm">{t('users.loading', 'Memuat data pelapor...')}</p>
                   </div>
                 </td>
               </tr>
             ) : users.length === 0 ? (
               <tr>
                 <td colSpan={6} className="py-16 text-center">
-                  <p className="text-[#43474F] font-iBMPlexSans text-sm">Tidak ada data pelapor yang ditemukan.</p>
+                  <p className="text-[#43474F] font-iBMPlexSans text-sm">{t('users.empty', 'Tidak ada data pelapor yang ditemukan.')}</p>
                 </td>
               </tr>
             ) : (
@@ -196,15 +199,15 @@ export default function UsersTableSection({
                   onChange={(e) => { setItemsPerPage(Number(e.target.value)); onPageChange?.(1); }}
                   className="text-[13px] border border-[#C3C6D1] rounded px-2 py-1 outline-none focus:border-[#1E3A8A] text-[#1A1C1E]"
               >
-                  <option value={8}>8 / page</option>
-                  <option value={10}>10 / page</option>
-                  <option value={15}>15 / page</option>
-                  <option value={25}>25 / page</option>
-                  <option value={50}>50 / page</option>
+                  <option value={8}>8 / {t('tickets.per_page', 'page')}</option>
+                  <option value={10}>10 / {t('tickets.per_page', 'page')}</option>
+                  <option value={15}>15 / {t('tickets.per_page', 'page')}</option>
+                  <option value={25}>25 / {t('tickets.per_page', 'page')}</option>
+                  <option value={50}>50 / {t('tickets.per_page', 'page')}</option>
               </select>
             )}
             <p className="text-[#1A1C1E] font-iBMPlexSans text-[13px]">
-                Showing {startDisplay} - {endDisplay} of {totalUsers.toLocaleString('en-US')} pelapor
+                {t('tickets.showing', 'Showing')} {startDisplay} - {endDisplay} {t('tickets.of', 'of')} {totalUsers.toLocaleString('en-US')} {t('users.reporters_count', 'pelapor')}
             </p>
         </div>
         <div className="flex items-center gap-2">

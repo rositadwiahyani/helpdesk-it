@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface WhatsAppMockupProps {
   message: string;
@@ -34,6 +35,7 @@ const parseWhatsAppText = (text: string) => {
 };
 
 export default function WhatsAppMockup({ message, triggerWord = 'HaloDesk' }: WhatsAppMockupProps) {
+  const { t } = useLanguage();
   const currentTime = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 
   return (
@@ -101,7 +103,7 @@ export default function WhatsAppMockup({ message, triggerWord = 'HaloDesk' }: Wh
         {/* Bot Response Message */}
         <div className="self-start max-w-[90%] relative mt-2">
           <div className="bg-white text-gray-800 text-[13.5px] leading-[1.4] px-3 pt-2 pb-5 rounded-md shadow-sm break-words whitespace-pre-wrap">
-            {message ? parseWhatsAppText(message) : <span className="text-gray-400 italic">Mulai mengetik untuk melihat preview...</span>}
+            {message ? parseWhatsAppText(message) : <span className="text-gray-400 italic">{t('bot.preview_empty')}</span>}
             <div className="absolute right-2 bottom-1 flex items-center gap-1">
               <span className="text-[9px] text-gray-400">{currentTime}</span>
             </div>
@@ -113,7 +115,7 @@ export default function WhatsAppMockup({ message, triggerWord = 'HaloDesk' }: Wh
       <div className="bg-[#f0f2f5] w-full px-3 py-2 flex items-center gap-2">
         <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
         <div className="flex-1 bg-white rounded-full h-9 flex items-center px-4">
-          <span className="text-gray-400 text-sm">Ketik pesan</span>
+          <span className="text-gray-400 text-sm">{t('bot.type_message')}</span>
         </div>
         <div className="w-9 h-9 rounded-full bg-[#00a884] text-white flex items-center justify-center">
           <svg className="w-5 h-5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>

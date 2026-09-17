@@ -1,12 +1,14 @@
 import LogItem from "./LogItem";
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function ActivityLog() {
+  const { language } = useLanguage();
   return (
     <div className="flex p-4 flex-col items-start gap-4 rounded-lg border border-[#C3C6D1] bg-[#FFF] w-full">
       <div className="flex justify-between items-center w-full">
         <div className="flex flex-col items-start w-fit">
           <p className="text-[#001E40] font-iBMPlexSans text-xl font-medium leading-7 w-fit">
-            Log Aktivitas Perubahan
+            {language === 'id' ? 'Log Aktivitas Perubahan' : 'Change Activity Log'}
           </p>
         </div>
         <svg
@@ -27,19 +29,19 @@ export default function ActivityLog() {
         <LogItem
           variant="line"
           dotColor="bg-[#0059BB]"
-          title={<>Kategori &quot;Reset OTP&quot; ditambahkan ke SSO</>}
-          timestamp={<>Hari ini, 10:45 • Admin IT</>}
+          title={<>{language === 'id' ? 'Kategori "Reset OTP" ditambahkan ke SSO' : 'Category "Reset OTP" added to SSO'}</>}
+          timestamp={<>{language === 'id' ? 'Hari ini, 10:45 • Admin IT' : 'Today, 10:45 • IT Admin'}</>}
         />
         <LogItem
           variant="line"
           dotColor="bg-[#737780]"
-          title={<>Urutan &quot;Cyber Security&quot; dipindahkan ke posisi 3</>}
-          timestamp={<>Kemarin, 14:20 • Admin IT</>}
+          title={<>{language === 'id' ? 'Urutan "Cyber Security" dipindahkan ke posisi 3' : '"Cyber Security" moved to position 3'}</>}
+          timestamp={<>{language === 'id' ? 'Kemarin, 14:20 • Admin IT' : 'Yesterday, 14:20 • IT Admin'}</>}
         />
         <LogItem
           variant="end"
-          title={<>Kategori &quot;Legalisir&quot; dinonaktifkan</>}
-          timestamp={<>20 Okt 2023, 09:00 • Sistem</>}
+          title={<>{language === 'id' ? 'Kategori "Legalisir" dinonaktifkan' : 'Category "Legalisir" deactivated'}</>}
+          timestamp={<>20 Oct 2023, 09:00 • System</>}
         />
       </div>
     </div>

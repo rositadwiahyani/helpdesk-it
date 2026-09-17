@@ -7,10 +7,12 @@ import { supabase } from "@/lib/supabase";
 import StaffHeader from "./StaffHeader";
 import AgentModal from "./AgentModal";
 import DeptModal from "./DeptModal";
+import { useLanguage } from '@/context/LanguageContext';
 
 type StaffTab = "Agents" | "Departments";
 
 export default function StaffWorkspace() {
+  const { t } = useLanguage();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<StaffTab>("Agents");
   const [agents, setAgents] = useState<any[]>([]);
@@ -73,7 +75,7 @@ export default function StaffWorkspace() {
               type="text" 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={`Cari ${activeTab.toLowerCase()}...`} 
+              placeholder={activeTab === 'Agents' ? t('staff.search_agents') : t('staff.search_departments')} 
               className="pl-9 pr-4 py-2 text-sm border border-[#C3C6D1] rounded focus:outline-none focus:border-[#0059BB] w-full" 
             />
             <svg className="w-4 h-4 absolute left-3 top-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
@@ -90,11 +92,11 @@ export default function StaffWorkspace() {
                   setIsDeptModalOpen(true);
                 }
               }}
-              title={`Tambah ${activeTab}`} 
+              title={activeTab === 'Agents' ? t('staff.add_staff') : t('staff.add_department')} 
               className="flex items-center gap-2 px-4 py-2 bg-[#001E40] text-white rounded hover:bg-[#00142d] text-sm font-iBMPlexSans"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/></svg>
-              Tambah {activeTab === 'Agents' ? 'Staf' : 'Dept'}
+              {activeTab === 'Agents' ? t('staff.add_staff') : t('staff.add_department')}
             </button>
           </div>
         )}
@@ -110,7 +112,7 @@ export default function StaffWorkspace() {
             }`}
           >
             <p className={`font-iBMPlexSans text-sm leading-5 w-fit ${activeTab === 'Agents' ? 'text-[#001E40] font-bold' : 'text-[#43474F]'}`}>
-              Agents
+              {t('staff.agents')}
             </p>
           </button>
           <button
@@ -120,7 +122,7 @@ export default function StaffWorkspace() {
             }`}
           >
             <p className={`font-iBMPlexSans text-sm leading-5 w-fit ${activeTab === 'Departments' ? 'text-[#001E40] font-bold' : 'text-[#43474F]'}`}>
-              Departments
+              {t('staff.departments')}
             </p>
           </button>
         </div>
@@ -128,18 +130,18 @@ export default function StaffWorkspace() {
         {/* Content Area */}
         <div className="flex flex-col w-full bg-white relative">
           {loading ? (
-            <div className="p-8 text-center text-gray-500">Loading...</div>
+            <div className="p-8 text-center text-gray-500">{t('staff.loading')}</div>
           ) : (
             <div className="w-full overflow-x-auto">
               {activeTab === "Agents" && (
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-b-[#C3C6D1] bg-[#F3F3F6]">
-                      <th className="px-4 py-4 text-[#43474F] font-iBMPlexSans text-[11px] font-bold tracking-[0.05em]">NAMA</th>
-                      <th className="px-4 py-4 text-[#43474F] font-iBMPlexSans text-[11px] font-bold tracking-[0.05em]">EMAIL</th>
-                      <th className="px-4 py-4 text-[#43474F] font-iBMPlexSans text-[11px] font-bold tracking-[0.05em]">PERAN</th>
-                      <th className="px-4 py-4 text-[#43474F] font-iBMPlexSans text-[11px] font-bold tracking-[0.05em]">DEPARTEMEN</th>
-                      <th className="px-4 py-4 text-[#43474F] font-iBMPlexSans text-[11px] font-bold tracking-[0.05em] w-24">AKSI</th>
+                      <th className="px-4 py-4 text-[#43474F] font-iBMPlexSans text-[11px] font-bold tracking-[0.05em]">{t('staff.name')}</th>
+                      <th className="px-4 py-4 text-[#43474F] font-iBMPlexSans text-[11px] font-bold tracking-[0.05em]">{t('staff.email')}</th>
+                      <th className="px-4 py-4 text-[#43474F] font-iBMPlexSans text-[11px] font-bold tracking-[0.05em]">{t('staff.role')}</th>
+                      <th className="px-4 py-4 text-[#43474F] font-iBMPlexSans text-[11px] font-bold tracking-[0.05em]">{t('staff.department')}</th>
+                      <th className="px-4 py-4 text-[#43474F] font-iBMPlexSans text-[11px] font-bold tracking-[0.05em] w-24">{t('staff.action')}</th>
                     </tr>
                   </thead>
                 <tbody>
@@ -161,7 +163,7 @@ export default function StaffWorkspace() {
                             router.push(`/dashboard/administrasi/staff/${agent.id}?edit=true`);
                           }}
                           className="p-1.5 text-[#1E3A8A] hover:bg-slate-100 rounded transition-colors inline-flex" 
-                          title="Edit Data"
+                          title={t('staff.edit')}
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                         </button>
@@ -170,7 +172,7 @@ export default function StaffWorkspace() {
                   ))}
                   {agents.filter(a => a.name.toLowerCase().includes(searchQuery.toLowerCase()) || a.email.toLowerCase().includes(searchQuery.toLowerCase()) || (a.dept?.name || '').toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
                     <tr>
-                      <td colSpan={5} className="px-4 py-8 text-center text-gray-500">Belum ada data agen.</td>
+                      <td colSpan={5} className="px-4 py-8 text-center text-gray-500">{t('staff.empty_agents')}</td>
                     </tr>
                   )}
                 </tbody>
@@ -182,8 +184,8 @@ export default function StaffWorkspace() {
                 <thead>
                   <tr className="border-b border-b-[#C3C6D1] bg-[#F3F3F6]">
                     <th className="px-4 py-4 text-[#43474F] font-iBMPlexSans text-[11px] font-bold tracking-[0.05em]">ID</th>
-                    <th className="px-4 py-4 text-[#43474F] font-iBMPlexSans text-[11px] font-bold tracking-[0.05em]">NAMA DEPARTEMEN</th>
-                    <th className="px-4 py-4 text-[#43474F] font-iBMPlexSans text-[11px] font-bold tracking-[0.05em] w-24">AKSI</th>
+                    <th className="px-4 py-4 text-[#43474F] font-iBMPlexSans text-[11px] font-bold tracking-[0.05em]">{t('staff.department')}</th>
+                    <th className="px-4 py-4 text-[#43474F] font-iBMPlexSans text-[11px] font-bold tracking-[0.05em] w-24">{t('staff.action')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -201,14 +203,14 @@ export default function StaffWorkspace() {
                           }}
                           className="text-blue-600 hover:text-blue-800"
                         >
-                          Edit
+                          {t('staff.edit')}
                         </button>
                       </td>
                     </tr>
                   ))}
                   {departments.filter(d => d.name.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
                     <tr>
-                      <td colSpan={3} className="px-4 py-8 text-center text-gray-500">Belum ada data departemen.</td>
+                      <td colSpan={3} className="px-4 py-8 text-center text-gray-500">{t('staff.empty_departments')}</td>
                     </tr>
                   )}
                 </tbody>

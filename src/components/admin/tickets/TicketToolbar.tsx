@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useLanguage } from '@/context/LanguageContext';
 
 export type TabFilter = 'all' | 'my_tickets' | 'waiting_verification' | 'open' | 'in_progress' | 'resolved' | 'rejected' | 'deleted';
 
@@ -56,6 +57,7 @@ export default function TicketToolbar({
   selectedCategory = '',
   onCategoryChange,
 }: TicketToolbarProps & { onBulkAction?: (action: string) => void }) {
+  const { t } = useLanguage();
   const [showCategoryPopup, setShowCategoryPopup] = React.useState(false);
 
   const handleTabClick = (tab: TabFilter) => {
@@ -89,7 +91,7 @@ export default function TicketToolbar({
           <div className="relative">
             <input 
               type="text" 
-              placeholder="Search tickets..." 
+              placeholder={t('tickets.search_placeholder', 'Search tickets...')} 
               value={searchQuery}
               onChange={(e) => onSearchChange?.(e.target.value)}
               className="pl-9 pr-4 py-2 text-sm border border-[#C3C6D1] rounded focus:outline-none focus:border-[#0059BB] w-full md:w-64"
@@ -118,7 +120,7 @@ export default function TicketToolbar({
                 >
                     <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                     <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 max-w-[120px] truncate">
-                        {selectedCategory ? categories.find(c => String(c.id) === selectedCategory)?.name || 'Kategori' : 'Kategori'}
+                        {selectedCategory ? categories.find(c => String(c.id) === selectedCategory)?.name || t('tickets.category_btn', 'Kategori') : t('tickets.category_btn', 'Kategori')}
                     </span>
                 </button>
                 
@@ -128,7 +130,7 @@ export default function TicketToolbar({
                             className={`px-3 py-2 text-[13px] font-semibold rounded cursor-pointer whitespace-nowrap transition-colors ${!selectedCategory ? 'bg-[#F4F7FF] text-[#1E3A8A]' : 'text-slate-700 hover:bg-slate-50'}`}
                             onClick={() => { onCategoryChange?.(''); setShowCategoryPopup(false); }}
                         >
-                            Semua Kategori
+                            {t('tickets.all_categories', 'Semua Kategori')}
                         </div>
                         {categories.map((cat) => (
                             <div 
@@ -144,7 +146,7 @@ export default function TicketToolbar({
             </div>
           </div>
           {selectedCount > 0 && (
-            <span className="text-xs font-bold text-[#1E3A8A] bg-blue-50 px-2 py-1 rounded ml-1">{selectedCount} selected</span>
+            <span className="text-xs font-bold text-[#1E3A8A] bg-blue-50 px-2 py-1 rounded ml-1">{selectedCount} {t('tickets.selected', 'dipilih')}</span>
           )}
         </div>
 
@@ -153,24 +155,24 @@ export default function TicketToolbar({
 
           <div onClick={() => onOpenFilters && onOpenFilters()} className="flex h-[38px] px-3.5 items-center gap-2 rounded border border-[#C3C6D1] bg-[#FFF] cursor-pointer hover:bg-gray-50 transition-colors">
             <svg width="14" height="9" viewBox="0 0 14 9" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.25 9V7.5H8.25V9H5.25ZM2.25 5.25V3.75H11.25V5.25H2.25ZM0 1.5V0H13.5V1.5H0Z" fill="#43474F" /></svg>
-            <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4">Lanjutan</span>
+            <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4">{t('tickets.advanced_filter', 'Lanjutan')}</span>
           </div>
           
           <button 
               onClick={() => { if (onSearchChange) onSearchChange(''); if (onCategoryChange) onCategoryChange(''); }}
               className="h-[38px] px-4 bg-white text-slate-600 border border-[#C3C6D1] text-[13px] font-medium rounded hover:bg-slate-50 hover:text-slate-900 transition-colors"
           >
-              Reset
+              {t('common.reset', 'Reset')}
           </button>
 
           <div onClick={() => onExportCsv && onExportCsv()} className="flex h-[38px] px-3.5 items-center gap-2 rounded border border-[#C3C6D1] bg-[#FFF] cursor-pointer hover:bg-gray-50 transition-colors">
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 9L2.25 5.25L3.3 4.1625L5.25 6.1125V0H6.75V6.1125L8.7 4.1625L9.75 5.25L6 9ZM1.5 12C1.0875 12 0.734375 11.8531 0.440625 11.5594C0.146875 11.2656 0 10.9125 0 10.5V8.25H1.5V10.5H10.5V8.25H12V10.5C12 10.9125 11.8531 11.2656 11.5594 11.5594C11.2656 11.8531 10.9125 12 10.5 12H1.5Z" fill="#43474F" /></svg>
-            <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4">Ekspor CSV</span>
+            <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4">{t('tickets.export_csv', 'Ekspor CSV')}</span>
           </div>
           
           <div onClick={() => onNewTicket && onNewTicket()} className="flex h-[38px] px-4 items-center gap-2 rounded bg-[#1E3A8A] shadow-[01px2px0rgba(0,0,0,0.05)] cursor-pointer hover:bg-blue-900 transition-colors">
             <svg width="11" height="11" viewBox="0 0 11 11" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.5 6H0V4.5H4.5V0H6V4.5H10.5V6H6V10.5H4.5V6Z" fill="white" /></svg>
-            <span className="text-[#FFF] font-iBMPlexSans text-xs font-semibold leading-4">Buat Tiket</span>
+            <span className="text-[#FFF] font-iBMPlexSans text-xs font-semibold leading-4">{t('tickets.create_ticket', 'Buat Tiket')}</span>
           </div>
         </div>
       </div>
@@ -178,28 +180,28 @@ export default function TicketToolbar({
       {/* Bottom Row: Tabs */}
       <div className="flex items-end gap-6 border-b border-b-[#C3C6D1] w-full overflow-x-auto mt-2">
         <button onClick={() => handleTabClick('all')} className={getBtnClass('all')}>
-          <p className={getTextClass('all')}>Semua Tiket ({counts.all})</p>
+          <p className={getTextClass('all')}>{t('tickets.tab_all', 'Semua Tiket')} ({counts.all})</p>
         </button>
         <button onClick={() => handleTabClick('my_tickets')} className={getBtnClass('my_tickets')}>
-          <p className={getTextClass('my_tickets')}>Tugas Saya ({counts.myTickets})</p>
+          <p className={getTextClass('my_tickets')}>{t('tickets.tab_my', 'Tugas Saya')} ({counts.myTickets})</p>
         </button>
         <button onClick={() => handleTabClick('waiting_verification')} className={getBtnClass('waiting_verification')}>
-          <p className={getTextClass('waiting_verification')}>Menunggu Verifikasi ({counts.waitingVerification})</p>
+          <p className={getTextClass('waiting_verification')}>{t('tickets.tab_waiting', 'Menunggu Verifikasi')} ({counts.waitingVerification})</p>
         </button>
         <button onClick={() => handleTabClick('open')} className={getBtnClass('open')}>
-          <p className={getTextClass('open')}>Open ({counts.open})</p>
+          <p className={getTextClass('open')}>{t('tickets.tab_open', 'Open')} ({counts.open})</p>
         </button>
         <button onClick={() => handleTabClick('in_progress')} className={getBtnClass('in_progress')}>
-          <p className={getTextClass('in_progress')}>Diproses ({counts.inProgress})</p>
+          <p className={getTextClass('in_progress')}>{t('tickets.tab_in_progress', 'Diproses')} ({counts.inProgress})</p>
         </button>
         <button onClick={() => handleTabClick('resolved')} className={getBtnClass('resolved')}>
-          <p className={getTextClass('resolved')}>Selesai ({counts.resolved})</p>
+          <p className={getTextClass('resolved')}>{t('tickets.tab_resolved', 'Selesai')} ({counts.resolved})</p>
         </button>
         <button onClick={() => handleTabClick('rejected')} className={getBtnClass('rejected')}>
-          <p className={getTextClass('rejected')}>Ditolak ({counts.rejected})</p>
+          <p className={getTextClass('rejected')}>{t('tickets.tab_rejected', 'Ditolak')} ({counts.rejected})</p>
         </button>
         <button onClick={() => handleTabClick('deleted')} className={getBtnClass('deleted')}>
-          <p className={getTextClass('deleted')}>Dihapus ({counts.deleted})</p>
+          <p className={getTextClass('deleted')}>{t('tickets.tab_deleted', 'Dihapus')} ({counts.deleted})</p>
         </button>
       </div>
 

@@ -4,11 +4,13 @@ import { usePathname } from 'next/navigation';
 import { fetchClient } from '@/lib/apiClient';
 import AdminSidebar from './AdminSidebar';
 import AdminTopbar from './AdminTopbar';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [userProfile, setUserProfile] = useState<any>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const pathname = usePathname();
+  const { t } = useLanguage();
 
   useEffect(() => {
     fetchClient('/auth/me').then(res => {
@@ -33,12 +35,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   };
 
   const getPageTitle = () => {
-    if (!pathname) return 'Dashboard Administrator';
-    if (pathname.includes('/dashboard/administrasi/reports')) return 'Laporan & Ekspor';
-    if (pathname.includes('/dashboard/administrasi/webhook')) return 'Log API Webhook';
-    if (pathname.includes('/dashboard/administrasi/bot-settings')) return 'Manajemen Template Bot';
-    if (pathname.includes('/admin/tickets')) return 'Tickets';
-    return 'Dashboard Administrator';
+    if (!pathname) return t('topbar.dashboard_admin');
+    if (pathname.includes('/dashboard/administrasi/reports')) return t('menu.reports');
+    if (pathname.includes('/dashboard/administrasi/webhook')) return t('admin.webhook_title');
+    if (pathname.includes('/dashboard/administrasi/bot-settings')) return t('admin.bot_template_title');
+    if (pathname.includes('/admin/tickets')) return t('menu.tickets');
+    return t('topbar.dashboard_admin');
   };
 
   return (

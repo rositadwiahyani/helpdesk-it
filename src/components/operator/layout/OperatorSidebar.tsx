@@ -4,6 +4,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import { logoutUser } from '@/lib/AuthService';
 import { LayoutDashboard, Ticket, User, LogOut } from 'lucide-react';
 
+import { useLanguage } from '@/context/LanguageContext';
+
 interface OperatorSidebarProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
@@ -12,6 +14,7 @@ interface OperatorSidebarProps {
 export default function OperatorSidebar({ isOpen, setIsOpen }: OperatorSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { t } = useLanguage();
 
   const handleLogout = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -20,9 +23,9 @@ export default function OperatorSidebar({ isOpen, setIsOpen }: OperatorSidebarPr
   };
 
   const MENU_ITEMS = [
-    { name: 'Dashboard', path: '/dashboard/operator', icon: LayoutDashboard },
-    { name: 'Semua Tiket', path: '/dashboard/operator/tickets', icon: Ticket },
-    { name: 'Profil', path: '/dashboard/operator/profile', icon: User },
+    { name: t('menu.operator_dashboard'), path: '/dashboard/operator', icon: LayoutDashboard },
+    { name: t('menu.all_tickets'), path: '/dashboard/operator/tickets', icon: Ticket },
+    { name: t('menu.profile'), path: '/dashboard/operator/profile', icon: User },
   ];
 
   return (
@@ -113,11 +116,11 @@ export default function OperatorSidebar({ isOpen, setIsOpen }: OperatorSidebarPr
               <div className="flex-none flex items-center justify-center w-6 h-6">
                 <LogOut className="w-5 h-5" strokeWidth={1.8} />
               </div>
-              <span className={`transition-opacity duration-200 ${isOpen ? 'opacity-100' : 'opacity-0 hidden'}`}>Logout</span>
+              <span className={`transition-opacity duration-200 ${isOpen ? 'opacity-100' : 'opacity-0 hidden'}`}>{t('common.logout')}</span>
             </button>
             {!isOpen && (
               <div className="absolute left-full ml-4 top-1/2 -translate-y-1/2 px-2 py-1.5 bg-gray-900 text-white text-xs font-semibold rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50">
-                Logout
+                {t('common.logout')}
                 <div className="absolute top-1/2 -left-1 -translate-y-1/2 border-y-4 border-y-transparent border-r-4 border-r-gray-900"></div>
               </div>
             )}

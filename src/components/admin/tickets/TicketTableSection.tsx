@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useLanguage } from '@/context/LanguageContext';
+import { translateTicketSubject } from '@/lib/translations';
 
 export type PriorityLevel = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
 export type TicketStatus = 'NEW' | 'IN PROGRESS' | 'WAITING VERIFICATION' | 'RESOLVED' | 'CLOSED';
@@ -29,6 +31,7 @@ interface TicketTableSectionProps {
 }
 
 export default function TicketTableSection({ activeTab = 'all', tickets = [], newlyAddedTicket, selectedTickets = [], onSelectionChange, filters, searchQuery = '', categories = [], technicians = [], departments = [], onEditTicket, onAcceptTicket, onRejectTicket, currentUserId }: TicketTableSectionProps) {
+  const { t, language } = useLanguage();
   const [currentPage, setCurrentPage] = useState(1);
   const [displayTickets, setDisplayTickets] = useState<any[]>([]);
   
@@ -185,7 +188,9 @@ export default function TicketTableSection({ activeTab = 'all', tickets = [], ne
     return (
       <div className={`flex py-0.5 px-2 items-center rounded-sm ${bg} w-fit`}>
         <p className={`${text} font-iBMPlexSans text-[11px] font-bold leading-5 w-fit tracking-[0.025em]`}>
-          {p}
+          {language === 'en'
+            ? p
+            : ({ URGENT: 'MENDESAK', CRITICAL: 'KRITIS', HIGH: 'TINGGI', MEDIUM: 'SEDANG', LOW: 'RENDAH' } as Record<string, string>)[p] || p}
         </p>
       </div>
     );
@@ -200,18 +205,18 @@ export default function TicketTableSection({ activeTab = 'all', tickets = [], ne
   };
 
   const formatTimeAgo = (dateStr: string) => {
-    if (!dateStr) return 'Unknown';
+    if (!dateStr) return t('time.unknown', 'Unknown');
     const date = new Date(dateStr);
     const now = new Date();
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
     
-    if (diffInSeconds < 60) return `${diffInSeconds} secs ago`;
+    if (diffInSeconds < 60) return `${diffInSeconds} ${t('time.secs_ago', 'secs ago')}`;
     const diffInMinutes = Math.floor(diffInSeconds / 60);
-    if (diffInMinutes < 60) return `${diffInMinutes} mins ago`;
+    if (diffInMinutes < 60) return `${diffInMinutes} ${t('time.mins_ago', 'mins ago')}`;
     const diffInHours = Math.floor(diffInMinutes / 60);
-    if (diffInHours < 24) return `${diffInHours} hrs ago`;
+    if (diffInHours < 24) return `${diffInHours} ${t('time.hrs_ago', 'hrs ago')}`;
     const diffInDays = Math.floor(diffInHours / 24);
-    return `${diffInDays} days ago`;
+    return `${diffInDays} ${t('time.days_ago', 'days ago')}`;
   };
 
   const SortIcon = ({ columnKey }: { columnKey: string }) => {
@@ -241,52 +246,52 @@ export default function TicketTableSection({ activeTab = 'all', tickets = [], ne
               </th>
               <th className="px-4 py-4 select-none hover:bg-gray-200 transition-colors cursor-pointer" onClick={() => handleSort('ticket_num')}>
                 <div className="flex items-center group">
-                  <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">NO. TIKET</span>
+                  <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">{t('tickets.col_ticket_num', 'NO. TIKET')}</span>
                   <SortIcon columnKey="ticket_num" />
                 </div>
               </th>
               <th className="px-4 py-4 select-none hover:bg-gray-200 transition-colors cursor-pointer" onClick={() => handleSort('updated_at')}>
                 <div className="flex items-center group">
-                  <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">LAST UPDATE</span>
+                  <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">{t('tickets.col_last_update', 'LAST UPDATE')}</span>
                   <SortIcon columnKey="updated_at" />
                 </div>
               </th>
               <th className="px-4 py-4 select-none hover:bg-gray-200 transition-colors cursor-pointer" onClick={() => handleSort('subject')}>
                 <div className="flex items-center group">
-                  <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">SUBJECT</span>
+                  <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">{t('tickets.col_subject', 'SUBJECT')}</span>
                   <SortIcon columnKey="subject" />
                 </div>
               </th>
               <th className="px-4 py-4 select-none hover:bg-gray-200 transition-colors cursor-pointer" onClick={() => handleSort('reporter_name')}>
                 <div className="flex items-center group">
-                  <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">FROM</span>
+                  <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">{t('tickets.col_from', 'FROM')}</span>
                   <SortIcon columnKey="reporter_name" />
                 </div>
               </th>
               <th className="px-4 py-4 select-none">
                 <div className="flex items-center group">
-                  <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">KATEGORI</span>
+                  <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">{t('tickets.col_category', 'KATEGORI')}</span>
                 </div>
               </th>
               <th className="px-4 py-4 select-none hover:bg-gray-200 transition-colors cursor-pointer" onClick={() => handleSort('priority')}>
                 <div className="flex items-center group">
-                  <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">PRIORITY</span>
+                  <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">{t('tickets.col_priority', 'PRIORITY')}</span>
                   <SortIcon columnKey="priority" />
                 </div>
               </th>
               <th className="px-4 py-4 select-none">
                 <div className="flex items-center group">
-                  <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">ASSIGN TO</span>
+                  <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">{t('tickets.col_assigned_to', 'ASSIGN TO')}</span>
                 </div>
               </th>
               <th className="px-4 py-4 select-none w-20 text-center">
-                <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">ACTION</span>
+                <span className="text-[#43474F] font-iBMPlexSans text-xs font-semibold tracking-wider">{t('tickets.col_action', 'ACTION')}</span>
               </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#C3C6D1]">
             {paginatedTickets.length === 0 ? (
-              <tr><td colSpan={6} className="py-10 text-center text-sm text-[#43474F]">Tidak ada tiket pada filter ini.</td></tr>
+              <tr><td colSpan={9} className="py-10 text-center text-sm text-[#43474F]">{t('tickets.empty_filter', 'Tidak ada tiket pada filter ini.')}</td></tr>
             ) : (
               paginatedTickets.map((ticket, index) => (
                 <tr key={ticket.id} className={`hover:bg-slate-50 transition-colors ${index % 2 === 1 ? 'bg-[#F9F9FC]' : ''}`}>
@@ -309,7 +314,7 @@ export default function TicketTableSection({ activeTab = 'all', tickets = [], ne
                   <td className="px-4 py-4 max-w-xs">
                     <Link href={`/dashboard/administrasi/tickets/${ticket.id}`} className="block">
                       <p className="text-[#1A1C1E] font-iBMPlexSans text-sm font-medium truncate mb-0.5 hover:text-[#1E3A8A]">
-                        {(ticket.subject || '').replace(/\s*>\s*/g, ' / ')}
+                        {translateTicketSubject((ticket.subject || '').replace(/\s*>\s*/g, ' / '), language)}
                       </p>
                     </Link>
                   </td>
@@ -381,14 +386,14 @@ export default function TicketTableSection({ activeTab = 'all', tickets = [], ne
                 onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
                 className="text-[13px] border border-[#C3C6D1] rounded px-2 py-1 outline-none focus:border-[#1E3A8A] text-[#1A1C1E]"
             >
-                <option value={8}>8 / page</option>
-                <option value={10}>10 / page</option>
-                <option value={15}>15 / page</option>
-                <option value={25}>25 / page</option>
-                <option value={50}>50 / page</option>
+                <option value={8}>8 / {t('tickets.per_page', 'page')}</option>
+                <option value={10}>10 / {t('tickets.per_page', 'page')}</option>
+                <option value={15}>15 / {t('tickets.per_page', 'page')}</option>
+                <option value={25}>25 / {t('tickets.per_page', 'page')}</option>
+                <option value={50}>50 / {t('tickets.per_page', 'page')}</option>
             </select>
             <p className="text-[#1A1C1E] font-iBMPlexSans text-[13px]">
-                Showing {totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} tickets
+                {t('tickets.showing', 'Showing')} {totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, totalItems)} {t('tickets.of', 'of')} {totalItems} {t('tickets.tickets_count', 'tickets')}
             </p>
         </div>
         <div className="flex items-center gap-2">

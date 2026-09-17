@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import OperatorTicketTable from '@/components/admin/tickets/OperatorTicketTable';
+import { useLanguage } from '@/context/LanguageContext';
 
 type Ticket = any;
 
@@ -20,6 +21,7 @@ export default function OperatorTicketWorkspace({
     mainCategories,
     technicians,
 }: OperatorTicketWorkspaceProps) {
+    const { t } = useLanguage();
     const [activeTab, setActiveTab] = useState<'all' | 'my_tickets' | 'verification' | 'processing' | 'resolved' | 'rejected'>('all');
     const [currentUser, setCurrentUser] = React.useState<any>(null);
 
@@ -67,7 +69,7 @@ export default function OperatorTicketWorkspace({
                     <div className="flex items-start gap-2 w-full">
                         <div className="flex flex-col items-start w-fit h-full">
                             <p className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">
-                                Dashboard
+                                {t('tickets.breadcrumb_dashboard', 'Dashboard')}
                             </p>
                         </div>
                         <div className="flex flex-col items-start w-fit h-full">
@@ -77,13 +79,13 @@ export default function OperatorTicketWorkspace({
                         </div>
                         <div className="flex flex-col items-start w-fit h-full">
                             <p className="text-[#1A1C1E] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">
-                                Tickets
+                                {t('tickets.breadcrumb_tickets', 'Tiket')}
                             </p>
                         </div>
                     </div>
                     <div className="flex flex-col items-start w-full">
                         <p className="text-[#001E40] font-iBMPlexSans text-[32px] font-semibold leading-10 w-fit tracking-[-0.02em]">
-                            Tiket
+                            {t('tickets.page_title', 'Tiket')}
                         </p>
                     </div>
                 </div>
@@ -112,7 +114,7 @@ export default function OperatorTicketWorkspace({
                             >
                                 <p className={`font-iBMPlexSans text-sm leading-5 w-fit transition-colors ${
                                     activeTab === 'all' ? 'text-[#1E3A8A] font-semibold' : 'text-[#43474F]'
-                                }`}>Semua Tiket ({tickets.length})</p>
+                                }`}>{t('tickets.tab_all', 'Semua Tiket')} ({tickets.length})</p>
                             </button>
                             <button
                                 onClick={() => setActiveTab('my_tickets')}
@@ -124,7 +126,7 @@ export default function OperatorTicketWorkspace({
                             >
                                 <p className={`font-iBMPlexSans text-sm leading-5 w-fit transition-colors ${
                                     activeTab === 'my_tickets' ? 'text-[#1E3A8A] font-semibold' : 'text-[#43474F]'
-                                }`}>Tugas Saya ({tickets.filter((t: any) => t.tech_id === currentUser?.id && !['RESOLVED', 'CLOSED', 'RESOLVED_BY_SYSTEM', 'WAITING CONFIRMATION'].includes(t.status?.toUpperCase() || t.status)).length})</p>
+                                }`}>{t('tickets.tab_my', 'Tugas Saya')} ({tickets.filter((t: any) => t.tech_id === currentUser?.id && !['RESOLVED', 'CLOSED', 'RESOLVED_BY_SYSTEM', 'WAITING CONFIRMATION'].includes(t.status?.toUpperCase() || t.status)).length})</p>
                             </button>
                             <button
                                 onClick={() => setActiveTab('verification')}
@@ -136,7 +138,7 @@ export default function OperatorTicketWorkspace({
                             >
                                 <p className={`font-iBMPlexSans text-sm leading-5 w-fit transition-colors ${
                                     activeTab === 'verification' ? 'text-[#1E3A8A] font-semibold' : 'text-[#43474F]'
-                                }`}>Menunggu Verifikasi ({tickets.filter((t: any) => t.status === 'WAITING VERIFICATION').length})</p>
+                                }`}>{t('tickets.tab_waiting', 'Menunggu Verifikasi')} ({tickets.filter((t: any) => t.status === 'WAITING VERIFICATION').length})</p>
                             </button>
                             <button
                                 onClick={() => setActiveTab('processing')}
@@ -148,7 +150,7 @@ export default function OperatorTicketWorkspace({
                             >
                                 <p className={`font-iBMPlexSans text-sm leading-5 w-fit transition-colors ${
                                     activeTab === 'processing' ? 'text-[#1E3A8A] font-semibold' : 'text-[#43474F]'
-                                }`}>Diproses ({tickets.filter((t: any) => ['Open', 'NEW', 'IN PROGRESS', 'Diproses'].includes(t.status?.toUpperCase() || t.status)).length})</p>
+                                }`}>{t('tickets.tab_in_progress', 'Diproses')} ({tickets.filter((t: any) => ['Open', 'NEW', 'IN PROGRESS', 'Diproses'].includes(t.status?.toUpperCase() || t.status)).length})</p>
                             </button>
                             <button
                                 onClick={() => setActiveTab('resolved')}
@@ -160,7 +162,7 @@ export default function OperatorTicketWorkspace({
                             >
                                 <p className={`font-iBMPlexSans text-sm leading-5 w-fit transition-colors ${
                                     activeTab === 'resolved' ? 'text-[#1E3A8A] font-semibold' : 'text-[#43474F]'
-                                }`}>Selesai ({tickets.filter((t: any) => ['RESOLVED', 'CLOSED', 'RESOLVED_BY_SYSTEM', 'WAITING CONFIRMATION'].includes(t.status?.toUpperCase() || t.status)).length})</p>
+                                }`}>{t('tickets.tab_resolved', 'Selesai')} ({tickets.filter((t: any) => ['RESOLVED', 'CLOSED', 'RESOLVED_BY_SYSTEM', 'WAITING CONFIRMATION'].includes(t.status?.toUpperCase() || t.status)).length})</p>
                             </button>
                             <button
                                 onClick={() => setActiveTab('rejected')}
@@ -172,7 +174,7 @@ export default function OperatorTicketWorkspace({
                             >
                                 <p className={`font-iBMPlexSans text-sm leading-5 w-fit transition-colors ${
                                     activeTab === 'rejected' ? 'text-[#1E3A8A] font-semibold' : 'text-[#43474F]'
-                                }`}>Ditolak ({tickets.filter((t: any) => ['DITOLAK', 'REJECTED'].includes(t.status?.toUpperCase() || t.status)).length})</p>
+                                }`}>{t('tickets.tab_rejected', 'Ditolak')} ({tickets.filter((t: any) => ['DITOLAK', 'REJECTED'].includes(t.status?.toUpperCase() || t.status)).length})</p>
                             </button>
                         </div>
                     }

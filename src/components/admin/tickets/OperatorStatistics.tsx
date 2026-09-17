@@ -14,6 +14,7 @@ import {
   Pie,
   Cell
 } from 'recharts';
+import { useLanguage } from '@/context/LanguageContext';
 
 type Ticket = any;
 type Category = { id: string; name: string };
@@ -35,6 +36,7 @@ export default function OperatorStatistics({
   categories,
   departments,
 }: OperatorStatisticsProps) {
+  const { t } = useLanguage();
   // Chart Date Range (Global to Charts)
   const [chartStartDate, setChartStartDate] = useState(() => {
     const d = new Date();
@@ -136,7 +138,7 @@ export default function OperatorStatistics({
     });
 
     const data = Object.entries(catCounts).map(([catId, count]) => {
-      if (catId === 'unassigned') return { name: 'Lainnya', value: count };
+      if (catId === 'unassigned') return { name: t('charts.no_topic_data'), value: count };
       const cat = categories.find((c) => String(c.id) === String(catId));
       return { name: cat ? cat.name : 'Unknown', value: count };
     });
@@ -154,12 +156,12 @@ export default function OperatorStatistics({
     departments.forEach((d) => {
       departMap[d.id] = { name: d.name, opened: 0, assigned: 0, closed: 0 };
     });
-    departMap['unassigned'] = { name: 'Tanpa Departemen', opened: 0, assigned: 0, closed: 0 };
+    departMap['unassigned'] = { name: t('stats.department'), opened: 0, assigned: 0, closed: 0 };
 
     categories.forEach((c) => {
       topicMap[c.id] = { name: c.name, opened: 0, assigned: 0, closed: 0 };
     });
-    topicMap['unassigned'] = { name: 'Tanpa Topik', opened: 0, assigned: 0, closed: 0 };
+    topicMap['unassigned'] = { name: t('stats.topics'), opened: 0, assigned: 0, closed: 0 };
 
     validTickets.forEach((t) => {
       const depId = t.dept_id || 'unassigned';
@@ -197,7 +199,7 @@ export default function OperatorStatistics({
       return (
         <div className="bg-white border border-[var(--line-dark)] p-3 rounded-xl shadow-lg">
           <p className="text-[13px] font-bold text-[var(--ink)] mb-1">{payload[0].name}</p>
-          <p className="text-[13px] font-medium text-[var(--text-dim)]">Total: <span className="font-bold text-[var(--ink)]">{payload[0].value} tiket</span></p>
+          <p className="text-[13px] font-medium text-[var(--text-dim)]">{t('stats.total')}: <span className="font-bold text-[var(--ink)]">{payload[0].value} {t('stats.tickets_count')}</span></p>
         </div>
       );
     }
@@ -209,7 +211,7 @@ export default function OperatorStatistics({
       {/* Chart Filter */}
       <div className="bg-white border border-[var(--line-dark)] rounded-2xl p-5 shadow-sm flex flex-col sm:flex-row sm:items-end gap-4">
         <div>
-          <label className="block text-[11px] font-bold text-[var(--text-dim)] uppercase tracking-wider mb-2">Mulai Tanggal</label>
+          <label className="block text-[11px] font-bold text-[var(--text-dim)] uppercase tracking-wider mb-2">{t('stats.start_date')}</label>
           <input
             type="date"
             value={chartStartDate}
@@ -218,7 +220,7 @@ export default function OperatorStatistics({
           />
         </div>
         <div>
-          <label className="block text-[11px] font-bold text-[var(--text-dim)] uppercase tracking-wider mb-2">Sampai Tanggal</label>
+          <label className="block text-[11px] font-bold text-[var(--text-dim)] uppercase tracking-wider mb-2">{t('stats.end_date')}</label>
           <input
             type="date"
             value={chartEndDate}
@@ -228,7 +230,7 @@ export default function OperatorStatistics({
         </div>
         <div className="ml-auto flex items-center gap-3">
           <div className="text-[12px] font-bold text-[var(--ink)] bg-[var(--paper-2)] py-2.5 px-4 rounded-xl border border-[var(--line-dark)] hidden md:block">
-            Range: {chartStartDate} - {chartEndDate}
+            {t('stats.range')}: {chartStartDate} - {chartEndDate}
           </div>
           <button
             onClick={() => {
@@ -239,7 +241,7 @@ export default function OperatorStatistics({
             }}
             className="text-[12px] font-bold text-[var(--ink)] hover:bg-[var(--paper-2)] py-2 px-4 rounded-xl border border-[var(--line)] transition-colors"
           >
-            Reset
+            {t('common.reset')}
           </button>
         </div>
       </div>
@@ -248,7 +250,7 @@ export default function OperatorStatistics({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Line Chart */}
         <div className="bg-white border border-[var(--line-dark)] rounded-2xl p-6 shadow-sm lg:col-span-2">
-          <h2 className="text-[18px] font-bold text-[var(--ink)] mb-6">Grafik Aktivitas Tiket</h2>
+          <h2 className="text-[18px] font-bold text-[var(--ink)] mb-6">{t('charts.activity_graph')}</h2>
           <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={lineChartData} margin={{ top: 5, right: 10, bottom: 5, left: -20 }}>
@@ -257,8 +259,8 @@ export default function OperatorStatistics({
                 <YAxis tick={{ fontSize: 11, fill: '#64748b' }} tickMargin={10} axisLine={false} tickLine={false} />
                 <Tooltip contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
                 <Legend wrapperStyle={{ paddingTop: '20px', fontSize: '12px' }} />
-                <Line type="monotone" name="Tiket Masuk" dataKey="opened" stroke="#3b82f6" strokeWidth={3} activeDot={{ r: 6 }} dot={false} />
-                <Line type="monotone" name="Tiket Diverifikasi" dataKey="verified" stroke="#10b981" strokeWidth={3} activeDot={{ r: 6 }} dot={false} />
+                <Line type="monotone" name={t('charts.incoming_tickets')} dataKey="opened" stroke="#3b82f6" strokeWidth={3} activeDot={{ r: 6 }} dot={false} />
+                <Line type="monotone" name={t('charts.verified_tickets')} dataKey="verified" stroke="#10b981" strokeWidth={3} activeDot={{ r: 6 }} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -266,8 +268,8 @@ export default function OperatorStatistics({
 
         {/* Donut Chart */}
         <div className="bg-white border border-[var(--line-dark)] rounded-2xl p-6 shadow-sm flex flex-col">
-          <h2 className="text-[18px] font-bold text-[var(--ink)] mb-2">Distribusi Help Topic</h2>
-          <p className="text-[12px] text-[var(--text-dim)] mb-6">Topik tiket terverifikasi</p>
+          <h2 className="text-[18px] font-bold text-[var(--ink)] mb-2">{t('charts.topic_distribution')}</h2>
+          <p className="text-[12px] text-[var(--text-dim)] mb-6">{t('charts.topic_desc')}</p>
           <div className="flex-1 w-full h-64">
             {donutChartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
@@ -296,7 +298,7 @@ export default function OperatorStatistics({
                 </ResponsiveContainer>
             ) : (
                 <div className="flex h-full items-center justify-center text-[13px] text-[var(--text-dim)]">
-                    Tidak ada data topik.
+                    {t('charts.no_topic_data')}
                 </div>
             )}
           </div>
@@ -307,7 +309,7 @@ export default function OperatorStatistics({
       <div className="bg-white border border-[var(--line-dark)] rounded-2xl shadow-sm overflow-hidden">
         <div className="p-5 md:p-6 border-b border-[var(--line-dark)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <h2 className="text-[18px] font-bold text-[var(--ink)] flex items-center gap-2">
-            Statistics Data
+            {t('charts.stats_data')}
           </h2>
           {/* Internal Table Filters */}
           <div className="flex items-center gap-3">
@@ -335,7 +337,7 @@ export default function OperatorStatistics({
                 }}
                 className="text-[11px] font-bold text-[var(--ink)] uppercase hover:text-[var(--gold)] transition-colors"
               >
-                Reset
+                {t('common.reset')}
               </button>
           </div>
         </div>
@@ -346,13 +348,13 @@ export default function OperatorStatistics({
             className={`px-5 py-3 text-[13px] font-bold transition-colors border-b-2 -mb-[1px] ${activeTab === 'department' ? 'border-[#3b82f6] text-[#3b82f6]' : 'border-transparent text-[var(--text-dim)] hover:text-[var(--ink)]'}`}
             onClick={() => setActiveTab('department')}
           >
-            Department
+            {t('charts.department_tab')}
           </button>
           <button 
             className={`px-5 py-3 text-[13px] font-bold transition-colors border-b-2 -mb-[1px] ${activeTab === 'topics' ? 'border-[#3b82f6] text-[#3b82f6]' : 'border-transparent text-[var(--text-dim)] hover:text-[var(--ink)]'}`}
             onClick={() => setActiveTab('topics')}
           >
-            Topics
+            {t('charts.topics_tab')}
           </button>
         </div>
 
@@ -361,16 +363,16 @@ export default function OperatorStatistics({
           <table className="w-full text-sm text-left">
             <thead className="bg-[var(--paper-2)]/30 border-b border-[var(--line-dark)]">
               <tr>
-                <th className="px-6 py-4 text-[11px] font-bold text-[var(--text-dim)] uppercase tracking-wider w-1/3">{activeTab === 'department' ? 'Department' : 'Topics'}</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-[var(--text-dim)] uppercase tracking-wider text-center">Opened <span className="font-medium text-[10px] block opacity-70 mt-0.5">Dibuat</span></th>
-                <th className="px-6 py-4 text-[11px] font-bold text-[var(--text-dim)] uppercase tracking-wider text-center">Assigned <span className="font-medium text-[10px] block opacity-70 mt-0.5">Diterima/Verifikasi</span></th>
-                <th className="px-6 py-4 text-[11px] font-bold text-[var(--text-dim)] uppercase tracking-wider text-center">Closed <span className="font-medium text-[10px] block opacity-70 mt-0.5">Ditolak</span></th>
+                <th className="px-6 py-4 text-[11px] font-bold text-[var(--text-dim)] uppercase tracking-wider w-1/3">{activeTab === 'department' ? t('charts.department_tab') : t('charts.topics_tab')}</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-[var(--text-dim)] uppercase tracking-wider text-center">{t('stats.opened_header')} <span className="font-medium text-[10px] block opacity-70 mt-0.5">{t('stats.opened')}</span></th>
+                <th className="px-6 py-4 text-[11px] font-bold text-[var(--text-dim)] uppercase tracking-wider text-center">{t('stats.assigned_header')} <span className="font-medium text-[10px] block opacity-70 mt-0.5">{t('stats.assigned')}</span></th>
+                <th className="px-6 py-4 text-[11px] font-bold text-[var(--text-dim)] uppercase tracking-wider text-center">{t('stats.closed_header')} <span className="font-medium text-[10px] block opacity-70 mt-0.5">{t('stats.closed')}</span></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--line-dark)]">
               {activeStatsData.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="text-center py-12 text-[var(--text-dim)] text-[14px]">Belum ada data untuk periode ini.</td>
+                  <td colSpan={4} className="text-center py-12 text-[var(--text-dim)] text-[14px]">{t('stats.no_data_period')}</td>
                 </tr>
               ) : (
                 activeStatsData.map((row, idx) => (

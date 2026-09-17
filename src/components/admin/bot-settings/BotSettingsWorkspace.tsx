@@ -4,8 +4,10 @@ import React, { useState, useEffect } from 'react';
 import { Save, AlertCircle, RefreshCw } from 'lucide-react';
 import { fetchClient } from '@/lib/apiClient';
 import WhatsAppMockup from './WhatsAppMockup';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function BotSettingsWorkspace() {
+  const { t, language } = useLanguage();
   const [settings, setSettings] = useState({
     trigger_word: '',
     greeting_message: '',
@@ -29,7 +31,9 @@ export default function BotSettingsWorkspace() {
   const getPreviewMessage = () => {
     const raw = settings[activePreview] || '';
     if (activePreview === 'greeting_message') {
-      return `*Selamat Pagi Mahasiswa!* ${raw}\n\nSilakan pilih menu layanan di bawah ini:\n1. Pusat Bantuan & Layanan IT\n2. Cek Status Tiket\n3. Jelajahi Basis Pengetahuan (FAQ)\n4. Info & Jam Operasional\n5. Tautan Penting Kampus\n\n_Balas angka pilihan Anda (Contoh: 1)_`;
+      return language === 'id'
+        ? `*Selamat Pagi Mahasiswa!* ${raw}\n\nSilakan pilih menu layanan di bawah ini:\n1. Pusat Bantuan & Layanan IT\n2. Cek Status Tiket\n3. Jelajahi Basis Pengetahuan (FAQ)\n4. Info & Jam Operasional\n5. Tautan Penting Kampus\n\n_Balas angka pilihan Anda (Contoh: 1)_`
+        : `*Good Morning Student!* ${raw}\n\nPlease choose a service menu below:\n1. IT Help and Services\n2. Check Ticket Status\n3. Browse Knowledge Base (FAQ)\n4. Operating Hours Information\n5. Important Campus Links\n\n_Reply with a menu number (Example: 1)_`;
     }
     return raw;
   };
@@ -70,13 +74,13 @@ export default function BotSettingsWorkspace() {
         body: JSON.stringify(settings)
       });
       if (res.success) {
-        showToast('Template Bot berhasil disimpan.');
+        showToast(t('bot.saved'));
       } else {
-        alert('Gagal menyimpan pengaturan.');
+        alert(t('bot.save_failed'));
       }
     } catch (error) {
       console.error('Save error:', error);
-      alert('Terjadi kesalahan saat menyimpan pengaturan.');
+      alert(t('bot.save_error'));
     } finally {
       setIsSaving(false);
     }
@@ -100,7 +104,7 @@ export default function BotSettingsWorkspace() {
           <div className="flex items-start gap-2 w-full">
             <div className="flex flex-col items-start w-fit h-full">
               <p className="text-[#43474F] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">
-                Dashboard
+                {t('topbar.dashboard')}
               </p>
             </div>
             <div className="flex flex-col items-start w-fit h-full">
@@ -110,13 +114,13 @@ export default function BotSettingsWorkspace() {
             </div>
             <div className="flex flex-col items-start w-fit h-full">
               <p className="text-[#1A1C1E] font-iBMPlexSans text-xs font-semibold leading-4 w-fit tracking-[0.05em]">
-                Manajemen Bot
+                {t('bot.settings_breadcrumb')}
               </p>
             </div>
           </div>
           <div className="flex flex-col items-start w-full">
             <p className="text-[#001E40] font-iBMPlexSans text-[32px] font-semibold leading-10 w-fit tracking-[-0.02em]">
-              Manajemen Template Bot
+              {t('bot.settings_title')}
             </p>
           </div>
         </div>
@@ -127,7 +131,7 @@ export default function BotSettingsWorkspace() {
           className="flex h-9 px-4 items-center gap-2 rounded bg-[#001E40] text-white shadow-sm hover:bg-[#00142d] transition-colors disabled:opacity-50"
         >
           {isSaving ? <RefreshCw className="w-4 h-4 text-white animate-spin" /> : <Save className="w-4 h-4 text-white" />}
-          <span className="text-white font-iBMPlexSans text-sm font-medium">Simpan Perubahan</span>
+          <span className="text-white font-iBMPlexSans text-sm font-medium">{isSaving ? t('bot.saving') : t('bot.save_changes')}</span>
         </button>
       </div>
 
@@ -142,8 +146,8 @@ export default function BotSettingsWorkspace() {
           <div className="flex-1 flex flex-col gap-6">
             <div className={`bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col transition-all duration-300`}>
               <div className="p-5 border-b border-slate-100 bg-slate-50/50">
-                <h3 className="font-semibold text-gray-900 text-lg">Kata Kunci Pemicu (Trigger Word)</h3>
-                <p className="text-sm text-gray-500 mt-1">Kata kunci yang diketik pengguna untuk memunculkan menu utama bot.</p>
+                <h3 className="font-semibold text-gray-900 text-lg">{t('bot.trigger_title')}</h3>
+                <p className="text-sm text-gray-500 mt-1">{t('bot.trigger_desc')}</p>
               </div>
               <div className="p-5 flex-1">
                 <input
@@ -160,8 +164,8 @@ export default function BotSettingsWorkspace() {
 
             <div className={`bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col transition-all duration-300`}>
               <div className="p-5 border-b border-slate-100 bg-slate-50/50">
-                <h3 className="font-semibold text-gray-900 text-lg">Pesan Sambutan (Greeting)</h3>
-                <p className="text-sm text-gray-500 mt-1">Ditampilkan pada pesan pertama di menu utama, setelah sapaan waktu.</p>
+                <h3 className="font-semibold text-gray-900 text-lg">{t('bot.greeting_title')}</h3>
+                <p className="text-sm text-gray-500 mt-1">{t('bot.greeting_desc')}</p>
               </div>
               <div className="p-5 flex-1">
                 <textarea
@@ -175,14 +179,14 @@ export default function BotSettingsWorkspace() {
               </div>
               <div className="px-5 py-3 bg-blue-50/50 border-t border-blue-100 text-xs text-blue-800 flex gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>Gunakan format Markdown WA seperti *tebal* atau _miring_.</span>
+                <span>{t('bot.markdown_help')}</span>
               </div>
             </div>
 
             <div className={`bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col transition-all duration-300`}>
               <div className="p-5 border-b border-slate-100 bg-slate-50/50">
-                <h3 className="font-semibold text-gray-900 text-lg">Pesan Default (Fallback)</h3>
-                <p className="text-sm text-gray-500 mt-1">Dikirim ketika bot tidak memahami pesan atau pilihan pengguna.</p>
+                <h3 className="font-semibold text-gray-900 text-lg">{t('bot.fallback_title')}</h3>
+                <p className="text-sm text-gray-500 mt-1">{t('bot.fallback_desc')}</p>
               </div>
               <div className="p-5 flex-1">
                 <textarea
@@ -198,8 +202,8 @@ export default function BotSettingsWorkspace() {
 
             <div className={`bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col transition-all duration-300`}>
               <div className="p-5 border-b border-slate-100 bg-slate-50/50">
-                <h3 className="font-semibold text-gray-900 text-lg">Informasi Jam Operasional</h3>
-                <p className="text-sm text-gray-500 mt-1">Informasi jam kerja Helpdesk (jika ada menu yang menampilkan ini).</p>
+                <h3 className="font-semibold text-gray-900 text-lg">{t('bot.hours_title')}</h3>
+                <p className="text-sm text-gray-500 mt-1">{t('bot.hours_desc')}</p>
               </div>
               <div className="p-5 flex-1">
                 <textarea
@@ -215,8 +219,8 @@ export default function BotSettingsWorkspace() {
 
             <div className={`bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col transition-all duration-300`}>
               <div className="p-5 border-b border-slate-100 bg-slate-50/50">
-                <h3 className="font-semibold text-gray-900 text-lg">Informasi Lokasi</h3>
-                <p className="text-sm text-gray-500 mt-1">Alamat atau lokasi pusat layanan Helpdesk IT.</p>
+                <h3 className="font-semibold text-gray-900 text-lg">{t('bot.location_title')}</h3>
+                <p className="text-sm text-gray-500 mt-1">{t('bot.location_desc')}</p>
               </div>
               <div className="p-5 flex-1">
                 <textarea
@@ -236,8 +240,8 @@ export default function BotSettingsWorkspace() {
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden sticky top-24">
               <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
                 <div>
-                  <h3 className="font-semibold text-gray-900 text-lg">Live Preview</h3>
-                  <p className="text-sm text-gray-500 mt-0.5">Tampilan di WhatsApp Pengguna</p>
+                  <h3 className="font-semibold text-gray-900 text-lg">{t('bot.preview_title')}</h3>
+                  <p className="text-sm text-gray-500 mt-0.5">{t('bot.preview_desc')}</p>
                 </div>
                 <div className="px-3 py-1 bg-green-100 text-green-700 text-[10px] font-bold uppercase tracking-wider rounded-full">
                   {activePreview.replace('_', ' ')}
@@ -251,7 +255,7 @@ export default function BotSettingsWorkspace() {
                 />
               </div>
               <div className="mt-6 text-center text-xs text-gray-400">
-                Preview ini otomatis diperbarui saat Anda mengetik
+                {t('bot.preview_updated')}
               </div>
             </div>
           </div>

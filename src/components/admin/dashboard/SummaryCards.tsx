@@ -1,6 +1,7 @@
 'use client';
 
 import AnimatedCounter from '@/components/ui/AnimatedCounter';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface SummaryCardsProps {
   data?: {
@@ -13,40 +14,41 @@ interface SummaryCardsProps {
 }
 
 export default function SummaryCards({ data }: SummaryCardsProps) {
+  const { t } = useLanguage();
   const defaultData = data || { today: 0, growth: "0", open: 0, overdue: 0, failedMessages: 0 };
   
   const cardData = [
     {
-      title: "Tiket Hari Ini",
+      title: t('dashboard.today_tickets'),
       value: defaultData.today,
-      growth: `${defaultData.growth}% vs yesterday`,
+      growth: `${defaultData.growth}% ${t('dashboard.vs_yesterday')}`,
       containerClass: "bg-white border border-[var(--line-dark)] rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow",
       titleClass: "text-[11px] font-bold text-[var(--text-dim)] uppercase tracking-wider mb-2",
       valueClass: "text-4xl font-bold text-[var(--ink)]",
       descClass: "text-xs text-[var(--text-dim)] mt-4",
     },
     {
-      title: "Open Ticket",
+      title: t('dashboard.open_tickets'),
       value: defaultData.open,
-      growth: "Needs attention",
+      growth: t('dashboard.needs_attention'),
       containerClass: "bg-white border border-amber-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow bg-amber-50/30",
       titleClass: "text-[11px] font-bold text-amber-700 uppercase tracking-wider mb-2",
       valueClass: "text-4xl font-bold text-amber-600",
       descClass: "text-xs text-amber-700 mt-4",
     },
     {
-      title: "Overdue SLA",
+      title: t('dashboard.overdue_sla'),
       value: defaultData.overdue,
-      growth: "Action required",
+      growth: t('dashboard.action_required'),
       containerClass: "bg-white border border-red-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow bg-red-50/30",
       titleClass: "text-[11px] font-bold text-red-700 uppercase tracking-wider mb-2",
       valueClass: "text-4xl font-bold text-red-600",
       descClass: "text-xs text-red-700 mt-4",
     },
     {
-      title: "Solved by Sistem",
+      title: t('dashboard.solved_by_system'),
       value: defaultData.failedMessages,
-      growth: "Auto-resolved",
+      growth: t('dashboard.auto_resolved'),
       containerClass: "bg-white border border-[var(--line-dark)] rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow",
       titleClass: "text-[11px] font-bold text-[var(--text-dim)] uppercase tracking-wider mb-2",
       valueClass: "text-4xl font-bold text-[var(--ink)]",

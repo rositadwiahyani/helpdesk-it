@@ -17,6 +17,8 @@ import {
   LogOut 
 } from 'lucide-react';
 
+import { useLanguage } from '@/context/LanguageContext';
+
 interface AdminSidebarProps {
   isOpen?: boolean;
   setIsOpen?: (isOpen: boolean) => void;
@@ -25,6 +27,7 @@ interface AdminSidebarProps {
 export default function AdminSidebar({ isOpen = true, setIsOpen = () => {} }: AdminSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { t } = useLanguage();
 
   const handleLogout = () => {
     document.cookie = 'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
@@ -33,13 +36,13 @@ export default function AdminSidebar({ isOpen = true, setIsOpen = () => {} }: Ad
   };
 
   const MENU_ITEMS = [
-    { name: 'Beranda', path: '/dashboard/administrasi', icon: LayoutDashboard },
-    { name: 'Tickets', path: '/dashboard/administrasi/tickets', icon: Ticket },
-    { name: 'Manajemen Pengguna', path: '/dashboard/administrasi/users', icon: Users },
-    { name: 'Kategori Laporan', path: '/dashboard/administrasi/report-categories', icon: Layers },
-    { name: 'Manajemen Staff', path: '/dashboard/administrasi/staff', icon: UserCog },
-    { name: 'Manajemen Bot', path: '/dashboard/administrasi/bot-settings', icon: Webhook },
-    { name: 'Profil', path: '/dashboard/administrasi/profile', icon: User },
+    { name: t('menu.dashboard'), path: '/dashboard/administrasi', icon: LayoutDashboard },
+    { name: t('menu.tickets'), path: '/dashboard/administrasi/tickets', icon: Ticket },
+    { name: t('menu.users'), path: '/dashboard/administrasi/users', icon: Users },
+    { name: t('menu.report_categories'), path: '/dashboard/administrasi/report-categories', icon: Layers },
+    { name: t('menu.staff'), path: '/dashboard/administrasi/staff', icon: UserCog },
+    { name: t('menu.bot'), path: '/dashboard/administrasi/bot-settings', icon: Webhook },
+    { name: t('menu.profile'), path: '/dashboard/administrasi/profile', icon: User },
   ];
 
   return (
@@ -130,11 +133,11 @@ export default function AdminSidebar({ isOpen = true, setIsOpen = () => {} }: Ad
               <div className="flex-none flex items-center justify-center w-6 h-6">
                 <LogOut strokeWidth={2} size={20} />
               </div>
-              <span className={`transition-opacity duration-200 ${isOpen ? 'opacity-100' : 'opacity-0 hidden'}`}>Logout</span>
+              <span className={`transition-opacity duration-200 ${isOpen ? 'opacity-100' : 'opacity-0 hidden'}`}>{t('common.logout')}</span>
             </button>
             {!isOpen && (
               <div className="absolute left-full ml-4 top-1/2 -translate-y-1/2 px-2 py-1.5 bg-gray-900 text-white text-xs font-semibold rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50">
-                Logout
+                {t('common.logout')}
                 <div className="absolute top-1/2 -left-1 -translate-y-1/2 border-y-4 border-y-transparent border-r-4 border-r-gray-900"></div>
               </div>
             )}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import { useLanguage } from '@/context/LanguageContext';
 
 interface AgentModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface AgentModalProps {
 }
 
 export default function AgentModal({ isOpen, onClose, onSuccess, showToast, agent, departments }: AgentModalProps) {
+  const { t } = useLanguage();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -59,10 +61,10 @@ export default function AgentModal({ isOpen, onClose, onSuccess, showToast, agen
           method: 'PUT',
           body: JSON.stringify(payload)
         });
-        showToast("Berhasil mengedit staf", "success");
+        showToast(t('staff.updated'), "success");
         onSuccess();
       } catch (err: any) {
-        showToast("Gagal mengupdate agen: " + err.message, "error");
+        showToast(t('staff.update_failed') + ': ' + err.message, "error");
       }
     } else {
       // Add via backend to create auth user
@@ -72,10 +74,10 @@ export default function AgentModal({ isOpen, onClose, onSuccess, showToast, agen
           method: 'POST',
           body: JSON.stringify({ ...payload, password: password || 'password123' }) // Use entered password or default
         });
-        showToast("Berhasil menambah staf", "success");
+        showToast(t('staff.added'), "success");
         onSuccess();
       } catch (err: any) {
-        showToast("Gagal menambah agen: " + err.message, "error");
+        showToast(t('staff.add_failed') + ': ' + err.message, "error");
       }
     }
     setLoading(false);
@@ -84,10 +86,10 @@ export default function AgentModal({ isOpen, onClose, onSuccess, showToast, agen
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
       <div className="bg-white rounded-lg p-6 w-[500px] border border-[#C3C6D1] shadow-xl">
-        <h2 className="text-lg font-bold mb-4 text-[#001E40]">{agent ? "Edit Agen" : "Tambah Agen Baru"}</h2>
+        <h2 className="text-lg font-bold mb-4 text-[#001E40]">{agent ? t('staff.edit_agent_title') : t('staff.add_agent_title')}</h2>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Nama Lengkap</label>
+            <label className="block text-sm text-gray-600 mb-1">{t('profile.full_name')}</label>
             <input required type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full border border-gray-300 rounded p-2 text-sm" />
           </div>
           <div>
@@ -101,20 +103,20 @@ export default function AgentModal({ isOpen, onClose, onSuccess, showToast, agen
             </div>
           )}
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Nomor WA</label>
+            <label className="block text-sm text-gray-600 mb-1">{t('profile.phone')}</label>
             <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full border border-gray-300 rounded p-2 text-sm" />
           </div>
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Peran (Role)</label>
+            <label className="block text-sm text-gray-600 mb-1">{t('profile.role')}</label>
             <select value={role} onChange={(e) => setRole(e.target.value)} className="w-full border border-gray-300 rounded p-2 text-sm">
               <option value="admin">Administrator</option>
               <option value="agent">Agent (Operator)</option>
             </select>
           </div>
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Departemen / Layanan</label>
+            <label className="block text-sm text-gray-600 mb-1">{t('staff.department')}</label>
             <select value={deptId} onChange={(e) => setDeptId(e.target.value)} className="w-full border border-gray-300 rounded p-2 text-sm">
-              <option value="">Pilih Departemen...</option>
+              <option value="">{t('staff.select_department')}</option>
               {departments.map((d) => (
                 <option key={d.id} value={d.id}>{d.name}</option>
               ))}
@@ -122,9 +124,9 @@ export default function AgentModal({ isOpen, onClose, onSuccess, showToast, agen
           </div>
           
           <div className="flex justify-end gap-3 mt-4">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded hover:bg-gray-100">Batal</button>
+            <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded hover:bg-gray-100">{t('staff.cancel')}</button>
             <button type="submit" disabled={loading} className="px-4 py-2 text-sm text-white bg-[#001E40] rounded hover:bg-[#00142d] disabled:opacity-50">
-              {loading ? "Menyimpan..." : "Simpan"}
+              {loading ? t('staff.saving') : t('staff.save')}
             </button>
           </div>
         </form>
