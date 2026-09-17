@@ -35,8 +35,8 @@ const parseWhatsAppText = (text: string) => {
 };
 
 export default function WhatsAppMockup({ message, triggerWord = 'HaloDesk' }: WhatsAppMockupProps) {
-  const { t } = useLanguage();
-  const currentTime = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+  const { t, language } = useLanguage();
+  const currentTime = new Date().toLocaleTimeString(language === 'en' ? 'en-US' : 'id-ID', { hour: '2-digit', minute: '2-digit' });
 
   return (
     <div className="w-[320px] mx-auto md:w-[350px] bg-[#EFEAE2] rounded-[36px] overflow-hidden shadow-2xl border-[8px] border-slate-900 relative h-[700px] flex flex-col font-sans">
@@ -85,7 +85,7 @@ export default function WhatsAppMockup({ message, triggerWord = 'HaloDesk' }: Wh
         {/* Date bubble */}
         <div className="flex justify-center my-1">
           <div className="bg-white/90 backdrop-blur-sm text-gray-500 text-[10px] font-medium px-3 py-1 rounded-lg shadow-sm">
-            HARI INI
+            {language === 'en' ? 'TODAY' : 'HARI INI'}
           </div>
         </div>
 

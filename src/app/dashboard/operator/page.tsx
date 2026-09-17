@@ -37,9 +37,9 @@ export default async function OperatorDashboard() {
         <div className="flex flex-col gap-6 p-6 md:p-10">
             <DashboardHeader 
                 titleKey="dashboard.operator_title"
-                defaultTitle="Beranda Operator"
+                defaultTitle="Operator Dashboard"
                 descKey="dashboard.operator_desc"
-                defaultDesc="Ringkasan aktivitas tiket yang butuh perhatian Anda."
+                defaultDesc="Summary of ticket activities that need your attention."
             />
 
             {/* Statistik Penting */}

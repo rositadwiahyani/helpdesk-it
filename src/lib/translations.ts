@@ -956,3 +956,17 @@ export function translateTicketSubject(subject: string, language: Language): str
   const translatedPrefix = language === 'en' ? '[Auto-Resolved] ' : '[Diselesaikan Sistem] ';
   return subject.replace(prefix, translatedPrefix);
 }
+
+export function translateCategoryName(name: string, language: Language): string {
+  if (!name || language === 'id') return name;
+
+  const categoryTranslations: Array<[string, string]> = [
+    ['Akses Tidak Dikenal', 'Unknown Access'],
+    ['Akses Not Dikenal', 'Unknown Access'],
+    ['Access Not Dikenal', 'Unknown Access'],
+  ];
+
+  return categoryTranslations.reduce((translated, [source, target]) => (
+    translated.replace(new RegExp(source.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), target)
+  ), name);
+}

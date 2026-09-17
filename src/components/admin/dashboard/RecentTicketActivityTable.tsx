@@ -7,8 +7,32 @@ interface RecentTicketActivityTableProps {
   data?: { id: string; ticketNum: string; status?: string; message: string; time: string; iconColor?: string }[];
 }
 
+type RecentActivity = NonNullable<RecentTicketActivityTableProps['data']>[number];
+
 export default function RecentTicketActivityTable({ data = [] }: RecentTicketActivityTableProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+
+  const localizeActivity = (activity: RecentActivity) => {
+    if (language === 'en') return activity;
+
+    const status = activity.status?.toLowerCase();
+    const message = activity.message.toLowerCase();
+
+    if (status === 'new ticket') {
+      return { ...activity, status: 'Tiket Baru', message: 'Tiket baru dibuat' };
+    }
+    if (status === 'status change') {
+      return { ...activity, status: 'Perubahan Status' };
+    }
+    if (status === 'closed') {
+      return { ...activity, status: 'Ditutup' };
+    }
+    if (message === 'ticket auto-resolved by system') {
+      return { ...activity, message: 'Tiket diselesaikan otomatis oleh sistem' };
+    }
+
+    return activity;
+  };
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
@@ -34,7 +58,10 @@ export default function RecentTicketActivityTable({ data = [] }: RecentTicketAct
                 <td colSpan={4} className="p-4 text-center text-slate-500 text-sm">{t('charts.no_activity')}</td>
               </tr>
             ) : (
-              data.map((activity, index) => (
+              data.map((rawActivity, index) => {
+                const activity = localizeActivity(rawActivity);
+
+                return (
                 <tr key={index} className="hover:bg-slate-50/50 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
@@ -51,7 +78,8 @@ export default function RecentTicketActivityTable({ data = [] }: RecentTicketAct
                   <td className="px-6 py-4 text-slate-600 text-sm leading-relaxed">{activity.message}</td>
                   <td className="px-6 py-4 text-right text-xs text-slate-500 font-medium whitespace-nowrap">{activity.time}</td>
                 </tr>
-              ))
+                );
+              })
             )}
           </tbody>
         </table>

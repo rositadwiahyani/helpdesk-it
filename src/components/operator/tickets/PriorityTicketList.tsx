@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
-import { translateTicketSubject } from '@/lib/translations';
+import { translateCategoryName, translateTicketSubject } from '@/lib/translations';
 
 type Ticket = any;
 
@@ -45,7 +45,7 @@ export default function PriorityTicketList({ tickets }: PriorityTicketListProps)
         return (
             <span className={`px-2.5 py-1 text-[10px] font-bold uppercase rounded ${bg} ${text}`}>
                 {language === 'en'
-                    ? p
+                    ? ({ URGENT: 'Urgent', CRITICAL: 'Critical', HIGH: 'High', MEDIUM: 'Medium', LOW: 'Low' } as Record<string, string>)[p] || p
                     : ({ URGENT: 'MENDESAK', CRITICAL: 'KRITIS', HIGH: 'TINGGI', MEDIUM: 'SEDANG', LOW: 'RENDAH' } as Record<string, string>)[p] || p}
             </span>
         );
@@ -117,7 +117,7 @@ export default function PriorityTicketList({ tickets }: PriorityTicketListProps)
                                     </td>
                                     <td className="px-5 py-4">
                                         <p className="text-[13.5px] font-medium text-slate-800 line-clamp-1">
-                                            {translateTicketSubject(ticket.subject || ticket.category?.name || t('tickets.no_subject'), language)}
+                                            {translateCategoryName(translateTicketSubject(ticket.subject || ticket.category?.name || t('tickets.no_subject'), language), language)}
                                         </p>
                                         <p className="text-[12px] text-slate-500 mt-0.5">
                                             {t('tickets.from')}: {ticket.reporter_name || 'N/A'}

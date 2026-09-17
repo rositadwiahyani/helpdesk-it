@@ -28,8 +28,21 @@ export default function BotSettingsWorkspace() {
     setTimeout(() => setToastMessage(null), 3000);
   };
 
+  const translatePreviewContent = (content: string) => {
+    if (language === 'id' || !content) return content;
+
+    const translations: Array<[string, string]> = [
+      ['Selamat datang di ChatBOT IT Helpdesk.', 'Welcome to the IT Helpdesk ChatBOT.'],
+      ['Selamat datang di IT Helpdesk.', 'Welcome to IT Helpdesk.'],
+    ];
+
+    return translations.reduce((translated, [source, target]) => (
+      translated.replace(new RegExp(source.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), target)
+    ), content);
+  };
+
   const getPreviewMessage = () => {
-    const raw = settings[activePreview] || '';
+    const raw = translatePreviewContent(settings[activePreview] || '');
     if (activePreview === 'greeting_message') {
       return language === 'id'
         ? `*Selamat Pagi Mahasiswa!* ${raw}\n\nSilakan pilih menu layanan di bawah ini:\n1. Pusat Bantuan & Layanan IT\n2. Cek Status Tiket\n3. Jelajahi Basis Pengetahuan (FAQ)\n4. Info & Jam Operasional\n5. Tautan Penting Kampus\n\n_Balas angka pilihan Anda (Contoh: 1)_`
@@ -156,7 +169,7 @@ export default function BotSettingsWorkspace() {
                   value={settings.trigger_word}
                   onChange={handleChange}
                   onFocus={() => setActivePreview('trigger_word')}
-                  placeholder="Misal: HaloDesk"
+                  placeholder={language === 'en' ? 'Example: HaloDesk' : 'Misal: HaloDesk'}
                   className="w-full text-gray-800 text-[15px] p-4 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
                 />
               </div>
@@ -174,7 +187,7 @@ export default function BotSettingsWorkspace() {
                   onChange={handleChange}
                   onFocus={() => setActivePreview('greeting_message')}
                   className="w-full h-full min-h-[120px] p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none resize-none"
-                  placeholder="Contoh: Selamat datang di IT Helpdesk."
+                  placeholder={language === 'en' ? 'Example: Welcome to IT Helpdesk.' : 'Contoh: Selamat datang di IT Helpdesk.'}
                 />
               </div>
               <div className="px-5 py-3 bg-blue-50/50 border-t border-blue-100 text-xs text-blue-800 flex gap-2">
@@ -195,7 +208,7 @@ export default function BotSettingsWorkspace() {
                   onChange={handleChange}
                   onFocus={() => setActivePreview('fallback_message')}
                   className="w-full h-full min-h-[120px] p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none resize-none"
-                  placeholder="Contoh: Ketik *HaloDesk* untuk kembali ke menu utama."
+                  placeholder={language === 'en' ? 'Example: Type *HaloDesk* to return to the main menu.' : 'Contoh: Ketik *HaloDesk* untuk kembali ke menu utama.'}
                 />
               </div>
             </div>
@@ -212,7 +225,7 @@ export default function BotSettingsWorkspace() {
                   onChange={handleChange}
                   onFocus={() => setActivePreview('operational_hours')}
                   className="w-full h-full min-h-[120px] p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none resize-none"
-                  placeholder="Contoh: Senin - Jumat: 08:00 - 16:00 WIB"
+                  placeholder={language === 'en' ? 'Example: Monday - Friday: 08:00 - 16:00 WIB' : 'Contoh: Senin - Jumat: 08:00 - 16:00 WIB'}
                 />
               </div>
             </div>
@@ -229,7 +242,7 @@ export default function BotSettingsWorkspace() {
                   onChange={handleChange}
                   onFocus={() => setActivePreview('location_info')}
                   className="w-full h-full min-h-[120px] p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none resize-none"
-                  placeholder="Contoh: Gedung IT Center Lantai 1..."
+                  placeholder={language === 'en' ? 'Example: IT Center Building, 1st Floor...' : 'Contoh: Gedung IT Center Lantai 1...'}
                 />
               </div>
             </div>

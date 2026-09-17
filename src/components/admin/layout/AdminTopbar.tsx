@@ -36,6 +36,15 @@ export default function AdminTopbar({
     { id: 3, title: 'Tiket Dikembalikan', desc: 'Teknisi Jaringan mengembalikan Tiket #000085 ke Anda.', time: '2 jam lalu', isRead: true, type: 'rejected' },
   ]);
 
+  const localizedNotifications = notifications.map((notif) => {
+    if (language === 'en') {
+      if (notif.type === 'new') return { ...notif, title: 'New Incoming Ticket', desc: 'Ticket #000143 (Network) is waiting for your verification.', time: '5 minutes ago' };
+      if (notif.type === 'warning') return { ...notif, title: 'SLA Warning', desc: 'Warning: Ticket #000120 has 1 hour remaining before SLA deadline!', time: '1 hour ago' };
+      return { ...notif, title: 'Ticket Returned', desc: 'Network technician returned Ticket #000085 to you.', time: '2 hours ago' };
+    }
+    return notif;
+  });
+
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   useEffect(() => {
@@ -189,8 +198,8 @@ export default function AdminTopbar({
                   )}
                 </div>
                 <div className="max-h-[350px] overflow-y-auto">
-                  {notifications.length > 0 ? (
-                    notifications.map(notif => (
+                  {localizedNotifications.length > 0 ? (
+                    localizedNotifications.map(notif => (
                       <div key={notif.id} className={`flex gap-4 p-4 border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors cursor-pointer ${!notif.isRead ? 'bg-blue-50/30' : ''}`}>
                         <div className="shrink-0 mt-0.5">
                           {notif.type === 'new' && <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg></div>}

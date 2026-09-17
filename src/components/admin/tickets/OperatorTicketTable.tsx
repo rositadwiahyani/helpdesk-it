@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { fetchClient } from '@/lib/apiClient';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/context/LanguageContext';
-import { translateTicketSubject } from '@/lib/translations';
+import { translateCategoryName, translateTicketSubject } from '@/lib/translations';
 
 type Ticket = any; // simplified for this example
 type Category = { id: string | number, name: string };
@@ -360,7 +360,7 @@ export default function OperatorTicketTable({
           <div className={`flex py-0.5 px-2 items-center rounded-sm ${bg} w-fit`}>
             <p className={`${text} font-iBMPlexSans text-[11px] font-bold leading-5 w-fit tracking-[0.025em]`}>
                             {language === 'en'
-                                ? p
+                                ? ({ URGENT: 'Urgent', CRITICAL: 'Critical', HIGH: 'High', MEDIUM: 'Medium', LOW: 'Low' } as Record<string, string>)[p] || p
                                 : ({ URGENT: 'MENDESAK', CRITICAL: 'KRITIS', HIGH: 'TINGGI', MEDIUM: 'SEDANG', LOW: 'RENDAH' } as Record<string, string>)[p] || p}
             </p>
           </div>
@@ -621,7 +621,7 @@ export default function OperatorTicketTable({
                                     <td className="px-4 py-4 max-w-xs">
                                         <Link href={`/dashboard/operator/tickets/${ticket.id}`} className="block">
                                             <p className="text-[#1A1C1E] font-iBMPlexSans text-sm font-medium truncate mb-0.5 hover:text-[#0059BB]">
-                                                {translateTicketSubject((ticket.subject || ticket.category?.name || t('tickets.no_subject')).replace(/ > /g, ' / ').replace(/>/g, '/'), language)}
+                                                {translateCategoryName(translateTicketSubject((ticket.subject || ticket.category?.name || t('tickets.no_subject')).replace(/ > /g, ' / ').replace(/>/g, '/'), language), language)}
                                             </p>
                                         </Link>
                                     </td>
@@ -650,7 +650,7 @@ export default function OperatorTicketTable({
                                                 </svg>
                                             </div>
                                         ) : (
-                                            <span className="text-[#43474F] font-iBMPlexSans text-[13px] font-medium truncate">{ticket.category?.name || 'N/A'}</span>
+                                            <span className="text-[#43474F] font-iBMPlexSans text-[13px] font-medium truncate">{translateCategoryName(ticket.category?.name || 'N/A', language)}</span>
                                         )}
                                     </td>
                                     <td className="px-4 py-4 whitespace-nowrap">
@@ -679,7 +679,7 @@ export default function OperatorTicketTable({
                                         {assignToType === 'dept' ? (
                                             <span className="text-[#43474F] font-iBMPlexSans text-[12px]">{ticket.department?.name || departments?.find(d => String(d.id) === String(ticket.dept_id))?.name || ticket.dept_id || '-'}</span>
                                         ) : assignToType === 'tech' ? (
-                                            <span className="text-[#43474F] font-iBMPlexSans text-[12px]">{ticket.tech?.name || technicians?.find(t => String(t.id) === String(ticket.tech_id))?.name || ticket.tech_id || 'Belum di-assign'}</span>
+                                            <span className="text-[#43474F] font-iBMPlexSans text-[12px]">{ticket.tech?.name || technicians?.find(t => String(t.id) === String(ticket.tech_id))?.name || ticket.tech_id || t('ticket_detail.not_assigned', 'Unassigned')}</span>
                                         ) : assignToType === 'resolver' ? (
                                             <span className="text-[#43474F] font-iBMPlexSans text-[12px]">{ticket.tech?.name || ticket.tech_id || 'System'}</span>
                                         ) : actionType === 'verify' ? (
