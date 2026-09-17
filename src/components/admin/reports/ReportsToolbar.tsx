@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface ReportsToolbarProps {
   fromDate?: string;
@@ -25,6 +26,7 @@ export default function ReportsToolbar({
   setStatus,
   onExport,
 }: ReportsToolbarProps) {
+  const { language, t } = useLanguage();
   // State lokal fallback jika tidak di-pass dari ReportWorkspace
   const [localFromDate, setLocalFromDate] = useState("");
   const [localToDate, setLocalToDate] = useState("");
@@ -77,7 +79,7 @@ export default function ReportsToolbar({
             />
           </svg>
           <p className="text-[#001E40] font-iBMPlexSans text-xl font-medium leading-7 w-fit">
-            Konfigurasi Ekspor
+            {language === 'en' ? 'Export Configuration' : 'Konfigurasi Ekspor'}
           </p>
         </div>
       </div>
@@ -90,7 +92,7 @@ export default function ReportsToolbar({
           <div className="flex flex-col items-start gap-2 w-full">
             <div className="flex flex-col items-start w-full">
               <p className="text-[#1A1C1E] font-iBMPlexSans text-base leading-6 w-full tracking-[0.05em]">
-                DARI TANGGAL MASUK
+                {language === 'en' ? 'FROM DATE' : 'DARI TANGGAL MASUK'}
               </p>
             </div>
             <div className="flex flex-col items-start w-full relative">
@@ -140,14 +142,14 @@ export default function ReportsToolbar({
             </div>
             <div className="flex flex-col items-start w-full">
               <p className="text-[#43474F] font-iBMPlexSans text-[11px] leading-[16.5px] w-full">
-                Kosongkan jika ingin mengambil semua data dari awal
+                {language === 'en' ? 'Leave empty to include all data from the beginning' : 'Kosongkan jika ingin mengambil semua data dari awal'}
               </p>
             </div>
           </div>
           <div className="flex flex-col items-start gap-2 w-full">
             <div className="flex flex-col items-start w-full">
               <p className="text-[#1A1C1E] font-iBMPlexSans text-base leading-6 w-full tracking-[0.05em]">
-                SAMPAI TANGGAL MASUK
+                {language === 'en' ? 'TO DATE' : 'SAMPAI TANGGAL MASUK'}
               </p>
             </div>
             <div className="flex flex-col items-start w-full relative">
@@ -197,7 +199,7 @@ export default function ReportsToolbar({
             </div>
             <div className="flex flex-col items-start w-full">
               <p className="text-[#43474F] font-iBMPlexSans text-[11px] leading-[16.5px] w-full">
-                Kosongkan jika ingin mengambil data hingga hari ini
+                {language === 'en' ? 'Leave empty to include data through today' : 'Kosongkan jika ingin mengambil data hingga hari ini'}
               </p>
             </div>
           </div>
@@ -206,7 +208,7 @@ export default function ReportsToolbar({
         <div className="flex flex-col items-start gap-2 w-full">
           <div className="flex flex-col items-start w-full">
             <p className="text-[#1A1C1E] font-iBMPlexSans text-base leading-6 w-full tracking-[0.05em]">
-              STATUS TIKET
+              {language === 'en' ? 'TICKET STATUS' : 'STATUS TIKET'}
             </p>
           </div>
           <div className="flex p-3 justify-center items-center rounded border border-[#C3C6D1] bg-[#FFF] w-full relative">
@@ -232,7 +234,7 @@ export default function ReportsToolbar({
 
             <div className="flex flex-col items-start w-full">
               <p className="text-[#1A1C1E] font-iBMPlexSans text-base leading-6 w-full">
-                {activeStatus || "Semua Status"}
+                {activeStatus || (language === 'en' ? 'All Statuses' : 'Semua Status')}
               </p>
             </div>
             <select
@@ -240,7 +242,7 @@ export default function ReportsToolbar({
               value={activeStatus}
               onChange={(e) => activeSetStatus(e.target.value)}
             >
-              <option value="">Semua Status</option>
+              <option value="">{language === 'en' ? 'All Statuses' : 'Semua Status'}</option>
               <option value="Open">Open</option>
               <option value="In Progress">In Progress</option>
               <option value="Resolved">Resolved</option>
@@ -267,15 +269,17 @@ export default function ReportsToolbar({
           <div className="flex flex-col items-start gap-1 w-fit h-full">
             <div className="flex flex-col items-start w-full">
               <p className="text-[#001E40] font-iBMPlexSans text-base font-bold leading-6 w-fit">
-                Informasi Data:
+                {language === 'en' ? 'Data Information:' : 'Informasi Data:'}
               </p>
             </div>
             <div className="flex flex-col items-start w-full">
               <p className="text-[#1F477B] font-iBMPlexSans text-[13px] leading-[21.13px] w-fit">
-                Data yang diunduh mencakup Nomor Tiket, Identitas Pelapor
+                {language === 'en'
+                  ? 'Downloaded data includes Ticket Number, Reporter Identity (Name, Unit, Email), Issue Category, Priority, Last Status, and Handling Time Details (Response Time, Resolution Time).'
+                  : <>Data yang diunduh mencakup Nomor Tiket, Identitas Pelapor
                 &#40;Nama, Unit, Email&#41;, Kategori Masalah, Prioritas,
                 Status Terakhir, dan Detail Waktu Penanganan &#40;Response
-                Time, Resolution Time&#41;.
+                Time, Resolution Time&#41;.</>}
               </p>
             </div>
           </div>
@@ -306,7 +310,7 @@ export default function ReportsToolbar({
             </svg>
             <div className="flex flex-col items-center w-fit">
               <p className="text-[#FFF] font-iBMPlexSans text-base font-bold leading-6 w-fit">
-                {isExporting ? "Mengekspor..." : "Unduh CSV (Excel)"}
+                {isExporting ? t('reports.processing') : t('reports.download_excel')}
               </p>
             </div>
           </div>

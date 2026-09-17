@@ -26,7 +26,7 @@ export default async function PimpinanDashboard() {
         titleKey="dashboard.pimpinan_title"
         defaultTitle="Executive Summary"
         descKey="dashboard.pimpinan_desc"
-        defaultDesc="Ringkasan analitik dan performa layanan IT Helpdesk."
+        defaultDesc="Analytics summary and IT Helpdesk service performance."
       />
 
       {/* Row 1: Summary Cards */}

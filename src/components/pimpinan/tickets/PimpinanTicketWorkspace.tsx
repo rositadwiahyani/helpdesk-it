@@ -6,7 +6,7 @@ import { Search, Printer, AlertTriangle, CheckCircle2, Clock, Inbox } from 'luci
 import { useLanguage } from '@/context/LanguageContext';
 
 export default function PimpinanTicketWorkspace() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [tickets, setTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -173,12 +173,12 @@ export default function PimpinanTicketWorkspace() {
             isEscalatedTab={activeTab === 'escalated'} 
             onAction={async (id, action) => {
               if (action === 'CLOSE') {
-                if (confirm('Tutup tiket ini secara paksa?')) {
+                if (confirm(language === 'en' ? 'Force close this ticket?' : 'Tutup tiket ini secara paksa?')) {
                   await fetchClient(`/admin/tickets/${id}/status`, { method: 'PUT', body: JSON.stringify({ status: 'CLOSED' }) });
                   fetchTicketsData();
                 }
               } else if (action === 'RETURN') {
-                if (confirm('Kembalikan tiket ini ke Operator?')) {
+                if (confirm(language === 'en' ? 'Return this ticket to the operator?' : 'Kembalikan tiket ini ke Operator?')) {
                   await fetchClient(`/admin/tickets/${id}/status`, { method: 'PUT', body: JSON.stringify({ status: 'OPEN' }) });
                   fetchTicketsData();
                 }

@@ -4,7 +4,7 @@ import { format, parseISO } from 'date-fns';
 import { id, enUS } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
-import { translateTicketSubject } from '@/lib/translations';
+import { translateCategoryName, translateTicketSubject } from '@/lib/translations';
 
 export default function PimpinanTicketTable({ 
   tickets, 
@@ -109,8 +109,8 @@ export default function PimpinanTicketTable({
               paginatedTickets.map((t) => {
                 const reporterName = t.reporter_name || t.reporters?.name || 'Anonim';
                 const reporterInfo = t.nim_nip || t.reporters?.phone || t.phone || '';
-                const categoryName = t.category?.name || t.categories?.name || '-';
-                const subject = translateTicketSubject(t.subject || t.title || 'Tanpa Judul', language);
+                const categoryName = translateCategoryName(t.category?.name || t.categories?.name || '-', language);
+                const subject = translateCategoryName(translateTicketSubject(t.subject || t.title || (language === 'en' ? 'Untitled' : 'Tanpa Judul'), language), language);
                 const technicianName = t.technician?.name || t.assigned_technician?.name || '-';
 
                 return (
