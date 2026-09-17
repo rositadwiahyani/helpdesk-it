@@ -20,8 +20,8 @@ const translations = {
     faqTitle: 'Yang paling sering ditanyakan',
     faqDesc: 'Coba cek dulu di sini, kemungkinan besar jawabannya sudah tersedia.',
     help: 'Butuh bantuan langsung?',
-    hours: 'Jam Operasional',
-    hoursDesc: 'Senin – Jumat, 08.00 – 16.00 WIB.',
+    hours: 'Hubungi Helpdesk IT sekarang',
+    hoursDesc: 'Scan QR code untuk chat langsung via WhatsApp.',
     faqs: [
       { q: "Lupa kata sandi akun SSO Undip, bagaimana cara mengatur ulang?", a: "Buka halaman reset kata sandi SSO, lalu ikuti verifikasi lewat email alternatif atau nomor terdaftar." },
       { q: "Tidak bisa masuk ke email mahasiswa atau dosen (Undip Mail), harus bagaimana?", a: "Periksa dulu apakah kata sandi SSO masih berlaku." },
@@ -44,8 +44,8 @@ const translations = {
     faqTitle: 'Frequently Asked Questions',
     faqDesc: 'Check here first. Your answer may already be available.',
     help: 'Need Direct Assistance?',
-    hours: 'Working Hours',
-    hoursDesc: 'Monday – Friday, 08:00 AM – 04:00 PM.',
+    hours: 'Contact IT Helpdesk now',
+    hoursDesc: 'Scan the QR code to chat directly via WhatsApp.',
     faqs: [
       { q: "Forgot Undip SSO account password, how to reset it?", a: "Open the SSO password reset page, then follow the verification via alternative email or registered number." },
       { q: "Cannot log in to student or lecturer email (Undip Mail), what should I do?", a: "First, check if your SSO password is still valid..." },
@@ -170,7 +170,7 @@ export default function Beranda() {
           </section>
 
           <aside className="lg:col-span-1 mb-16 lg:mb-0">
-            <div className="sticky top-32 mt-50">
+            <div className="sticky top-32 mt-20">
               <div className="relative overflow-hidden bg-slate-900 p-8 rounded-3xl border border-slate-800 shadow-2xl reveal is-visible text-white">
                 <div className="absolute -top-16 -right-16 w-48 h-48 bg-blue-600 opacity-20 blur-3xl rounded-full pointer-events-none"></div>
                 <h2 style={{marginTop: '0', fontSize: '1.5rem', marginBottom: '1.5rem', color: 'white', position: 'relative'}}>{t.help}</h2>

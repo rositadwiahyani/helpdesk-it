@@ -1,10 +1,12 @@
 'use client';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface SlaHealthProps {
   data?: { name: string; value: number; fill: string }[];
 }
 
 export default function SlaHealth({ data = [] }: SlaHealthProps) {
+  const { language } = useLanguage();
   const withinSLA = data.find(d => d.name === 'Within SLA')?.value || 0;
   const nearDeadline = data.find(d => d.name === 'Near Deadline')?.value || 0;
   const overdue = data.find(d => d.name === 'Overdue')?.value || 0;
@@ -30,7 +32,7 @@ export default function SlaHealth({ data = [] }: SlaHealthProps) {
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2 text-sm text-slate-600">
             <div className="w-2.5 h-2.5 rounded-full bg-emerald-400"></div>
-            Within SLA
+            {language === 'en' ? 'Within SLA' : 'Sesuai SLA'}
           </div>
           <span className="font-semibold text-slate-900">{withinSLA}</span>
         </div>
@@ -38,7 +40,7 @@ export default function SlaHealth({ data = [] }: SlaHealthProps) {
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2 text-sm text-slate-600">
             <div className="w-2.5 h-2.5 rounded-full bg-amber-400"></div>
-            Near Deadline
+            {language === 'en' ? 'Near Deadline' : 'Mendekati Tenggat'}
           </div>
           <span className="font-semibold text-slate-900">{nearDeadline}</span>
         </div>
@@ -46,7 +48,7 @@ export default function SlaHealth({ data = [] }: SlaHealthProps) {
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2 text-sm text-slate-600">
             <div className="w-2.5 h-2.5 rounded-full bg-rose-500"></div>
-            Overdue
+            {language === 'en' ? 'Overdue' : 'Terlambat'}
           </div>
           <span className="font-semibold text-rose-600">{overdue}</span>
         </div>

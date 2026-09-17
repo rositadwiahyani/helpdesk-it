@@ -1,5 +1,6 @@
 import React from 'react';
 import { TicketStatus } from '@/lib/mock/tickets';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface StatusBadgeProps {
   status: TicketStatus;
@@ -8,6 +9,7 @@ interface StatusBadgeProps {
 }
 
 export default function StatusBadge({ status, overdue = false }: StatusBadgeProps) {
+  const { language } = useLanguage();
   let colorClass = '';
   let label: string = status;
 
@@ -40,14 +42,14 @@ export default function StatusBadge({ status, overdue = false }: StatusBadgeProp
   return (
     <div className="flex flex-col items-start gap-1">
       <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-bold border tracking-wide whitespace-nowrap ${colorClass}`}>
-        {label}
+          {language === 'en' ? label : ({ NEW: 'BARU', 'IN PROGRESS': 'DIPROSES', 'WAITING VERIFICATION': 'MENUNGGU VERIFIKASI', RESOLVED: 'SELESAI', CLOSED: 'DITUTUP' } as Record<string, string>)[label] || label}
       </span>
       {overdue && (
         <span className="inline-flex items-center gap-1 text-[11px] font-bold text-red-600">
           <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m0 3.75h.007M4.322 19.5h15.356c1.42 0 2.309-1.523 1.6-2.755L13.6 4.245c-.71-1.233-2.49-1.233-3.2 0L2.72 16.745c-.71 1.232.18 2.755 1.601 2.755z" />
           </svg>
-          OVERDUE
+          {language === 'en' ? 'OVERDUE' : 'TERLAMBAT'}
         </span>
       )}
     </div>

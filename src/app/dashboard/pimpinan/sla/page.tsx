@@ -5,7 +5,7 @@ import { fetchClient } from '@/lib/apiClient';
 import { useLanguage } from '@/context/LanguageContext';
 
 export default function PimpinanSlaPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [slaHealth, setSlaHealth] = useState<any[]>([
     { name: 'Within SLA', value: 85, fill: '#34D399' },
     { name: 'Near Deadline', value: 10, fill: '#FBBF24' },
@@ -95,7 +95,11 @@ export default function PimpinanSlaPage() {
           <div className="grid grid-cols-3 gap-3 mb-6">
             {Array.isArray(slaHealth) && slaHealth.map((sh: any, idx: number) => (
               <div key={idx} className="p-4 rounded-xl border border-[var(--line-dark)] bg-slate-50/50 flex flex-col items-center text-center">
-                <span className="text-xs font-bold text-[var(--text-dim)] mb-1">{sh.name}</span>
+                <span className="text-xs font-bold text-[var(--text-dim)] mb-1">
+                  {language === 'en'
+                    ? sh.name
+                    : ({ 'Within SLA': 'Sesuai SLA', 'Near Deadline': 'Mendekati Tenggat', Overdue: 'Terlambat' } as Record<string, string>)[sh.name] || sh.name}
+                </span>
                 <span className="text-2xl font-extrabold text-[var(--ink)]" style={{ color: sh.fill }}>{sh.value}</span>
               </div>
             ))}

@@ -3,10 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import PimpinanSidebar from './PimpinanSidebar';
 import AdminTopbar from '@/components/admin/layout/AdminTopbar';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function PimpinanLayout({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const pathname = usePathname();
+  const { t } = useLanguage();
 
   // Load sidebar state from localStorage on mount
   useEffect(() => {
@@ -23,13 +25,13 @@ export default function PimpinanLayout({ children }: { children: React.ReactNode
   };
 
   const getPageTitle = () => {
-    if (!pathname) return 'Executive Summary';
-    if (pathname.includes('/dashboard/pimpinan/tickets')) return 'Laporan Tiket';
-    if (pathname.includes('/dashboard/pimpinan/performance')) return 'Laporan Performa';
-    if (pathname.includes('/dashboard/pimpinan/sla')) return 'Laporan SLA';
-    if (pathname.includes('/dashboard/pimpinan/reports')) return 'Rekap Laporan';
-    if (pathname.includes('/dashboard/pimpinan/profile')) return 'Profil Pimpinan';
-    return 'Executive Summary';
+    if (!pathname) return t('menu.executive_summary');
+    if (pathname.includes('/dashboard/pimpinan/tickets')) return t('menu.ticket_reports');
+    if (pathname.includes('/dashboard/pimpinan/performance')) return t('menu.performance_reports');
+    if (pathname.includes('/dashboard/pimpinan/sla')) return t('menu.sla_reports');
+    if (pathname.includes('/dashboard/pimpinan/reports')) return t('menu.summary_reports');
+    if (pathname.includes('/dashboard/pimpinan/profile')) return t('profile.pimpinan_title');
+    return t('menu.executive_summary');
   };
 
   return (
