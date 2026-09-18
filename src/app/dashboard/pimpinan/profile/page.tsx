@@ -1,11 +1,11 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { User, Lock, Phone, Mail, Shield, CheckCircle2, AlertCircle, Globe } from 'lucide-react';
+import { User, Lock, Phone, Mail, Shield, CheckCircle2, AlertCircle } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/apiClient';
 import { useLanguage } from '@/context/LanguageContext';
 
 export default function PimpinanProfilePage() {
-  const { language, setLanguage, t } = useLanguage();
+  const { t } = useLanguage();
   const [currentUser, setCurrentUser] = useState<any>({});
   const [isLoaded, setIsLoaded] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -112,68 +112,6 @@ export default function PimpinanProfilePage() {
       <div>
         <h1 className="text-2xl font-bold text-[var(--ink)] tracking-tight">{t('profile.pimpinan_title')}</h1>
         <p className="text-[var(--text-dim)] text-sm font-medium">{t('profile.pimpinan_desc')}</p>
-      </div>
-
-      {/* Preferensi Bahasa (Language Preference) Card */}
-      <div className="bg-white rounded-2xl border border-[var(--line)] shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
-        <div className="p-6 border-b border-[var(--line)] flex items-center justify-between">
-          <div>
-            <h3 className="font-bold text-base text-[var(--ink)] flex items-center gap-2">
-              <Globe className="w-5 h-5 text-[var(--gold)]" />
-              {t('language.title')}
-            </h3>
-            <p className="text-[var(--text-dim)] text-xs mt-1">
-              {t('language.desc')}
-            </p>
-          </div>
-        </div>
-        <div className="p-6 flex flex-col sm:flex-row gap-4">
-          <button
-            type="button"
-            onClick={() => setLanguage('id')}
-            className={`flex-1 flex items-center justify-between p-4 rounded-xl border-2 transition-all cursor-pointer ${
-              language === 'id'
-                ? 'border-[var(--gold)] bg-[var(--gold)]/5 shadow-xs'
-                : 'border-[var(--line-dark)] hover:border-slate-300 bg-white'
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">🇮🇩</span>
-              <div className="text-left">
-                <div className="font-bold text-[14px] text-[var(--ink)]">Bahasa Indonesia</div>
-                <div className="text-xs text-[var(--text-dim)]">Indonesian language</div>
-              </div>
-            </div>
-            {language === 'id' && (
-              <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[var(--gold)] text-white">
-                {t('language.active')}
-              </span>
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setLanguage('en')}
-            className={`flex-1 flex items-center justify-between p-4 rounded-xl border-2 transition-all cursor-pointer ${
-              language === 'en'
-                ? 'border-[var(--gold)] bg-[var(--gold)]/5 shadow-xs'
-                : 'border-[var(--line-dark)] hover:border-slate-300 bg-white'
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">🇬🇧</span>
-              <div className="text-left">
-                <div className="font-bold text-[14px] text-[var(--ink)]">English</div>
-                <div className="text-xs text-[var(--text-dim)]">English language</div>
-              </div>
-            </div>
-            {language === 'en' && (
-              <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[var(--gold)] text-white">
-                {t('language.active')}
-              </span>
-            )}
-          </button>
-        </div>
       </div>
 
       {/* Account Info Card */}

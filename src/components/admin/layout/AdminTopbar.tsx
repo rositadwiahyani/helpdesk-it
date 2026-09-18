@@ -164,7 +164,7 @@ export default function AdminTopbar({
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-slate-200 hover:border-slate-300 bg-slate-50 hover:bg-slate-100 text-xs font-bold text-slate-700 transition-all cursor-pointer shadow-2xs"
           >
             <Globe className="w-3.5 h-3.5 text-slate-500" />
-            <span>{language === 'id' ? '🇮🇩 ID' : '🇬🇧 EN'}</span>
+            <span>{language === 'id' ? 'ID' : 'EN'}</span>
           </button>
 
           <div className="relative" ref={dropdownRef}>
