@@ -47,7 +47,7 @@ function KnowledgebaseContent() {
 
       const { data: artsData } = await supabase
         .from('knowledge_base')
-        .select(`id, slug, title, content, category_id, categories(name)`)
+        .select(`id, slug, title, title_en, content, content_en, category_id, categories(name)`)
         .order('created_at', { ascending: false });
 
       if (catsData) setCategories(catsData);
@@ -70,7 +70,63 @@ function KnowledgebaseContent() {
     notFoundDesc: language === 'ID' 
       ? 'Coba gunakan kata kunci lain atau periksa kembali ejaan pencarian kamu.' 
       : 'Try using another keyword or check your spelling.',
-    clearSearch: language === 'ID' ? 'Hapus Pencarian' : 'Clear Search'
+    clearSearch: language === 'ID' ? 'Hapus Pencarian' : 'Clear Search',
+    allCategories: language === 'EN' ? 'All Categories' : 'Semua Kategori',
+    mainCategory: language === 'EN' ? 'Main Categories' : 'Kategori Utama',
+    subCategory: language === 'EN' ? 'Subcategories' : 'Sub Kategori',
+    folderEmpty: language === 'EN' ? 'This folder is empty.' : 'Folder ini kosong.',
+    articlesLabel: language === 'EN' ? 'Articles' : 'Artikel',
+    items: language === 'EN' ? 'items' : 'item',
+    general: language === 'EN' ? 'General' : 'Umum'
+  };
+
+  const translateCategory = (name: string) => {
+    if (language === 'ID') return name;
+    const dictionary: Record<string, string> = {
+      'Aplikasi': 'Applications',
+      'Cyber dan Security': 'Cyber and Security',
+      'Jaringan dan Internet': 'Network and Internet',
+      'Website dan Email': 'Website and Email',
+      'Email': 'Email',
+      'Website': 'Website',
+      'Domain': 'Domain',
+      'Keamanan Sistem': 'System Security',
+      'E-office': 'E-office',
+      'VM': 'Virtual Machine',
+      'Licensi': 'License',
+      'Lupa Password': 'Forgot Password',
+      'SIAP': 'SIAP',
+      'Gentayu': 'Gentayu',
+      'SSO': 'SSO',
+      'Mandala': 'Mandala',
+      'Wifi': 'Wifi',
+      'Gagal TTE (Tanda Tangan Elektronik)': 'Failed TTE (Electronic Signature)',
+      'Ubah Email Recovery': 'Change Recovery Email',
+      'Aplikasi Down / Error 500': 'Application Down / Error 500',
+      'Backdoor': 'Backdoor',
+      'Data Tidak Sinkron': 'Data Not Synced',
+      'Tidak Kompatibel di Browser': 'Browser Incompatible',
+      'Gagal Sinkronisasi Pembayaran': 'Payment Sync Failed',
+      'Error Sinkronisasi KRS': 'KRS Sync Error',
+      'Aplikasi Crash / White Screen': 'App Crash / White Screen',
+      'Indikasi Malware / Script Ilegal': 'Malware Indication / Illegal Script',
+      'Akses Tidak Dikenal': 'Unknown Access',
+      'Serangan DDoS': 'DDoS Attack',
+      'Kebocoran Data (Data Breach)': 'Data Breach',
+      'Tidak Bisa Connect (Auth Error)': 'Cannot Connect (Auth Error)',
+      'Sering Putus / Disconnect': 'Frequent Disconnects',
+      'Gagal Login VPN': 'VPN Login Failed',
+      'Aplikasi Internal Tidak Bisa Diakses': 'Internal App Inaccessible',
+      'Server Tidak Bisa Diremote (RDP/SSH)': 'Server Cannot be Remoted (RDP/SSH)',
+      'Setting DNS (A Record/CNAME)': 'DNS Setting (A Record/CNAME)',
+      'Request SSL Certificate': 'Request SSL Certificate',
+      'Permintaan Pembuatan Subdomain': 'Subdomain Creation Request',
+      'Inbox Penuh / Bouncing': 'Inbox Full / Bouncing',
+      'Terkena Spam / Phishing': 'Spam / Phishing Target',
+      'Request Lisensi Zoom / Office 365': 'Zoom / Office 365 License Request',
+      'Halaman Website Error / Blank': 'Website Error / Blank Page'
+    };
+    return dictionary[name] || name;
   };
 
   const handleSearch = (e: React.FormEvent) => {
@@ -79,10 +135,11 @@ function KnowledgebaseContent() {
     router.push(`/knowledgebase?q=${encodeURIComponent(searchQuery)}`, { scroll: false });
   };
 
-  const filteredArticles = articles.filter(art => 
-    art.title.toLowerCase().includes(activeQuery.toLowerCase()) ||
-    (art.categories?.name || '').toLowerCase().includes(activeQuery.toLowerCase())
-  );
+  const filteredArticles = articles.filter(art => {
+    const title = language === 'EN' && art.title_en ? art.title_en : art.title;
+    return title.toLowerCase().includes(activeQuery.toLowerCase()) ||
+           (art.categories?.name || '').toLowerCase().includes(activeQuery.toLowerCase());
+  });
 
   // Get Breadcrumbs for current folder
   const getBreadcrumbs = (categoryId: number | null) => {
@@ -187,9 +244,9 @@ function KnowledgebaseContent() {
                     <div className="quick-icon">
                       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>
                     </div>
-                    <h3 className="transition-colors">{art.title}</h3>
+                    <h3 className="transition-colors">{language === 'EN' && art.title_en ? art.title_en : art.title}</h3>
                     <p className="line-clamp-2 flex-grow text-gray-500 mb-2">
-                      {art.categories?.name || 'Umum'}
+                      {art.categories?.name ? translateCategory(art.categories.name) : t.general}
                     </p>
                     <div className="quick-link">
                       <span>{t.viewText}</span>
@@ -230,7 +287,7 @@ function KnowledgebaseContent() {
                 className={`flex items-center gap-2 font-medium transition-colors ${currentCategoryId === null ? 'text-gray-800' : 'text-gray-500 hover:text-blue-600'}`}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
-                Semua Kategori
+                {t.allCategories}
               </button>
               
               {breadcrumbs.map((crumb, idx) => (
@@ -240,7 +297,7 @@ function KnowledgebaseContent() {
                     onClick={() => setCurrentCategoryId(crumb.id)}
                     className={`font-medium transition-colors ${idx === breadcrumbs.length - 1 ? 'text-gray-800' : 'text-gray-500 hover:text-blue-600'}`}
                   >
-                    {crumb.name}
+                    {translateCategory(crumb.name)}
                   </button>
                 </div>
               ))}
@@ -249,7 +306,7 @@ function KnowledgebaseContent() {
             {/* Content for Current Folder */}
             {currentSubCategories.length === 0 && currentArticles.length === 0 && uncategorizedArticles.length === 0 ? (
               <div className="text-center py-12 bg-white rounded-2xl border border-gray-100">
-                <p className="text-gray-500">Folder ini kosong.</p>
+                <p className="text-gray-500">{t.folderEmpty}</p>
               </div>
             ) : (
               <div className="flex flex-col gap-10">
@@ -258,7 +315,7 @@ function KnowledgebaseContent() {
                   <div>
                     <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
                       <svg className="w-5 h-5 text-[var(--gold)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
-                      {currentCategoryId === null ? 'Kategori Utama' : 'Sub Kategori'}
+                      {currentCategoryId === null ? t.mainCategory : t.subCategory}
                     </h3>
                     <div className="quick-grid" style={{ marginTop: 0 }}>
                       {currentSubCategories.map(cat => {
@@ -275,8 +332,8 @@ function KnowledgebaseContent() {
                             <div className="quick-icon">
                               <svg fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" /></svg>
                             </div>
-                            <h3>{cat.name}</h3>
-                            <p>{totalArts} items</p>
+                            <h3>{translateCategory(cat.name)}</h3>
+                            <p>{totalArts} {t.items}</p>
                           </div>
                         );
                       })}
@@ -289,7 +346,7 @@ function KnowledgebaseContent() {
                   <div>
                     <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
                       <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                      Artikel
+                      {t.articlesLabel}
                     </h3>
                     <div className="quick-grid" style={{ marginTop: 0 }}>
                       {[...currentArticles, ...uncategorizedArticles].map(art => (
@@ -297,9 +354,12 @@ function KnowledgebaseContent() {
                           <div className="quick-icon">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>
                           </div>
-                          <h3 className="transition-colors">{art.title}</h3>
+                          <h3 className="transition-colors">{language === 'EN' && art.title_en ? art.title_en : art.title}</h3>
                           <p className="line-clamp-2 flex-grow text-gray-500">
-                            {art.content ? art.content.replace(/<[^>]*>?/gm, '').substring(0, 100) + '...' : 'Tidak ada deskripsi.'}
+                            {(() => {
+                              const content = language === 'EN' && art.content_en ? art.content_en : art.content;
+                              return content ? content.replace(/<[^>]*>?/gm, '').substring(0, 100) + '...' : (language === 'EN' ? 'No description.' : 'Tidak ada deskripsi.');
+                            })()}
                           </p>
                           <div className="quick-link">
                             <span>{t.viewText}</span>
