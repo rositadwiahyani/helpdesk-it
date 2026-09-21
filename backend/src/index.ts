@@ -13,6 +13,11 @@ import reporterRoutes from './routes/reporter.routes';
 import simulatorRoutes from './routes/simulator.routes';
 const app = express();
 
+app.use((req, res, next) => {
+  console.log(`[${new Date().toLocaleTimeString()}] ${req.method} ${req.originalUrl}`);
+  next();
+});
+
 // Middleware CORS
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
