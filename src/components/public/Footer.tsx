@@ -45,17 +45,15 @@ export default function Footer() {
           
           {/* Brand Info */}
           <div>
-            <div className="mb-6">
-              <div className="relative h-12 w-auto flex items-start">
-                <Image 
-                  src="/universitas-diponegoro-helpit1.png" 
-                  alt="Logo HelpIT Undip" 
-                  width={150} 
-                  height={40} 
-                  style={{ width: 'auto', height: 'auto' }}
-                  className="h-full object-contain"
-                />
-              </div>
+            <div className="h-12 flex items-center mb-6">
+              <Image 
+                src="/universitas-diponegoro-helpit1.png" 
+                alt="Logo HelpIT Undip" 
+                width={150} 
+                height={40} 
+                style={{ width: 'auto', height: 'auto' }}
+                className="max-h-full object-contain"
+              />
             </div>
             <p className="text-sm leading-relaxed pr-4">
               {t.desc}
@@ -64,7 +62,9 @@ export default function Footer() {
 
           {/* Contact Section */}
           <div>
-            <h4 className="text-sm font-bold text-white mb-6 tracking-wider">{t.contact}</h4>
+            <div className="h-12 flex items-center mb-6">
+              <h4 className="text-sm font-bold text-white tracking-wider">{t.contact}</h4>
+            </div>
             <ul className="space-y-5 text-sm">
               <li className="flex items-start gap-4">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5 flex-shrink-0 mt-0.5 text-gray-400">
@@ -86,7 +86,9 @@ export default function Footer() {
 
           {/* Operational Hours Section */}
           <div>
-            <h4 className="text-sm font-bold text-white mb-6 tracking-wider">{t.hours}</h4>
+            <div className="h-12 flex items-center mb-6">
+              <h4 className="text-sm font-bold text-white tracking-wider">{t.hours}</h4>
+            </div>
             <ul className="space-y-2 text-sm leading-relaxed">
               <li className="text-gray-300">{t.schedule.monThu}</li>
               <li className="text-gray-500 pb-2">{t.schedule.break1}</li>
