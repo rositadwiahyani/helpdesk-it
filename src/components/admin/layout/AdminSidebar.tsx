@@ -40,6 +40,7 @@ export default function AdminSidebar({ isOpen = true, setIsOpen = () => {} }: Ad
     { name: t('menu.tickets'), path: '/dashboard/administrasi/tickets', icon: Ticket },
     { name: t('menu.users'), path: '/dashboard/administrasi/users', icon: Users },
     { name: t('menu.report_categories'), path: '/dashboard/administrasi/report-categories', icon: Layers },
+    { name: t('menu.knowledge_base'), path: '/dashboard/administrasi/knowledge-base', icon: BookOpen },
     { name: t('menu.staff'), path: '/dashboard/administrasi/staff', icon: UserCog },
     { name: t('menu.bot'), path: '/dashboard/administrasi/bot-settings', icon: Webhook },
     { name: t('menu.profile'), path: '/dashboard/administrasi/profile', icon: User },
