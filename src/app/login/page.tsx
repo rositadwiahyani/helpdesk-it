@@ -105,7 +105,8 @@ export default function LoginPage() {
               onChange={(e) => setUsernameOrEmail(e.target.value)}
               required
               placeholder="Email atau Username"
-              className="w-full bg-transparent border-none border-b-2 border-slate-400 outline-none text-slate-800 text-[14px] pb-2.5 pt-2 transition-colors duration-200 font-sans focus:border-[#002D72] placeholder-slate-400"
+              className="w-full bg-transparent border-0 border-b-[2.5px] border-b-slate-500 rounded-none outline-none ring-0 text-slate-800 text-[14px] pb-2.5 pt-2 transition-colors duration-200 font-sans focus:border-b-[#002D72] focus:outline-none focus:ring-0 placeholder-slate-400"
+              style={{ borderRadius: 0 }}
             />
           </div>
         </div>
@@ -126,7 +127,8 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 placeholder="Password"
-                className={`w-full bg-transparent border-none border-b-2 border-slate-400 outline-none text-slate-800 text-[14px] pb-2.5 pt-2 pr-7 transition-colors duration-200 font-sans focus:border-[#002D72] placeholder-slate-400 ${!showPassword && password ? 'tracking-[0.1em]' : 'tracking-normal'}`}
+                className={`w-full bg-transparent border-0 border-b-[2.5px] border-b-slate-500 rounded-none outline-none ring-0 text-slate-800 text-[14px] pb-2.5 pt-2 pr-7 transition-colors duration-200 font-sans focus:border-b-[#002D72] focus:outline-none focus:ring-0 placeholder-slate-400 ${!showPassword && password ? 'tracking-[0.1em]' : 'tracking-normal'}`}
+                style={{ borderRadius: 0 }}
               />
               <button
                 type="button"
@@ -229,6 +231,14 @@ export default function LoginPage() {
         input:-webkit-autofill:active {
             transition: background-color 5000s ease-in-out 0s;
             -webkit-text-fill-color: #1e293b !important;
+        }
+        /* Menghilangkan focus ring/outline bawaan Tailwind & browser */
+        input:focus,
+        input:focus-visible {
+            outline: none !important;
+            box-shadow: none !important;
+            --tw-ring-shadow: none !important;
+            --tw-ring-color: transparent !important;
         }
       `}</style>
     </>

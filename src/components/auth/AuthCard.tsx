@@ -48,7 +48,7 @@ export default function AuthCard({ title, description, children, footer }: AuthC
 
           {/* Description */}
           {description && (
-            <p className="text-[13px] text-slate-400 mb-8 text-center">
+            <p className="text-[13px] text-slate-400 text-center" style={{ marginBottom: '48px' }}>
               {description}
             </p>
           )}
