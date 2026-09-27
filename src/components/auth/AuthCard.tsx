@@ -42,13 +42,13 @@ export default function AuthCard({ title, description, children, footer }: AuthC
           </div>
 
           {/* Title */}
-          <h2 className={`text-[17px] font-medium text-slate-700 tracking-[0.01em] ${description ? 'mb-2' : 'mb-9'}`}>
+          <h2 className={`text-[22px] font-semibold text-slate-800 tracking-[0.01em] ${description ? 'mb-2' : 'mb-9'}`}>
             {title}
           </h2>
 
           {/* Description */}
           {description && (
-            <p className="text-[13px] text-slate-400 mb-8 text-center">
+            <p className="text-[15px] text-slate-500 text-center" style={{ marginBottom: '48px' }}>
               {description}
             </p>
           )}
