@@ -13,8 +13,8 @@ export const loginHandler = async (req: Request, res: Response) => {
 
     // Validasi input dasar
     if (!email || !password) {
-      return res.status(400).json({ 
-        error: 'Email dan password wajib diisi.' 
+      return res.status(400).json({
+        error: 'Email dan password wajib diisi.'
       });
     }
 
@@ -28,8 +28,8 @@ export const loginHandler = async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     console.error('Error pada loginHandler:', error.message);
-    return res.status(401).json({ 
-      error: error.message || 'Login gagal. Periksa email dan password Anda.' 
+    return res.status(401).json({
+      error: error.message || 'Login gagal. Periksa email dan password Anda.'
     });
   }
 };
@@ -47,7 +47,7 @@ export const updateProfileHandler = async (req: Request, res: Response) => {
     const token = authHeader.split(' ')[1];
 
     const { userId, name, phone, ext, mobile, username, password } = req.body;
-    
+
     if (!userId) {
       return res.status(400).json({ error: 'User ID wajib disertakan.' });
     }
@@ -76,17 +76,17 @@ export const getMe = async (req: Request, res: Response) => {
     if (!token) return res.status(401).json({ error: 'Token tidak ditemukan.' });
 
     const { data: { user }, error } = await supabase.auth.getUser(token);
-    
+
     if (error || !user) {
       return res.status(401).json({ error: 'Token tidak valid.' });
     }
 
     // Ambil profile
     const { data: profile } = await supabase
-        .from('staff_profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+      .from('staff_profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
 
     return res.status(200).json({
       success: true,

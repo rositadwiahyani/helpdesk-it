@@ -2,18 +2,70 @@
 import React, { useState } from 'react';
 import { FileText, Download, Calendar, MessageSquare, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
+import { fetchClient } from '@/lib/apiClient';
 
 export default function PimpinanReportsPage() {
   const { t } = useLanguage();
   const [downloading, setDownloading] = useState<string | null>(null);
 
-  const handleExport = (reportId: string, title: string, format: string) => {
+  const handleExport = async (reportId: string, title: string, format: string) => {
     const key = `${reportId}-${format}`;
     setDownloading(key);
-    setTimeout(() => {
+
+    try {
+      const res = await fetchClient('/admin/tickets');
+      let data = Array.isArray(res.data) ? res.data : (Array.isArray(res) ? res : []);
+      
+      // Simple filtering based on report type
+      if (reportId === 'weekly') {
+        const lastWeek = new Date();
+        lastWeek.setDate(lastWeek.getDate() - 7);
+        data = data.filter((t: any) => new Date(t.created_at) >= lastWeek);
+      } else if (reportId === 'monthly') {
+        const lastMonth = new Date();
+        lastMonth.setMonth(lastMonth.getMonth() - 1);
+        data = data.filter((t: any) => new Date(t.created_at) >= lastMonth);
+      } else if (reportId === 'sla') {
+        data = data.filter((t: any) => t.is_overdue || (t.sla_due && new Date(t.sla_due) < new Date()));
+      }
+      
+      const tableData = data.map((t: any) => [
+        t.ticket_num || '-',
+        t.reporter_name || t.reporters?.name || '-',
+        t.category?.name || t.categories?.name || '-',
+        t.dept?.name || t.departments?.name || '-',
+        t.status || '-',
+        t.created_at ? new Date(t.created_at).toLocaleDateString() : '-'
+      ]);
+
+      const headers = ['No Tiket', 'Pelapor', 'Kategori', 'Departemen', 'Status', 'Tanggal'];
+
+      if (format === 'PDF') {
+        const doc = new jsPDF();
+        doc.text(`Rekap Laporan - ${title}`, 14, 15);
+        autoTable(doc, {
+          head: [headers],
+          body: tableData,
+          startY: 20
+        });
+        doc.save(`Rekap_${reportId}.pdf`);
+      } else if (format === 'Excel') {
+        const ws = XLSX.utils.aoa_to_sheet([headers, ...tableData]);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Laporan");
+        XLSX.writeFile(wb, `Rekap_${reportId}.xlsx`);
+      }
+      
+      alert(`${t('reports.success_alert')} ${title} (${format}).`);
+    } catch (error) {
+      console.error(error);
+      alert('Gagal mengekspor data');
+    } finally {
       setDownloading(null);
-      alert(`${t('reports.success_alert')} ${title} (${format}). ${t('reports.download_start')}`);
-    }, 800);
+    }
   };
 
   const reportList = [

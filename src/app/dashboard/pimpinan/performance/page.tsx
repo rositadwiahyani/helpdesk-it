@@ -7,6 +7,7 @@ import { useLanguage } from '@/context/LanguageContext';
 export default function PimpinanPerformancePage() {
   const { t } = useLanguage();
   const [tickets, setTickets] = useState<any[]>([]);
+  const [operators, setOperators] = useState<any[]>([]);
 
   useEffect(() => {
     fetchClient('/admin/tickets')
@@ -17,6 +18,13 @@ export default function PimpinanPerformancePage() {
       .catch((err) => {
         console.error('Gagal mengambil data tiket:', err);
       });
+
+    // Fetch operators
+    import('@/lib/supabase').then(({ supabase }) => {
+      supabase.from('staff_profiles').select('*').eq('role', 'operator').then(({ data }) => {
+        if (data) setOperators(data);
+      });
+    });
   }, []);
 
   // Calculate Teknisi Ranking
@@ -132,15 +140,47 @@ export default function PimpinanPerformancePage() {
             </span>
           </div>
 
-          <div className="flex flex-col items-center justify-center flex-1 text-center py-12 px-6 bg-slate-50/50 rounded-xl border border-dashed border-[var(--line)]">
-            <div className="w-14 h-14 bg-white rounded-2xl shadow-sm border border-[var(--line)] flex items-center justify-center mb-4 text-[var(--gold)]">
-              <BarChart2 className="w-6 h-6" />
+          {operators.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr className="border-b border-[var(--line)] text-xs font-bold text-[var(--text-dim)] uppercase tracking-wider">
+                    <th className="pb-3 pr-4">Nama Operator</th>
+                    <th className="pb-3 px-4">Email</th>
+                    <th className="pb-3 pl-4 text-right">Role</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--line)]">
+                  {operators.map((op, idx) => (
+                    <tr key={idx} className="hover:bg-slate-50/70 transition-colors">
+                      <td className="py-3.5 pr-4 font-semibold text-[var(--ink)] flex items-center gap-2">
+                        <span className="w-5 text-xs font-mono text-[var(--text-dim)]">#{idx + 1}</span>
+                        {op.name}
+                      </td>
+                      <td className="py-3.5 px-4 text-[var(--text-dim)]">
+                        {op.email}
+                      </td>
+                      <td className="py-3.5 pl-4 text-right">
+                        <span className="text-xs font-bold bg-blue-50 text-blue-700 px-2.5 py-1 rounded-lg border border-blue-100 uppercase">
+                          {op.role}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-            <h3 className="text-base font-bold text-[var(--ink)] mb-1">{t('perf.auto_verify_title', 'Metrik Verifikasi Tiket Otomatis')}</h3>
-            <p className="text-[var(--text-dim)] text-xs max-w-sm leading-relaxed">
-              {t('perf.auto_verify_desc', 'Seluruh tiket yang masuk diverifikasi dan dialokasikan ke departemen terkait oleh operator Helpdesk sesuai standar operasional.')}
-            </p>
-          </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center flex-1 text-center py-12 px-6 bg-slate-50/50 rounded-xl border border-dashed border-[var(--line)]">
+              <div className="w-14 h-14 bg-white rounded-2xl shadow-sm border border-[var(--line)] flex items-center justify-center mb-4 text-[var(--gold)]">
+                <BarChart2 className="w-6 h-6" />
+              </div>
+              <h3 className="text-base font-bold text-[var(--ink)] mb-1">{t('perf.auto_verify_title', 'Metrik Verifikasi Tiket Otomatis')}</h3>
+              <p className="text-[var(--text-dim)] text-xs max-w-sm leading-relaxed">
+                {t('perf.auto_verify_desc', 'Seluruh tiket yang masuk diverifikasi dan dialokasikan ke departemen terkait oleh operator Helpdesk sesuai standar operasional.')}
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

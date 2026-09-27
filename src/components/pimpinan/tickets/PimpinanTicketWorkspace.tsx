@@ -4,6 +4,8 @@ import PimpinanTicketTable from "./PimpinanTicketTable";
 import { fetchClient } from '@/lib/apiClient';
 import { Search, Printer, AlertTriangle, CheckCircle2, Clock, Inbox } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 export default function PimpinanTicketWorkspace() {
   const { t, language } = useLanguage();
@@ -61,6 +63,25 @@ export default function PimpinanTicketWorkspace() {
     return tickets.filter(t => t.status === 'ESCALATED' || (t.sla_due && new Date(t.sla_due).getTime() < Date.now() && !['RESOLVED', 'CLOSED'].includes(t.status))).length;
   }, [tickets]);
 
+  const exportPDF = () => {
+    const doc = new jsPDF();
+    doc.text('Laporan Tiket IT Helpdesk', 14, 15);
+    const tableData = filteredTickets.map(t => [
+      t.ticket_num || '-',
+      t.reporter_name || t.reporters?.name || 'Unknown',
+      t.subject || t.title || '-',
+      t.status || '-',
+      t.category?.name || t.categories?.name || '-',
+      t.created_at ? new Date(t.created_at).toLocaleDateString() : '-'
+    ]);
+    autoTable(doc, {
+      head: [['No Tiket', 'Pelapor', 'Subjek', 'Status', 'Kategori', 'Tanggal']],
+      body: tableData,
+      startY: 20
+    });
+    doc.save('Laporan_Tiket.pdf');
+  };
+
   return (
     <div className="flex flex-col gap-6 w-full max-w-[1440px] mx-auto pb-10 animate-in fade-in slide-in-from-bottom-2 duration-300">
       {/* Page Header */}
@@ -70,7 +91,7 @@ export default function PimpinanTicketWorkspace() {
           <p className="text-[var(--text-dim)] text-sm font-medium">{t('pimpinan.report_desc', 'Pemantauan seluruh tiket pengaduan IT Helpdesk secara real-time.')}</p>
         </div>
         <button 
-          onClick={() => window.print()}
+          onClick={exportPDF}
           className="flex items-center gap-2 px-4 py-2.5 bg-white border border-[var(--line)] rounded-xl text-sm font-semibold text-[var(--ink)] hover:bg-[var(--paper-2)] transition-colors shadow-sm active:scale-95"
         >
           <Printer className="w-4 h-4 text-[var(--text-dim)]" />

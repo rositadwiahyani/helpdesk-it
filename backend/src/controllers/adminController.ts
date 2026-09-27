@@ -88,7 +88,7 @@ export const getAdminDashboard = async (req: Request, res: Response): Promise<vo
         if (stat === 'RESOLVED_BY_SYSTEM') {
           totalSolvedBySystem++;
         }
-        
+
         const isOpen = !['RESOLVED', 'CLOSED', 'DONE', 'RESOLVED_BY_SYSTEM'].includes(stat);
         const isClosed = !isOpen;
 
@@ -176,7 +176,8 @@ export const getAdminDashboard = async (req: Request, res: Response): Promise<vo
         growth: growth.toFixed(1),
         open: totalOpen,
         overdue: totalOverdue,
-        failedMessages: totalSolvedBySystem      },
+        failedMessages: totalSolvedBySystem
+      },
       recentLogs: combinedLogs.map(l => {
         let status = 'Update';
         let iconColor = 'bg-slate-100 text-slate-600';
@@ -219,7 +220,7 @@ export const getAdminDashboard = async (req: Request, res: Response): Promise<vo
 export const createStaff = async (req: Request, res: Response) => {
   try {
     const { password, ...payload } = req.body;
-    
+
     // Check if email already exists
     const { data: existing } = await supabaseAdmin.from('staff_profiles').select('id').eq('email', payload.email).single();
     if (existing) {
@@ -241,7 +242,7 @@ export const createStaff = async (req: Request, res: Response) => {
         userId = crypto.randomUUID();
       }
     }
-    
+
     payload.id = userId;
 
     const { data, error } = await supabaseAdmin.from('staff_profiles').insert([payload]).select().single();
