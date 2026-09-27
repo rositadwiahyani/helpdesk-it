@@ -69,7 +69,7 @@ export default function LoginPage() {
     <AuthCard
       title="Login Helpdesk Terpadu"
       description="Silakan masuk menggunakan akun resmi Anda."
-      footer={<p className="text-xs text-slate-500">Hanya untuk pengguna terdaftar.</p>}
+      footer={<p className="text-[14.5px] text-slate-500">Hanya untuk pengguna terdaftar.</p>}
     >
       <form onSubmit={handleLogin}>
         {/* Error */}
@@ -154,7 +154,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className={`w-full py-[13px] px-6 rounded-full text-white text-[14.5px] font-semibold flex items-center justify-center gap-2.5 transition-all duration-200 font-sans tracking-[0.02em] ${
+          className={`w-full py-[13px] px-6 rounded-full text-white text-[17px] font-semibold flex items-center justify-center gap-2.5 transition-all duration-200 font-sans tracking-[0.02em] ${
             loading
               ? 'bg-[#002D72]/50 cursor-not-allowed opacity-70 shadow-none'
               : 'bg-[linear-gradient(135deg,#1a56db_0%,#002D72_55%,#001C46_100%)] cursor-pointer opacity-100 shadow-[0_6px_24px_rgba(0,45,114,0.45)] hover:-translate-y-[2px] hover:shadow-[0_10px_30px_rgba(0,45,114,0.55)]'
@@ -169,12 +169,7 @@ export default function LoginPage() {
               Memproses...
             </>
           ) : (
-            <>
-              Masuk ke Sistem
-              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </>
+            <>Masuk ke Sistem</>
           )}
         </button>
       </form>
