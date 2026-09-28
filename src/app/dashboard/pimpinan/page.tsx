@@ -41,9 +41,6 @@ export default async function PimpinanDashboard() {
         <div className="lg:col-span-2 flex flex-col gap-6 w-full">
           {/* Ticket Trend Chart */}
           <TicketTrendChart data={dashboardData.ticketTrend} />
-          
-          {/* Recent Ticket Activity */}
-          <RecentTicketActivityTable data={dashboardData.recentLogs} />
         </div>
 
         {/* Right Column (Narrower - spans 1 col) */}
