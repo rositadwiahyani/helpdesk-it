@@ -29,8 +29,8 @@ export default function AuthCard({ title, description, children, footer }: AuthC
       </div>
 
       {/* ─── Form Area ─── */}
-      <div className="flex-1 flex flex-col items-center justify-center w-full pb-[220px] pt-[80px] z-20 relative">
-        <div className="bg-white/60 backdrop-blur-[20px] rounded-[28px] p-12 w-full max-w-[440px] flex flex-col items-center shadow-[0_20px_40px_rgba(0,45,114,0.05),0_1px_3px_rgba(0,0,0,0.05)] border border-white/80">
+      <div className="flex-1 flex flex-col items-center justify-center w-full py-8 z-20 relative">
+        <div className="bg-white/60 backdrop-blur-[20px] rounded-[28px] p-12 w-full max-w-[440px] flex flex-col items-center shadow-[0_20px_40px_rgba(0,45,114,0.05),0_1px_3px_rgba(0,0,0,0.05)] border border-white/80 z-30">
           
           {/* Logo */}
           <div className="w-[68px] h-[68px] rounded-[18px] bg-[linear-gradient(145deg,#1a56db,#002D72)] flex items-center justify-center mb-5 shadow-[0_8px_32px_rgba(0,45,114,0.35)]">
