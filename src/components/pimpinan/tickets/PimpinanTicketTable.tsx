@@ -111,7 +111,8 @@ export default function PimpinanTicketTable({
                 const reporterInfo = t.nim_nip || t.reporters?.phone || t.phone || '';
                 const categoryName = translateCategoryName(t.category?.name || t.categories?.name || '-', language);
                 const subject = translateCategoryName(translateTicketSubject(t.subject || t.title || (language === 'en' ? 'Untitled' : 'Tanpa Judul'), language), language);
-                const technicianName = t.technician?.name || t.assigned_technician?.name || '-';
+                // API mengembalikan alias `tech` dari query: tech:staff_profiles!tickets_tech_id_fkey(name)
+                const technicianName = t.tech?.name || t.technician?.name || t.assigned_technician?.name || '-';
 
                 return (
                   <tr key={t.id} className="hover:bg-slate-50/80 transition-colors">
