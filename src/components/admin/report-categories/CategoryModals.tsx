@@ -12,6 +12,7 @@ interface ModalProps {
 
 export function AddCategoryModal({ isOpen, onClose, onSuccess }: ModalProps) {
   const { t } = useLanguage();
+  const { showToast } = React.useContext(TreeContext) || {};
   const [name, setName] = useState('');
   const [parentId, setParentId] = useState('');
   const [botContent, setBotContent] = useState('');
@@ -28,8 +29,6 @@ export function AddCategoryModal({ isOpen, onClose, onSuccess }: ModalProps) {
   }, [isOpen]);
 
   if (!isOpen) return null;
-
-  const { showToast } = React.useContext(TreeContext) || {};
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,14 +135,13 @@ export function AddCategoryModal({ isOpen, onClose, onSuccess }: ModalProps) {
 
 export function AddSubcategoryModal({ isOpen, onClose, onSuccess, categoryId }: ModalProps & { categoryId: string | null }) {
   const { t } = useLanguage();
+  const { showToast } = React.useContext(TreeContext) || {};
   const [name, setName] = useState('');
   const [botContent, setBotContent] = useState('');
   const [defaultPriority, setDefaultPriority] = useState('MEDIUM');
   const [loading, setLoading] = useState(false);
 
   if (!isOpen) return null;
-
-  const { showToast } = React.useContext(TreeContext) || {};
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -231,6 +229,7 @@ export function AddSubcategoryModal({ isOpen, onClose, onSuccess, categoryId }: 
 
 export function EditItemModal({ isOpen, onClose, onSuccess, target }: ModalProps & { target: any }) {
   const { t } = useLanguage();
+  const { showToast } = React.useContext(TreeContext) || {};
   const [name, setName] = useState('');
   const [botContent, setBotContent] = useState('');
   const [defaultPriority, setDefaultPriority] = useState('MEDIUM');
@@ -252,8 +251,6 @@ export function EditItemModal({ isOpen, onClose, onSuccess, target }: ModalProps
   }, [isOpen, target]);
 
   if (!isOpen || !target) return null;
-
-  const { showToast } = React.useContext(TreeContext) || {};
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

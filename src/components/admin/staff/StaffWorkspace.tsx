@@ -44,7 +44,7 @@ export default function StaffWorkspace() {
   const fetchData = async () => {
     setLoading(true);
     const { data: deptData } = await supabase.from('departments').select('*').order('name');
-    const { data: staffData } = await supabase.from('staff_profiles').select('*, dept:departments(name)').in('role', ['teknisi', 'operator', 'admin']).order('name');
+    const { data: staffData } = await supabase.from('staff_profiles').select('*, dept:departments(name)').in('role', ['teknisi', 'operator', 'admin', 'agent', 'pimpinan']).order('name');
     
     if (deptData) setDepartments(deptData);
     if (staffData) setAgents(staffData);

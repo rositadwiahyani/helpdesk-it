@@ -221,53 +221,60 @@ export const createStaff = async (req: Request, res: Response) => {
   try {
     const { password, ...payload } = req.body;
 
-    // Check if email already exists
-    const { data: existing } = await supabaseAdmin.from('staff_profiles').select('id').eq('email', payload.email).single();
+    if (!payload.email) {
+      return res.status(400).json({ success: false, message: 'Email wajib diisi' });
+    }
+    if (!payload.name) {
+      return res.status(400).json({ success: false, message: 'Nama wajib diisi' });
+    }
+
+    // Check if email already exists (maybeSingle avoids error when no row found)
+    const { data: existing } = await supabaseAdmin.from('staff_profiles').select('id').eq('email', payload.email).maybeSingle();
     if (existing) {
-      return res.status(400).json({ error: 'Email sudah terdaftar' });
+      return res.status(400).json({ success: false, message: 'Email sudah terdaftar. Gunakan email lain.' });
     }
 
-    // Create auth user
-    let userId = payload.id;
-    if (password) {
-      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-        email: payload.email,
-        password: password,
-        email_confirm: true
-      });
-      if (authError) throw authError;
-      userId = authData.user.id;
-    } else {
-      if (!userId) {
-        userId = crypto.randomUUID();
-      }
+    // Create Supabase Auth user (required for login capability)
+    const userPassword = password || 'Password123!';
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      email: payload.email,
+      password: userPassword,
+      email_confirm: true, // auto-confirm so user can login immediately
+    });
+
+    if (authError) {
+      console.error('Auth user creation failed:', authError);
+      return res.status(400).json({ success: false, message: authError.message });
     }
 
+    const userId = authData.user.id;
     payload.id = userId;
 
+    // Insert staff profile linked to auth user
     const { data, error } = await supabaseAdmin.from('staff_profiles').insert([payload]).select().single();
     if (error) {
-      // Rollback auth user creation if profile insert fails
-      if (password && userId) {
-        await supabaseAdmin.auth.admin.deleteUser(userId);
-      }
+      // Rollback: delete auth user if profile insert fails
+      await supabaseAdmin.auth.admin.deleteUser(userId);
+      console.error('Staff profile insert failed:', error);
       throw error;
     }
-    res.json(data);
+
+    res.status(201).json({ success: true, data });
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    console.error('createStaff error:', error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
 export const updateStaff = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const payload = req.body;
+    const { password, ...payload } = req.body; // exclude password from profile update
     const { data, error } = await supabaseAdmin.from('staff_profiles').update(payload).eq('id', id).select().single();
     if (error) throw error;
-    res.json(data);
+    res.json({ success: true, data });
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 

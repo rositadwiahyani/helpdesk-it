@@ -110,7 +110,10 @@ export default function AgentModal({ isOpen, onClose, onSuccess, showToast, agen
             <label className="block text-sm text-gray-600 mb-1">{t('profile.role')}</label>
             <select value={role} onChange={(e) => setRole(e.target.value)} className="w-full border border-gray-300 rounded p-2 text-sm">
               <option value="admin">Administrator</option>
-              <option value="agent">Agent (Operator)</option>
+              <option value="operator">Operator</option>
+              <option value="teknisi">Teknisi</option>
+              <option value="agent">Agent</option>
+              <option value="pimpinan">Pimpinan</option>
             </select>
           </div>
           <div>
