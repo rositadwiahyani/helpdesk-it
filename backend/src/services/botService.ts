@@ -603,15 +603,21 @@ async function handleInputTicketDetail(sender: string, input: string, currentDat
 
 async function handleAskAttachment(sender: string, input: string, currentData: any, mediaUrl?: string) {
   let updatedData = { ...currentData };
-  
+
   if (mediaUrl) {
-    // Media diterima
+    // ✅ Media/gambar diterima — simpan URL dan lanjutkan alur
     updatedData.attachment_url = mediaUrl;
+    console.log(`✅ Media diterima dari ${sender}: ${mediaUrl}`);
   } else {
-    // Tidak ada media
-    if (input.toLowerCase() !== 'tidak' && input.toLowerCase() !== 'tdk' && input !== '-') {
-      // Boleh jadi pesan salah atau mencoba menjelaskan. Biarkan saja anggap no attachment.
+    const inputLower = input.toLowerCase().trim();
+
+    // Jika teks juga kosong (terjadi saat WASender kirim media tanpa caption)
+    // Tidak ada yang bisa diproses, tunggu input berikutnya
+    if (!inputLower) {
+      return;
     }
+
+    // Jika bukan kata penolakan, tetap lanjutkan (anggap tidak ada lampiran)
   }
 
   const { data: reporter } = await supabase

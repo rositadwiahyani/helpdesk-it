@@ -6,7 +6,7 @@ const router = Router();
 router.post('/whatsapp', async (req: Request, res: Response) => {
   try {
     console.log('\n--- Menerima Webhook dari WaSender ---');
-    
+
     const event = req.body?.event;
     const msgData = req.body?.data?.messages;
 
@@ -17,16 +17,27 @@ router.post('/whatsapp', async (req: Request, res: Response) => {
 
     // Ekstrak sender dan pesan dari struktur payload asli WaSender
     const sender: string = msgData.key?.cleanedSenderPn || msgData.key?.senderPn?.replace('@s.whatsapp.net', '');
+
+    // Teks pesan (bisa kosong saat user kirim gambar/media)
     const message: string = msgData.messageBody || msgData.message?.conversation || '';
-    const mediaUrl: string | undefined = msgData.message?.imageMessage?.url || msgData.message?.documentMessage?.url || undefined;
 
-    console.log(`Pengirim : ${sender}`);
-    console.log(`Pesan    : ${message}`);
+    // URL media: gambar atau dokumen
+    const mediaUrl: string | undefined =
+      msgData.message?.imageMessage?.url ||
+      msgData.message?.documentMessage?.url ||
+      msgData.message?.videoMessage?.url ||
+      undefined;
 
-    if (sender && message) {
+    console.log(`Pengirim  : ${sender}`);
+    console.log(`Pesan     : ${message || '(kosong - kemungkinan media)'}`);
+    console.log(`Media URL : ${mediaUrl || 'tidak ada'}`);
+
+    // Proses jika ada sender DAN (ada pesan teks ATAU ada media)
+    if (sender && (message || mediaUrl)) {
       handleIncomingMessage(sender, message, mediaUrl);
     } else {
       console.log('⚠️ Gagal mengekstrak sender/message dari payload.');
+      console.log('DEBUG Payload:', JSON.stringify(req.body, null, 2));
     }
 
     // Selalu kembalikan 200 OK dengan cepat ke WASender
