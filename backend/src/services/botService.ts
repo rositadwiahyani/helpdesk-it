@@ -626,7 +626,7 @@ async function handleAskAttachment(sender: string, input: string, currentData: a
       // 1. Download file dari URL (biasanya mmg.whatsapp.net CDN)
       const response = await axios.get(mediaUrl, { responseType: 'arraybuffer' });
       const buffer = response.data;
-      const contentType = response.headers['content-type'] || 'image/jpeg';
+      const contentType = (response.headers['content-type'] as string) || 'image/jpeg';
       
       // Ambil ekstensi dari content-type, default ke .jpg
       const ext = contentType.split('/')[1] || 'jpg';
