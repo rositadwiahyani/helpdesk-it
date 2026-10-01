@@ -204,7 +204,7 @@ export async function handleIncomingMessage(sender: string, messageText: string,
       break;
 
     case 'ASK_ATTACHMENT':
-      await handleAskAttachment(sender, cleanInput, currentData, mediaUrl, mediaKey, mediaType);
+      await handleAskAttachment(sender, cleanInput, currentData, mediaUrl, mediaKey, mediaType, msgData);
       break;
 
     case 'ASK_REUSE_INFO':
@@ -617,7 +617,7 @@ async function handleInputTicketDetail(sender: string, input: string, currentDat
   await sendMessage(sender, text);
 }
 
-async function handleAskAttachment(sender: string, input: string, currentData: any, mediaUrl?: string, mediaKey?: string, mediaType?: string) {
+async function handleAskAttachment(sender: string, input: string, currentData: any, mediaUrl?: string, mediaKey?: string, mediaType?: string, msgData?: any) {
   let updatedData = { ...currentData };
 
   if (mediaUrl && mediaKey) {
