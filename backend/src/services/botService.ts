@@ -78,7 +78,7 @@ interface WASession {
   updated_at?: string;
 }
 
-export async function handleIncomingMessage(sender: string, messageText: string, mediaUrl?: string) {
+export async function handleIncomingMessage(sender: string, messageText: string, mediaUrl?: string, mediaKey?: string, mediaType?: string) {
   const cleanInput = messageText.trim();
 
   // 0. Jalankan dua query awal secara PARALEL (bukan serial) untuk mengurangi latensi
@@ -204,7 +204,7 @@ export async function handleIncomingMessage(sender: string, messageText: string,
       break;
 
     case 'ASK_ATTACHMENT':
-      await handleAskAttachment(sender, cleanInput, currentData, mediaUrl);
+      await handleAskAttachment(sender, cleanInput, currentData, mediaUrl, mediaKey, mediaType);
       break;
 
     case 'ASK_REUSE_INFO':
@@ -617,28 +617,52 @@ async function handleInputTicketDetail(sender: string, input: string, currentDat
   await sendMessage(sender, text);
 }
 
-async function handleAskAttachment(sender: string, input: string, currentData: any, mediaUrl?: string) {
+async function handleAskAttachment(sender: string, input: string, currentData: any, mediaUrl?: string, mediaKey?: string, mediaType?: string) {
   let updatedData = { ...currentData };
 
-  if (mediaUrl) {
+  if (mediaUrl && mediaKey) {
     try {
-      console.log(`Mengunduh media dari: ${mediaUrl}`);
-      // 1. Download file dari URL (biasanya mmg.whatsapp.net CDN)
-      const response = await axios.get(mediaUrl, { responseType: 'arraybuffer' });
-      const buffer = response.data;
-      let contentType = (response.headers['content-type'] as string) || 'image/jpeg';
-      
-      // WhatsApp CDN terkadang mengembalikan application/octet-stream untuk gambar
-      // Supabase menolak mime type ini, jadi kita paksa menjadi image/jpeg
-      if (contentType === 'application/octet-stream') {
+      // 1. Decrypt media via WASender API
+      // URL dari payload WhatsApp bersifat encrypted, tidak bisa di-download langsung.
+      // Kita harus minta WASender untuk decrypt dan memberikan publicUrl yang bisa di-download.
+      console.log(`Mendekripsi media via WASender (type: ${mediaType || 'image'})...`);
+      const decryptResponse = await axios.post(
+        `${process.env.WASENDER_BASE_URL || 'https://www.wasenderapi.com/api'}/decrypt-media`,
+        {
+          url: mediaUrl,
+          mediaKey: mediaKey,
+          mediaType: mediaType || 'image',
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${process.env.WASENDER_BEARER_TOKEN}`,
+          },
+          timeout: 30000,
+        }
+      );
+
+      const decryptedUrl: string = decryptResponse.data?.publicUrl || decryptResponse.data?.url;
+      if (!decryptedUrl) {
+        throw new Error(`WASender decrypt-media tidak mengembalikan URL. Response: ${JSON.stringify(decryptResponse.data)}`);
+      }
+      console.log(`✅ Media berhasil didekripsi, mengunduh dari: ${decryptedUrl}`);
+
+      // 2. Download file binary dari URL hasil decrypt
+      const downloadResponse = await axios.get(decryptedUrl, { responseType: 'arraybuffer', timeout: 30000 });
+      const buffer = downloadResponse.data;
+      let contentType = (downloadResponse.headers['content-type'] as string) || 'image/jpeg';
+
+      // Supabase menolak application/octet-stream, paksa jadi image/jpeg
+      if (contentType === 'application/octet-stream' || !contentType.startsWith('image/')) {
         contentType = 'image/jpeg';
       }
-      
-      // Ambil ekstensi dari content-type, default ke .jpg
+
+      // Ambil ekstensi dari content-type, default ke jpg
       const ext = contentType.split('/')[1] || 'jpg';
-      
-      // 2. Upload ke Supabase Storage (bucket: ticket-attachments)
-      // Menggunakan struktur folder: {nomor_wa}/{timestamp}.{ext}
+
+      // 3. Upload ke Supabase Storage (bucket: ticket-attachments)
+      // Struktur folder: {nomor_wa}/{timestamp}.{ext}
       const fileName = `${sender}/${Date.now()}.${ext}`;
 
       const { data: uploadData, error: uploadError } = await supabase.storage
@@ -653,14 +677,14 @@ async function handleAskAttachment(sender: string, input: string, currentData: a
         throw uploadError;
       }
 
-      // 3. Dapatkan Public URL
+      // 4. Dapatkan Public URL Supabase
       const { data: publicUrlData } = supabase.storage
         .from('ticket-attachments')
         .getPublicUrl(fileName);
 
-      // ✅ Simpan URL Supabase (permanen) ke database, BUKAN URL CDN WhatsApp yang bisa expired
+      // ✅ Simpan URL Supabase (permanen) ke session data
       updatedData.attachment_url = publicUrlData.publicUrl;
-      console.log(`✅ Media berhasil disimpan ke bucket: ${publicUrlData.publicUrl}`);
+      console.log(`✅ Media berhasil disimpan ke Supabase: ${publicUrlData.publicUrl}`);
     } catch (error) {
       console.error('Error saat memproses attachment:', error);
       return sendMessage(sender, `⚠️ Maaf, terjadi kesalahan saat menyimpan lampiran Anda. Silakan coba kirim ulang gambar, atau ketik *Batal* untuk mengakhiri.`);
