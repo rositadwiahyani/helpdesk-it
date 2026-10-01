@@ -626,7 +626,13 @@ async function handleAskAttachment(sender: string, input: string, currentData: a
       // 1. Download file dari URL (biasanya mmg.whatsapp.net CDN)
       const response = await axios.get(mediaUrl, { responseType: 'arraybuffer' });
       const buffer = response.data;
-      const contentType = (response.headers['content-type'] as string) || 'image/jpeg';
+      let contentType = (response.headers['content-type'] as string) || 'image/jpeg';
+      
+      // WhatsApp CDN terkadang mengembalikan application/octet-stream untuk gambar
+      // Supabase menolak mime type ini, jadi kita paksa menjadi image/jpeg
+      if (contentType === 'application/octet-stream') {
+        contentType = 'image/jpeg';
+      }
       
       // Ambil ekstensi dari content-type, default ke .jpg
       const ext = contentType.split('/')[1] || 'jpg';
