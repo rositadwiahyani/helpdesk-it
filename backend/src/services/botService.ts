@@ -3,22 +3,36 @@ import { sendMessage } from './wasender';
 import fs from 'fs';
 import path from 'path';
 
+// =========================================================
+// IN-MEMORY CACHE untuk bot settings
+// Dibaca sekali dari file saat server start, BUKAN setiap pesan
+// masuk. Ini mencegah fs.readFileSync memblokir event loop.
+// =========================================================
+let _botSettingsCache: Record<string, any> | null = null;
 
-function getTriggerWord(): string {
-  const settings = getBotSettings();
-  return settings.trigger_word || 'HaloDesk';
-}
-
-function getBotSettings() {
+function getBotSettings(): Record<string, any> {
+  if (_botSettingsCache !== null) return _botSettingsCache;
   try {
     const filePath = path.join(__dirname, '../bot_settings.json');
     if (fs.existsSync(filePath)) {
-      return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      _botSettingsCache = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      return _botSettingsCache!;
     }
   } catch (e) {
     console.error('Error reading bot settings:', e);
   }
-  return {};
+  _botSettingsCache = {};
+  return _botSettingsCache;
+}
+
+/** Invalidate cache saat settings diubah dari dashboard admin */
+export function invalidateBotSettingsCache() {
+  _botSettingsCache = null;
+  console.log('[BotSettings] Cache di-invalidate, akan dibaca ulang.');
+}
+
+function getTriggerWord(): string {
+  return getBotSettings().trigger_word || 'HaloDesk';
 }
 
 // Helper: Ambil waktu WIB (UTC+7)
@@ -66,24 +80,25 @@ interface WASession {
 export async function handleIncomingMessage(sender: string, messageText: string, mediaUrl?: string) {
   const cleanInput = messageText.trim();
 
-  // 0. Cek apakah pengguna diblokir
-  const { data: reporter } = await supabase
-    .from('reporters')
-    .select('status, name, nim_nip, unit, reporter_type')
-    .eq('phone', sender)
-    .single();
+  // 0. Jalankan dua query awal secara PARALEL (bukan serial) untuk mengurangi latensi
+  const [{ data: reporter }, { data: waitingTickets }] = await Promise.all([
+    supabase
+      .from('reporters')
+      .select('status, name, nim_nip, unit, reporter_type')
+      .eq('phone', sender)
+      .single(),
+    supabase
+      .from('tickets')
+      .select('*')
+      .eq('phone', sender)
+      .eq('status', 'WAITING CONFIRMATION')
+  ]);
 
   if (reporter?.status === 'Terblokir') {
     return sendMessage(sender, "⚠️ Maaf, nomor Anda saat ini diblokir dari sistem IT Helpdesk karena pelanggaran ketentuan layanan.");
   }
 
   // 0.5. Cek Tiket Menunggu Konfirmasi (Auto-Confirm)
-  const { data: waitingTickets } = await supabase
-    .from('tickets')
-    .select('*')
-    .eq('phone', sender)
-    .eq('status', 'WAITING CONFIRMATION');
-
   if (waitingTickets && waitingTickets.length > 0) {
     const isConfirmWord = ['selesai', 'ok', 'oke', 'sudah', 'thanks', 'terima kasih', 'mantap', 'ya'].some(w => cleanInput.toLowerCase().includes(w));
     if (isConfirmWord) {
