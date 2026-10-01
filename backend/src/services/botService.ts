@@ -297,7 +297,7 @@ async function handleMainMenu(sender: string, input: string) {
         let text = `🔍 Kami menemukan beberapa panduan yang mungkin relevan dengan "${input}":\n\n`;
         kbArticles.forEach((article, idx) => {
           text += `${idx + 1}. *${article.title}*\n`;
-          text += `🔗 http://localhost:3000/knowledgebase/article/${article.slug}\n\n`;
+          text += `🔗 ${process.env.FRONTEND_URL || 'http://localhost:3000'}/knowledgebase/article/${article.slug}\n\n`;
         });
         text += `_Ketik *${getTriggerWord()}* untuk melihat menu layanan lainnya._`;
         return sendMessage(sender, text);
@@ -470,7 +470,7 @@ async function handleDynamicCategorySelect(sender: string, input: string, parent
       
       let text = `*Panduan untuk: ${selectedCat.name}*\n\n`;
       text += `Untuk melihat langkah-langkah penyelesaiannya, silakan kunjungi halaman Basis Pengetahuan kami pada tautan berikut:\n`;
-      text += `🔗 http://localhost:3000/knowledgebase/article/${kbData.slug}\n\n`;
+      text += `🔗 ${process.env.FRONTEND_URL || 'http://localhost:3000'}/knowledgebase/article/${kbData.slug}\n\n`;
       text += `Apakah panduan di atas berhasil menyelesaikan kendala Anda?\n`;
       text += `1. ✅ Ya, kendala teratasi\n`;
       text += `2. ❌ Tidak, saya ingin membuat tiket ke Teknisi\n\n`;
