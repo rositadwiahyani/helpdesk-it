@@ -2,6 +2,7 @@ import { supabase } from '../config/supabase';
 import { sendMessage } from './wasender';
 import fs from 'fs';
 import path from 'path';
+import axios from 'axios';
 
 // =========================================================
 // IN-MEMORY CACHE untuk bot settings
@@ -620,9 +621,42 @@ async function handleAskAttachment(sender: string, input: string, currentData: a
   let updatedData = { ...currentData };
 
   if (mediaUrl) {
-    // ✅ Media/gambar diterima — simpan URL dan lanjutkan alur
-    updatedData.attachment_url = mediaUrl;
-    console.log(`✅ Media diterima dari ${sender}: ${mediaUrl}`);
+    try {
+      console.log(`Mengunduh media dari: ${mediaUrl}`);
+      // 1. Download file dari URL (biasanya mmg.whatsapp.net CDN)
+      const response = await axios.get(mediaUrl, { responseType: 'arraybuffer' });
+      const buffer = response.data;
+      const contentType = response.headers['content-type'] || 'image/jpeg';
+      
+      // Ambil ekstensi dari content-type, default ke .jpg
+      const ext = contentType.split('/')[1] || 'jpg';
+      const fileName = `${sender}_${Date.now()}.${ext}`;
+
+      // 2. Upload ke Supabase Storage (bucket: ticket-attachments)
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('ticket-attachments')
+        .upload(fileName, buffer, {
+          contentType,
+          upsert: false
+        });
+
+      if (uploadError) {
+        console.error('Gagal upload ke Supabase Storage:', uploadError);
+        throw uploadError;
+      }
+
+      // 3. Dapatkan Public URL
+      const { data: publicUrlData } = supabase.storage
+        .from('ticket-attachments')
+        .getPublicUrl(fileName);
+
+      // ✅ Simpan URL Supabase (permanen) ke database, BUKAN URL CDN WhatsApp yang bisa expired
+      updatedData.attachment_url = publicUrlData.publicUrl;
+      console.log(`✅ Media berhasil disimpan ke bucket: ${publicUrlData.publicUrl}`);
+    } catch (error) {
+      console.error('Error saat memproses attachment:', error);
+      return sendMessage(sender, `⚠️ Maaf, terjadi kesalahan saat menyimpan lampiran Anda. Silakan coba kirim ulang gambar, atau ketik *Batal* untuk mengakhiri.`);
+    }
   } else {
     const inputLower = input.toLowerCase().trim();
 
