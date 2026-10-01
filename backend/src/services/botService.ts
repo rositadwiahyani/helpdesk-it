@@ -635,6 +635,8 @@ async function handleAskAttachment(sender: string, input: string, currentData: a
       }
       
       // Ambil ekstensi dari content-type, default ke .jpg
+      const ext = contentType.split('/')[1] || 'jpg';
+      
       // 2. Upload ke Supabase Storage (bucket: ticket-attachments)
       // Menggunakan struktur folder: {nomor_wa}/{timestamp}.{ext}
       const fileName = `${sender}/${Date.now()}.${ext}`;
