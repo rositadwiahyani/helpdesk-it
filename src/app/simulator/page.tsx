@@ -52,7 +52,7 @@ export default function SimulatorPage() {
     if (activeNumber) {
       const fetchMsgs = async () => {
         try {
-          const res = await fetch(`http://localhost:5000/api/simulator/messages/${activeNumber}`);
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api'}/simulator/messages/${activeNumber}`);
           const json = await res.json();
           if (json.success) {
             setMessages(json.data);
@@ -101,7 +101,7 @@ export default function SimulatorPage() {
     setInputText('');
 
     try {
-      await fetch(`http://localhost:5000/api/simulator/send`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api'}/simulator/send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 

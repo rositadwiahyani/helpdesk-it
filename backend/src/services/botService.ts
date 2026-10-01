@@ -608,9 +608,9 @@ async function handleInputTicketDetail(sender: string, input: string, currentDat
     updated_at: new Date().toISOString()
   }).eq('phone', sender);
 
-  let text = `📸 *LAMPIRAN / SCREENSHOT*\n\n`;
-  text += `Apakah Anda memiliki bukti foto/screenshot terkait kendala ini?\n`;
-  text += `Silakan kirimkan gambarnya sekarang.\n\n`;
+  let text = `📎 *LAMPIRAN / SCREENSHOT*\n\n`;
+  text += `Apakah Anda memiliki bukti terkait kendala ini?\n`;
+  text += `Silakan kirimkan *foto/screenshot* atau *dokumen PDF* sekarang.\n\n`;
   text += `_Jika tidak ada, balas dengan kata *Tidak*_\n`;
   text += `_Ketik *Batal* untuk mengakhiri._`;
 
@@ -651,15 +651,49 @@ async function handleAskAttachment(sender: string, input: string, currentData: a
       // 2. Download file binary dari URL hasil decrypt
       const downloadResponse = await axios.get(decryptedUrl, { responseType: 'arraybuffer', timeout: 30000 });
       const buffer = downloadResponse.data;
-      let contentType = (downloadResponse.headers['content-type'] as string) || 'image/jpeg';
+      let contentType = (downloadResponse.headers['content-type'] as string) || '';
 
-      // Supabase menolak application/octet-stream, paksa jadi image/jpeg
-      if (contentType === 'application/octet-stream' || !contentType.startsWith('image/')) {
+      // Tentukan content-type yang benar berdasarkan tipe media dari WhatsApp
+      // WhatsApp selalu mengirim file terenkripsi dengan content-type generic (octet-stream)
+      // sehingga kita harus menebak dari mediaType yang dikirim di webhook
+      if (!contentType || contentType === 'application/octet-stream') {
+        if (mediaType === 'document') {
+          // Cek MIME type dari msgData jika tersedia (WhatsApp menyertakan mimetype di documentMessage)
+          const mimeType: string = msgData?.message?.documentMessage?.mimetype || '';
+          if (mimeType.includes('pdf')) {
+            contentType = 'application/pdf';
+          } else if (mimeType.includes('word') || mimeType.includes('docx')) {
+            contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+          } else if (mimeType.includes('excel') || mimeType.includes('xlsx')) {
+            contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+          } else if (mimeType) {
+            contentType = mimeType;
+          } else {
+            contentType = 'application/pdf'; // default dokumen = pdf
+          }
+        } else if (mediaType === 'video') {
+          contentType = 'video/mp4';
+        } else {
+          contentType = 'image/jpeg'; // default media = gambar
+        }
+      } else if (!contentType.startsWith('image/') && !contentType.startsWith('application/') && !contentType.startsWith('video/')) {
+        // Content-type tidak dikenal, fallback ke image/jpeg
         contentType = 'image/jpeg';
       }
 
-      // Ambil ekstensi dari content-type, default ke jpg
-      const ext = contentType.split('/')[1] || 'jpg';
+      // Tentukan ekstensi file dari content-type
+      const mimeToExt: Record<string, string> = {
+        'image/jpeg': 'jpg',
+        'image/png': 'png',
+        'image/gif': 'gif',
+        'image/webp': 'webp',
+        'application/pdf': 'pdf',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
+        'video/mp4': 'mp4',
+      };
+      const ext = mimeToExt[contentType] || contentType.split('/')[1]?.split(';')[0] || 'bin';
+      console.log(`Tipe file terdeteksi: ${contentType} (.${ext})`);
 
       // 3. Upload ke Supabase Storage (bucket: ticket-attachments)
       // Struktur folder: {nomor_wa}/{timestamp}.{ext}
@@ -687,7 +721,7 @@ async function handleAskAttachment(sender: string, input: string, currentData: a
       console.log(`✅ Media berhasil disimpan ke Supabase: ${publicUrlData.publicUrl}`);
     } catch (error) {
       console.error('Error saat memproses attachment:', error);
-      return sendMessage(sender, `⚠️ Maaf, terjadi kesalahan saat menyimpan lampiran Anda. Silakan coba kirim ulang gambar, atau ketik *Batal* untuk mengakhiri.`);
+      return sendMessage(sender, `⚠️ Maaf, terjadi kesalahan saat menyimpan lampiran Anda. Silakan coba kirim ulang gambar/PDF, atau ketik *Batal* untuk mengakhiri.`);
     }
   } else {
     const inputLower = input.toLowerCase().trim();
