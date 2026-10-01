@@ -25,12 +25,16 @@ export async function sendMessage(to: string, text: string): Promise<SendMessage
 
   try {
     const response = await axios.post<SendMessageResponse>(
-      `${process.env.WASENDER_BASE_URL}/send-message`,
+      `${process.env.WASENDER_BASE_URL || 'https://www.wasenderapi.com/api'}/send-message`,
       {
-        instance_id: process.env.WASENDER_INSTANCE_ID,
-        api_key: process.env.WASENDER_API_KEY,
         to: to,
-        message: text,
+        text: text, // Sandbox API expects 'text', not 'message'
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${process.env.WASENDER_BEARER_TOKEN}`,
+        },
       }
     );
     return response.data;
