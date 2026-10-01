@@ -389,7 +389,7 @@ async function showDynamicCategoryMenu(sender: string, parentId: number | null, 
     text += `${index + 1}. ${cat.name}\n`;
   });
   text += `${categories.length + 1}. 📝 Lainnya (Buat Tiket)\n`;
-  text += "\n_Balas angka pilihan Anda_\n_Ketik *0* untuk kembali ke menu awal atau *${getTriggerWord()}* untuk reset._";
+  text += `\n_Balas angka pilihan Anda_\n_Ketik *0* untuk kembali ke menu awal atau *${getTriggerWord()}* untuk reset._`;
 
   await sendMessage(sender, text);
 }

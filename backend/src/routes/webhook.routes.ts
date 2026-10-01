@@ -5,12 +5,28 @@ const router = Router();
 
 router.post('/whatsapp', async (req: Request, res: Response) => {
   try {
-    const { sender, message, url, media } = req.body;
-    const mediaUrl = url || media || undefined;
+    console.log('\n--- Menerima Webhook dari WaSender ---');
+    
+    const event = req.body?.event;
+    const msgData = req.body?.data?.messages;
+
+    // Hanya proses event messages.received dan bukan pesan dari bot sendiri
+    if (event !== 'messages.received' || !msgData || msgData.key?.fromMe === true) {
+      return res.status(200).json({ status: 'ignored' });
+    }
+
+    // Ekstrak sender dan pesan dari struktur payload asli WaSender
+    const sender: string = msgData.key?.cleanedSenderPn || msgData.key?.senderPn?.replace('@s.whatsapp.net', '');
+    const message: string = msgData.messageBody || msgData.message?.conversation || '';
+    const mediaUrl: string | undefined = msgData.message?.imageMessage?.url || msgData.message?.documentMessage?.url || undefined;
+
+    console.log(`Pengirim : ${sender}`);
+    console.log(`Pesan    : ${message}`);
 
     if (sender && message) {
-      // Jalankan logika bot secara async (tidak menahan response HTTP)
       handleIncomingMessage(sender, message, mediaUrl);
+    } else {
+      console.log('⚠️ Gagal mengekstrak sender/message dari payload.');
     }
 
     // Selalu kembalikan 200 OK dengan cepat ke WASender
@@ -21,4 +37,4 @@ router.post('/whatsapp', async (req: Request, res: Response) => {
   }
 });
 
-export default router;
+export default router;
