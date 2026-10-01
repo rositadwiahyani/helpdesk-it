@@ -27,15 +27,22 @@ export default function PimpinanPerformancePage() {
       .finally(() => setLoadingTickets(false));
 
     // Ambil semua operator & agent dari staff_profiles
-    supabase
-      .from('staff_profiles')
-      .select('id, name, email, role')
-      .in('role', ['operator', 'teknisi', 'agent'])
-      .then(({ data, error }) => {
+    const fetchStaff = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('staff_profiles')
+          .select('id, name, email, role')
+          .in('role', ['operator', 'teknisi', 'agent']);
+        
         if (error) console.error('Gagal mengambil data staff:', error);
         if (data) setStaffList(data);
-      })
-      .finally(() => setLoadingStaff(false));
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoadingStaff(false);
+      }
+    };
+    fetchStaff();
   }, []);
 
   // Hitung statistik kinerja berdasarkan tiket
