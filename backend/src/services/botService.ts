@@ -78,7 +78,7 @@ interface WASession {
   updated_at?: string;
 }
 
-export async function handleIncomingMessage(sender: string, messageText: string, mediaUrl?: string, mediaKey?: string, mediaType?: string) {
+export async function handleIncomingMessage(sender: string, messageText: string, mediaUrl?: string, mediaKey?: string, mediaType?: string, msgData?: any) {
   const cleanInput = messageText.trim();
 
   // 0. Jalankan dua query awal secara PARALEL (bukan serial) untuk mengurangi latensi
@@ -629,9 +629,9 @@ async function handleAskAttachment(sender: string, input: string, currentData: a
       const decryptResponse = await axios.post(
         `${process.env.WASENDER_BASE_URL || 'https://www.wasenderapi.com/api'}/decrypt-media`,
         {
-          url: mediaUrl,
-          mediaKey: mediaKey,
-          mediaType: mediaType || 'image',
+          data: {
+            messages: msgData,
+          },
         },
         {
           headers: {

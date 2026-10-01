@@ -47,7 +47,7 @@ router.post('/whatsapp', async (req: Request, res: Response) => {
 
     // Proses jika ada sender DAN (ada pesan teks ATAU ada media)
     if (sender && (message || mediaUrl)) {
-      handleIncomingMessage(sender, message, mediaUrl, mediaKey, mediaType);
+      handleIncomingMessage(sender, message, mediaUrl, mediaKey, mediaType, msgData);
     } else {
       console.log('⚠️ Gagal mengekstrak sender/message dari payload.');
       console.log('DEBUG Payload:', JSON.stringify(req.body, null, 2));
