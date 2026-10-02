@@ -2,7 +2,7 @@
 import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-
+import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/context/LanguageContext';
 import { Globe } from 'lucide-react';
 
@@ -30,22 +30,70 @@ export default function AdminTopbar({
   const [showNotifications, setShowNotifications] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const [notifications, setNotifications] = useState([
-    { id: 1, title: 'Tiket Baru Masuk', desc: 'Tiket #000143 (Jaringan) menunggu verifikasi Anda.', time: '5 menit lalu', isRead: false, type: 'new' },
-    { id: 2, title: 'SLA Warning', desc: 'Peringatan: Tiket #000120 sisa waktu penanganan tinggal 1 jam!', time: '1 jam lalu', isRead: false, type: 'warning' },
-    { id: 3, title: 'Tiket Dikembalikan', desc: 'Teknisi Jaringan mengembalikan Tiket #000085 ke Anda.', time: '2 jam lalu', isRead: true, type: 'rejected' },
-  ]);
+  const [notifications, setNotifications] = useState<any[]>([]);
 
-  const localizedNotifications = notifications.map((notif) => {
-    if (language === 'en') {
-      if (notif.type === 'new') return { ...notif, title: 'New Incoming Ticket', desc: 'Ticket #000143 (Network) is waiting for your verification.', time: '5 minutes ago' };
-      if (notif.type === 'warning') return { ...notif, title: 'SLA Warning', desc: 'Warning: Ticket #000120 has 1 hour remaining before SLA deadline!', time: '1 hour ago' };
-      return { ...notif, title: 'Ticket Returned', desc: 'Network technician returned Ticket #000085 to you.', time: '2 hours ago' };
-    }
-    return notif;
-  });
+  // Format waktu relatif
+  const formatRelativeTime = (dateStr: string) => {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'Baru saja';
+    if (mins < 60) return `${mins} menit lalu`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours} jam lalu`;
+    return `${Math.floor(hours / 24)} hari lalu`;
+  };
 
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+  // Fetch 5 tiket terbaru saat mount
+  useEffect(() => {
+    const fetchLatestTickets = async () => {
+      const { data, error } = await supabase
+        .from('tickets')
+        .select('id, ticket_number, subject, created_at')
+        .order('created_at', { ascending: false })
+        .limit(5);
+      if (!error && data) {
+        setNotifications(
+          data.map((t: any) => ({
+            id: t.id,
+            ticketNumber: t.ticket_number || t.id,
+            subject: t.subject || 'Tanpa subjek',
+            time: t.created_at,
+            isRead: false,
+          }))
+        );
+      }
+    };
+    fetchLatestTickets();
+
+    // Subscribe realtime INSERT pada tabel tickets
+    const channel = supabase
+      .channel('admin-ticket-notifications')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'tickets' },
+        (payload) => {
+          const t = payload.new as any;
+          setNotifications((prev) => {
+            const newNotif = {
+              id: t.id,
+              ticketNumber: t.ticket_number || t.id,
+              subject: t.subject || 'Tanpa subjek',
+              time: t.created_at,
+              isRead: false,
+            };
+            // Tambahkan di depan, batasi 5
+            return [newNotif, ...prev].slice(0, 5);
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -192,8 +240,8 @@ export default function AdminTopbar({
                   <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50/80">
                     <h3 className="font-bold text-slate-800 text-[14px]">{t('topbar.notifications')}</h3>
                     {unreadCount > 0 && (
-                      <button 
-                        onClick={() => setNotifications(prev => prev.map(n => ({...n, isRead: true})))}
+                      <button
+                        onClick={() => setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))}
                         className="text-[12px] font-semibold text-blue-600 hover:text-blue-800 transition-colors"
                       >
                         {t('notifications.mark_read')}
@@ -201,22 +249,34 @@ export default function AdminTopbar({
                     )}
                   </div>
                   <div className="max-h-[350px] overflow-y-auto">
-                    {localizedNotifications.length > 0 ? (
-                      localizedNotifications.map(notif => (
-                        <div key={notif.id} className={`flex gap-4 p-4 border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors cursor-pointer ${!notif.isRead ? 'bg-blue-50/30' : ''}`}>
+                    {notifications.length > 0 ? (
+                      notifications.map((notif) => (
+                        <div
+                          key={notif.id}
+                          className={`flex gap-4 p-4 border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors cursor-pointer ${!notif.isRead ? 'bg-blue-50/30' : ''}`}
+                          onClick={() =>
+                            setNotifications((prev) =>
+                              prev.map((n) => (n.id === notif.id ? { ...n, isRead: true } : n))
+                            )
+                          }
+                        >
                           <div className="shrink-0 mt-0.5">
-                            {notif.type === 'new' && <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg></div>}
-                            {notif.type === 'warning' && <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg></div>}
-                            {notif.type === 'rejected' && <div className="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>}
+                            <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                              </svg>
+                            </div>
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className={`text-[13px] font-bold ${!notif.isRead ? 'text-slate-900' : 'text-slate-700'}`}>
-                              {notif.type === 'new' ? t('notifications.new_ticket') : (notif.type === 'warning' ? t('notifications.sla_warning') : t('notifications.returned'))}
+                              {language === 'id' ? 'Tiket Baru Masuk' : 'New Ticket'}
                             </p>
                             <p className="text-[13px] text-slate-500 mt-0.5 leading-snug line-clamp-2">
-                              {notif.type === 'new' ? `${language === 'id' ? 'Tiket' : 'Ticket'} #000143 ${t('notifications.new_ticket_desc')}` : (notif.type === 'warning' ? t('notifications.sla_warning_desc') : t('notifications.returned_desc'))}
+                              #{notif.ticketNumber} — {notif.subject}
                             </p>
-                            <p className="text-[11px] font-semibold text-slate-400 mt-1.5">{notif.time}</p>
+                            <p className="text-[11px] font-semibold text-slate-400 mt-1.5">
+                              {formatRelativeTime(notif.time)}
+                            </p>
                           </div>
                           {!notif.isRead && (
                             <div className="w-2 h-2 rounded-full bg-blue-600 shrink-0 self-center"></div>
@@ -226,11 +286,6 @@ export default function AdminTopbar({
                     ) : (
                       <div className="p-8 text-center text-slate-400 text-sm">{t('topbar.no_notifications')}</div>
                     )}
-                  </div>
-                  <div className="p-2 border-t border-slate-100 bg-slate-50 text-center">
-                    <button className="text-[12px] font-bold text-slate-600 hover:text-slate-900 transition-colors w-full py-1">
-                      {t('notifications.view_all')}
-                    </button>
                   </div>
                 </div>
               )}

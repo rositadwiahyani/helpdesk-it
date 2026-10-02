@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useLanguage } from '@/context/LanguageContext';
 
@@ -19,6 +20,7 @@ export default function AgentModal({ isOpen, onClose, onSuccess, showToast, agen
   const [role, setRole] = useState("operator");
   const [deptId, setDeptId] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -99,7 +101,25 @@ export default function AgentModal({ isOpen, onClose, onSuccess, showToast, agen
           {!agent && (
             <div>
               <label className="block text-sm text-gray-600 mb-1">Password</label>
-              <input required type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Minimal 6 karakter" minLength={6} className="w-full border border-gray-300 rounded p-2 text-sm" />
+              <div className="relative">
+                <input
+                  required
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Minimal 6 karakter"
+                  minLength={6}
+                  className="w-full border border-gray-300 rounded p-2 pr-10 text-sm"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 transition-colors"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
           )}
           <div>
@@ -111,7 +131,6 @@ export default function AgentModal({ isOpen, onClose, onSuccess, showToast, agen
             <select value={role} onChange={(e) => setRole(e.target.value)} className="w-full border border-gray-300 rounded p-2 text-sm">
               <option value="admin">Administrator</option>
               <option value="operator">Operator</option>
-              <option value="teknisi">Teknisi</option>
               <option value="agent">Agent</option>
               <option value="pimpinan">Pimpinan</option>
             </select>

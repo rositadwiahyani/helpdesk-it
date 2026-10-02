@@ -8,7 +8,7 @@ export default function ProfilePage() {
   const [currentUser, setCurrentUser] = useState<any>({});
   const [isLoaded, setIsLoaded] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
+  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -26,12 +26,12 @@ export default function ProfilePage() {
       try {
         const user = JSON.parse(userStr);
         setCurrentUser(user);
-        
+
         let displayUserName = user.name || user.full_name || user.user_metadata?.full_name || user.user_metadata?.name;
         if (!displayUserName && user.email) {
           displayUserName = user.email.split('@')[0];
         }
-        
+
         setFormData({
           name: displayUserName || '',
           phone: user.phone || '',
@@ -90,7 +90,7 @@ export default function ProfilePage() {
       if (!response.ok) throw new Error(result.error || t('profile.save_error'));
 
       setMessage({ type: 'success', text: t('profile.save_success') });
-      
+
       const updatedUser = { ...currentUser, ...formData };
       delete updatedUser.password;
       localStorage.setItem('user', JSON.stringify(updatedUser));
@@ -183,15 +183,15 @@ export default function ProfilePage() {
                   <div className="flex flex-col gap-2 md:col-span-2 sm:col-span-1">
                     <label className="text-[13px] font-bold text-[var(--ink)]">{t('profile.password')}</label>
                     <div className="relative">
-                      <input 
-                        type={showPassword ? "text" : "password"} 
-                        name="password" 
-                        value={formData.password} 
-                        onChange={handleChange} 
-                        className="bg-[var(--paper)] border border-[var(--line-dark)] rounded-xl px-4 py-2.5 text-[14px] focus:outline-none focus:border-[var(--gold-soft)] transition-colors w-full pr-10" 
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        name="password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        className="bg-[var(--paper)] border border-[var(--line-dark)] rounded-xl px-4 py-2.5 text-[14px] focus:outline-none focus:border-[var(--gold-soft)] transition-colors w-full pr-10"
                       />
-                      <button 
-                        type="button" 
+                      <button
+                        type="button"
                         onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
                       >
