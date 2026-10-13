@@ -94,7 +94,13 @@ export const updateTicketByStaff = async (req: Request, res: Response) => {
         } else if (status === 'IN PROGRESS' || status === 'Diproses') {
            msg += '\n\nTeknisi kami saat ini sedang mengerjakan dan menangani kendala Anda.';
         } else if (status === 'RESOLVED' || status === 'CLOSED') {
-           msg += '\n\nTiket Anda telah ditutup secara resmi. Terima kasih telah menggunakan layanan IT Helpdesk.';
+           await supabase.from('wa_sessions').upsert({
+             phone: data.phone,
+             step: 'WAITING_RATING',
+             data: { ticket_id: data.id },
+             updated_at: new Date().toISOString()
+           });
+           msg = `Halo ${data.reporter_name || 'Pelapor'},\n\nTiket pengaduan Anda (*${data.ticket_num || data.id}*) telah resmi diselesaikan oleh tim IT Helpdesk kami. ✅\n\nBantu kami meningkatkan layanan dengan memberikan *RATING (1-5)* beserta ulasan Anda dalam 1 pesan balasan.\n\nContoh balasan:\n_5 Pelayanan sangat cepat dan teknisi ramah_`;
         } else if (status === 'REJECTED' || status === 'Ditolak') {
            msg += '\n\nMohon maaf, tiket Anda ditolak karena alasan tertentu. Silakan cek detail tiket atau hubungi Helpdesk.';
         }

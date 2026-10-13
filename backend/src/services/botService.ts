@@ -101,7 +101,11 @@ export async function handleIncomingMessage(sender: string, messageText: string,
 
   // 0.5. Cek Tiket Menunggu Konfirmasi (Auto-Confirm)
   if (waitingTickets && waitingTickets.length > 0) {
-    const isConfirmWord = ['selesai', 'ok', 'oke', 'sudah', 'thanks', 'terima kasih', 'mantap', 'ya'].some(w => cleanInput.toLowerCase().includes(w));
+    const confirmWords = [
+      'selesai', 'ok', 'oke', 'sudah', 'thanks', 'terima kasih', 'terimakasih',
+      'makasih', 'mksh', 'thx', 'tq', 'trims', 'matursuwun', 'mantap', 'ya', 'siap', 'sudah selesai', 'beres', 'aman'
+    ];
+    const isConfirmWord = confirmWords.some(w => cleanInput.toLowerCase().includes(w));
     if (isConfirmWord) {
       const ticketToConfirm = waitingTickets[0];
       await supabase.from('tickets').update({ status: 'RESOLVED', updated_at: new Date().toISOString() }).eq('id', ticketToConfirm.id);
@@ -287,6 +291,12 @@ async function handleMainMenu(sender: string, input: string) {
 
   if (!useFallback) {
     if (isNaN(selectedIndex) || !menus[selectedIndex]) {
+      // Cek apakah input adalah ungkapan terima kasih atau salam umum
+      const pleasantries = ['terima kasih', 'terimakasih', 'makasih', 'trims', 'thanks', 'thx', 'tq', 'matursuwun', 'sama-sama', 'samasama'];
+      if (pleasantries.some(p => input.toLowerCase().includes(p))) {
+        return sendMessage(sender, `Sama-sama! Senang bisa membantu Anda. 🙏\n\nKetik *${getTriggerWord()}* jika Anda membutuhkan bantuan lain.`);
+      }
+
       // Smart Keyword Search (Fallback jika bukan angka)
       const { data: kbArticles } = await supabase
         .from('knowledge_base')
