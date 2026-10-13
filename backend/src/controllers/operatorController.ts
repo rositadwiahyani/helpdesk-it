@@ -181,7 +181,7 @@ export const updateTicket = async (req: Request, res: Response) => {
         // Auto WA Notif
         if (updatedTicket?.phone) {
           if (updates.status === 'WAITING CONFIRMATION') {
-            const confirmLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/ticket/confirm/${updatedTicket.id}`;
+            const confirmLink = `${process.env.FRONTEND_URL || 'https://helpdesk-it-jet.vercel.app'}/ticket/confirm/${updatedTicket.id}`;
             const msg = `Halo ${updatedTicket.reporter_name || 'Pelapor'},\n\nTiket pengaduan Anda dengan nomor *${updatedTicket.ticket_num || updatedTicket.id}* telah selesai ditangani oleh teknisi kami.\n\nMohon konfirmasi apakah masalah sudah benar-benar teratasi melalui tautan berikut:\n${confirmLink}\n\n*ATAU balas pesan ini* dengan mengetik kata _selesai_, _ok_, atau _terimakasih_.\n\nTerima kasih.`;
             sendMessage(updatedTicket.phone, msg).catch(e => console.error('Gagal kirim WA konfirmasi operator:', e));
           } else {

@@ -80,7 +80,7 @@ export const updateTicketByStaff = async (req: Request, res: Response) => {
     // Auto send WhatsApp for status changes
     if (status && data.phone) {
       if (status === 'WAITING CONFIRMATION') {
-        const confirmLink = `http://localhost:3000/ticket/confirm/${data.id}`;
+        const confirmLink = `${process.env.FRONTEND_URL || 'https://helpdesk-it-jet.vercel.app'}/ticket/confirm/${data.id}`;
         const msg = `Halo ${data.reporter_name || 'Pelapor'},\n\nTiket pengaduan Anda dengan nomor *${data.ticket_num || data.id}* telah selesai ditangani oleh teknisi kami.\n\nMohon konfirmasi apakah masalah sudah benar-benar teratasi melalui tautan berikut:\n${confirmLink}\n\n*ATAU balas pesan ini* dengan mengetik kata _selesai_, _ok_, atau _thanks_.\n\nTerima kasih.`;
         sendMessage(data.phone, msg).catch(e => console.error('Gagal kirim WA konfirmasi:', e));
       } else {
