@@ -2,23 +2,38 @@ import { supabase } from '../config/supabase';
 import { sendMessage } from './wasender';
 import fs from 'fs';
 import path from 'path';
+import axios from 'axios';
 
+// =========================================================
+// IN-MEMORY CACHE untuk bot settings
+// Dibaca sekali dari file saat server start, BUKAN setiap pesan
+// masuk. Ini mencegah fs.readFileSync memblokir event loop.
+// =========================================================
+let _botSettingsCache: Record<string, any> | null = null;
 
-function getTriggerWord(): string {
-  const settings = getBotSettings();
-  return settings.trigger_word || 'HaloDesk';
-}
-
-function getBotSettings() {
+function getBotSettings(): Record<string, any> {
+  if (_botSettingsCache !== null) return _botSettingsCache;
   try {
     const filePath = path.join(__dirname, '../bot_settings.json');
     if (fs.existsSync(filePath)) {
-      return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      _botSettingsCache = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      return _botSettingsCache!;
     }
   } catch (e) {
     console.error('Error reading bot settings:', e);
   }
-  return {};
+  _botSettingsCache = {};
+  return _botSettingsCache;
+}
+
+/** Invalidate cache saat settings diubah dari dashboard admin */
+export function invalidateBotSettingsCache() {
+  _botSettingsCache = null;
+  console.log('[BotSettings] Cache di-invalidate, akan dibaca ulang.');
+}
+
+function getTriggerWord(): string {
+  return getBotSettings().trigger_word || 'HaloDesk';
 }
 
 // Helper: Ambil waktu WIB (UTC+7)
@@ -63,29 +78,34 @@ interface WASession {
   updated_at?: string;
 }
 
-export async function handleIncomingMessage(sender: string, messageText: string, mediaUrl?: string) {
+export async function handleIncomingMessage(sender: string, messageText: string, mediaUrl?: string, mediaKey?: string, mediaType?: string, msgData?: any) {
   const cleanInput = messageText.trim();
 
-  // 0. Cek apakah pengguna diblokir
-  const { data: reporter } = await supabase
-    .from('reporters')
-    .select('status, name, nim_nip, unit, reporter_type')
-    .eq('phone', sender)
-    .single();
+  // 0. Jalankan dua query awal secara PARALEL (bukan serial) untuk mengurangi latensi
+  const [{ data: reporter }, { data: waitingTickets }] = await Promise.all([
+    supabase
+      .from('reporters')
+      .select('status, name, nim_nip, unit, reporter_type')
+      .eq('phone', sender)
+      .single(),
+    supabase
+      .from('tickets')
+      .select('*')
+      .eq('phone', sender)
+      .eq('status', 'WAITING CONFIRMATION')
+  ]);
 
   if (reporter?.status === 'Terblokir') {
     return sendMessage(sender, "⚠️ Maaf, nomor Anda saat ini diblokir dari sistem IT Helpdesk karena pelanggaran ketentuan layanan.");
   }
 
   // 0.5. Cek Tiket Menunggu Konfirmasi (Auto-Confirm)
-  const { data: waitingTickets } = await supabase
-    .from('tickets')
-    .select('*')
-    .eq('phone', sender)
-    .eq('status', 'WAITING CONFIRMATION');
-
   if (waitingTickets && waitingTickets.length > 0) {
-    const isConfirmWord = ['selesai', 'ok', 'oke', 'sudah', 'thanks', 'terima kasih', 'mantap', 'ya'].some(w => cleanInput.toLowerCase().includes(w));
+    const confirmWords = [
+      'selesai', 'ok', 'oke', 'sudah', 'thanks', 'terima kasih', 'terimakasih',
+      'makasih', 'mksh', 'thx', 'tq', 'trims', 'matursuwun', 'mantap', 'ya', 'siap', 'sudah selesai', 'beres', 'aman'
+    ];
+    const isConfirmWord = confirmWords.some(w => cleanInput.toLowerCase().includes(w));
     if (isConfirmWord) {
       const ticketToConfirm = waitingTickets[0];
       await supabase.from('tickets').update({ status: 'RESOLVED', updated_at: new Date().toISOString() }).eq('id', ticketToConfirm.id);
@@ -188,7 +208,7 @@ export async function handleIncomingMessage(sender: string, messageText: string,
       break;
 
     case 'ASK_ATTACHMENT':
-      await handleAskAttachment(sender, cleanInput, currentData, mediaUrl);
+      await handleAskAttachment(sender, cleanInput, currentData, mediaUrl, mediaKey, mediaType, msgData);
       break;
 
     case 'ASK_REUSE_INFO':
@@ -271,6 +291,12 @@ async function handleMainMenu(sender: string, input: string) {
 
   if (!useFallback) {
     if (isNaN(selectedIndex) || !menus[selectedIndex]) {
+      // Cek apakah input adalah ungkapan terima kasih atau salam umum
+      const pleasantries = ['terima kasih', 'terimakasih', 'makasih', 'trims', 'thanks', 'thx', 'tq', 'matursuwun', 'sama-sama', 'samasama'];
+      if (pleasantries.some(p => input.toLowerCase().includes(p))) {
+        return sendMessage(sender, `Sama-sama! Senang bisa membantu Anda. 🙏\n\nKetik *${getTriggerWord()}* jika Anda membutuhkan bantuan lain.`);
+      }
+
       // Smart Keyword Search (Fallback jika bukan angka)
       const { data: kbArticles } = await supabase
         .from('knowledge_base')
@@ -282,7 +308,7 @@ async function handleMainMenu(sender: string, input: string) {
         let text = `🔍 Kami menemukan beberapa panduan yang mungkin relevan dengan "${input}":\n\n`;
         kbArticles.forEach((article, idx) => {
           text += `${idx + 1}. *${article.title}*\n`;
-          text += `🔗 http://localhost:3000/knowledgebase/article/${article.slug}\n\n`;
+          text += `🔗 ${process.env.FRONTEND_URL || 'https://helpdesk-it-jet.vercel.app'}/knowledgebase/article/${article.slug}\n\n`;
         });
         text += `_Ketik *${getTriggerWord()}* untuk melihat menu layanan lainnya._`;
         return sendMessage(sender, text);
@@ -455,7 +481,7 @@ async function handleDynamicCategorySelect(sender: string, input: string, parent
       
       let text = `*Panduan untuk: ${selectedCat.name}*\n\n`;
       text += `Untuk melihat langkah-langkah penyelesaiannya, silakan kunjungi halaman Basis Pengetahuan kami pada tautan berikut:\n`;
-      text += `🔗 http://localhost:3000/knowledgebase/article/${kbData.slug}\n\n`;
+      text += `🔗 ${process.env.FRONTEND_URL || 'https://helpdesk-it-jet.vercel.app'}/knowledgebase/article/${kbData.slug}\n\n`;
       text += `Apakah panduan di atas berhasil menyelesaikan kendala Anda?\n`;
       text += `1. ✅ Ya, kendala teratasi\n`;
       text += `2. ❌ Tidak, saya ingin membuat tiket ke Teknisi\n\n`;
@@ -592,26 +618,131 @@ async function handleInputTicketDetail(sender: string, input: string, currentDat
     updated_at: new Date().toISOString()
   }).eq('phone', sender);
 
-  let text = `📸 *LAMPIRAN / SCREENSHOT*\n\n`;
-  text += `Apakah Anda memiliki bukti foto/screenshot terkait kendala ini?\n`;
-  text += `Silakan kirimkan gambarnya sekarang.\n\n`;
+  let text = `📎 *LAMPIRAN / SCREENSHOT*\n\n`;
+  text += `Apakah Anda memiliki bukti terkait kendala ini?\n`;
+  text += `Silakan kirimkan *foto/screenshot* atau *dokumen PDF* sekarang.\n\n`;
   text += `_Jika tidak ada, balas dengan kata *Tidak*_\n`;
   text += `_Ketik *Batal* untuk mengakhiri._`;
 
   await sendMessage(sender, text);
 }
 
-async function handleAskAttachment(sender: string, input: string, currentData: any, mediaUrl?: string) {
+async function handleAskAttachment(sender: string, input: string, currentData: any, mediaUrl?: string, mediaKey?: string, mediaType?: string, msgData?: any) {
   let updatedData = { ...currentData };
-  
-  if (mediaUrl) {
-    // Media diterima
-    updatedData.attachment_url = mediaUrl;
-  } else {
-    // Tidak ada media
-    if (input.toLowerCase() !== 'tidak' && input.toLowerCase() !== 'tdk' && input !== '-') {
-      // Boleh jadi pesan salah atau mencoba menjelaskan. Biarkan saja anggap no attachment.
+
+  if (mediaUrl && mediaKey) {
+    try {
+      // 1. Decrypt media via WASender API
+      // URL dari payload WhatsApp bersifat encrypted, tidak bisa di-download langsung.
+      // Kita harus minta WASender untuk decrypt dan memberikan publicUrl yang bisa di-download.
+      console.log(`Mendekripsi media via WASender (type: ${mediaType || 'image'})...`);
+      const decryptResponse = await axios.post(
+        `${process.env.WASENDER_BASE_URL || 'https://www.wasenderapi.com/api'}/decrypt-media`,
+        {
+          data: {
+            messages: msgData,
+          },
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${process.env.WASENDER_BEARER_TOKEN}`,
+          },
+          timeout: 30000,
+        }
+      );
+
+      const decryptedUrl: string = decryptResponse.data?.publicUrl || decryptResponse.data?.url;
+      if (!decryptedUrl) {
+        throw new Error(`WASender decrypt-media tidak mengembalikan URL. Response: ${JSON.stringify(decryptResponse.data)}`);
+      }
+      console.log(`✅ Media berhasil didekripsi, mengunduh dari: ${decryptedUrl}`);
+
+      // 2. Download file binary dari URL hasil decrypt
+      const downloadResponse = await axios.get(decryptedUrl, { responseType: 'arraybuffer', timeout: 30000 });
+      const buffer = downloadResponse.data;
+      let contentType = (downloadResponse.headers['content-type'] as string) || '';
+
+      // Tentukan content-type yang benar berdasarkan tipe media dari WhatsApp
+      // WhatsApp selalu mengirim file terenkripsi dengan content-type generic (octet-stream)
+      // sehingga kita harus menebak dari mediaType yang dikirim di webhook
+      if (!contentType || contentType === 'application/octet-stream') {
+        if (mediaType === 'document') {
+          // Cek MIME type dari msgData jika tersedia (WhatsApp menyertakan mimetype di documentMessage)
+          const mimeType: string = msgData?.message?.documentMessage?.mimetype || '';
+          if (mimeType.includes('pdf')) {
+            contentType = 'application/pdf';
+          } else if (mimeType.includes('word') || mimeType.includes('docx')) {
+            contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+          } else if (mimeType.includes('excel') || mimeType.includes('xlsx')) {
+            contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+          } else if (mimeType) {
+            contentType = mimeType;
+          } else {
+            contentType = 'application/pdf'; // default dokumen = pdf
+          }
+        } else if (mediaType === 'video') {
+          contentType = 'video/mp4';
+        } else {
+          contentType = 'image/jpeg'; // default media = gambar
+        }
+      } else if (!contentType.startsWith('image/') && !contentType.startsWith('application/') && !contentType.startsWith('video/')) {
+        // Content-type tidak dikenal, fallback ke image/jpeg
+        contentType = 'image/jpeg';
+      }
+
+      // Tentukan ekstensi file dari content-type
+      const mimeToExt: Record<string, string> = {
+        'image/jpeg': 'jpg',
+        'image/png': 'png',
+        'image/gif': 'gif',
+        'image/webp': 'webp',
+        'application/pdf': 'pdf',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
+        'video/mp4': 'mp4',
+      };
+      const ext = mimeToExt[contentType] || contentType.split('/')[1]?.split(';')[0] || 'bin';
+      console.log(`Tipe file terdeteksi: ${contentType} (.${ext})`);
+
+      // 3. Upload ke Supabase Storage (bucket: ticket-attachments)
+      // Struktur folder: {nomor_wa}/{timestamp}.{ext}
+      const fileName = `${sender}/${Date.now()}.${ext}`;
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('ticket-attachments')
+        .upload(fileName, buffer, {
+          contentType,
+          upsert: false
+        });
+
+      if (uploadError) {
+        console.error('Gagal upload ke Supabase Storage:', uploadError);
+        throw uploadError;
+      }
+
+      // 4. Dapatkan Public URL Supabase
+      const { data: publicUrlData } = supabase.storage
+        .from('ticket-attachments')
+        .getPublicUrl(fileName);
+
+      // ✅ Simpan URL Supabase (permanen) ke session data
+      updatedData.attachment_url = publicUrlData.publicUrl;
+      console.log(`✅ Media berhasil disimpan ke Supabase: ${publicUrlData.publicUrl}`);
+    } catch (error) {
+      console.error('Error saat memproses attachment:', error);
+      return sendMessage(sender, `⚠️ Maaf, terjadi kesalahan saat menyimpan lampiran Anda. Silakan coba kirim ulang gambar/PDF, atau ketik *Batal* untuk mengakhiri.`);
     }
+  } else {
+    const inputLower = input.toLowerCase().trim();
+
+    // Jika teks juga kosong (terjadi saat WASender kirim media tanpa caption)
+    // Tidak ada yang bisa diproses, tunggu input berikutnya
+    if (!inputLower) {
+      return;
+    }
+
+    // Jika bukan kata penolakan, tetap lanjutkan (anggap tidak ada lampiran)
   }
 
   const { data: reporter } = await supabase

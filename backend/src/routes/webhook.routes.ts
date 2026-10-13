@@ -6,7 +6,7 @@ const router = Router();
 router.post('/whatsapp', async (req: Request, res: Response) => {
   try {
     console.log('\n--- Menerima Webhook dari WaSender ---');
-    
+
     const event = req.body?.event;
     const msgData = req.body?.data?.messages;
 
@@ -17,16 +17,40 @@ router.post('/whatsapp', async (req: Request, res: Response) => {
 
     // Ekstrak sender dan pesan dari struktur payload asli WaSender
     const sender: string = msgData.key?.cleanedSenderPn || msgData.key?.senderPn?.replace('@s.whatsapp.net', '');
+
+    // Teks pesan (bisa kosong saat user kirim gambar/media)
     const message: string = msgData.messageBody || msgData.message?.conversation || '';
-    const mediaUrl: string | undefined = msgData.message?.imageMessage?.url || msgData.message?.documentMessage?.url || undefined;
 
-    console.log(`Pengirim : ${sender}`);
-    console.log(`Pesan    : ${message}`);
+    // Tentukan tipe media dan ekstrak url + mediaKey untuk decrypt
+    const imageMsg = msgData.message?.imageMessage;
+    const documentMsg = msgData.message?.documentMessage;
+    const videoMsg = msgData.message?.videoMessage;
 
-    if (sender && message) {
-      handleIncomingMessage(sender, message, mediaUrl);
+    const mediaUrl: string | undefined =
+      imageMsg?.url || documentMsg?.url || videoMsg?.url || undefined;
+
+    const mediaKey: string | undefined =
+      imageMsg?.mediaKey || documentMsg?.mediaKey || videoMsg?.mediaKey || undefined;
+
+    const mediaType: string | undefined = imageMsg
+      ? 'image'
+      : documentMsg
+      ? 'document'
+      : videoMsg
+      ? 'video'
+      : undefined;
+
+    console.log(`Pengirim  : ${sender}`);
+    console.log(`Pesan     : ${message || '(kosong - kemungkinan media)'}`);
+    console.log(`Media URL : ${mediaUrl || 'tidak ada'}`);
+    console.log(`Media Key : ${mediaKey ? '(ada)' : 'tidak ada'}`);
+
+    // Proses jika ada sender DAN (ada pesan teks ATAU ada media)
+    if (sender && (message || mediaUrl)) {
+      handleIncomingMessage(sender, message, mediaUrl, mediaKey, mediaType, msgData);
     } else {
       console.log('⚠️ Gagal mengekstrak sender/message dari payload.');
+      console.log('DEBUG Payload:', JSON.stringify(req.body, null, 2));
     }
 
     // Selalu kembalikan 200 OK dengan cepat ke WASender

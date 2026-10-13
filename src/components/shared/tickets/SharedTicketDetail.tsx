@@ -27,6 +27,7 @@ type Ticket = {
   created_at?: string;
   updated_at?: string;
   tech_id?: string;
+  dept_id?: number | string;
   attachment?: string | null;
   attachments?: { file_url: string; file_name?: string }[];
 };
@@ -101,6 +102,8 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
 
         if (foundTicket) {
           setTicket(foundTicket);
+          if (foundTicket.dept_id) setSelectedDeptId(String(foundTicket.dept_id));
+          if (foundTicket.tech_id) setSelectedTechId(String(foundTicket.tech_id));
         }
 
         // Fetch categories to build full path
@@ -109,9 +112,9 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
           setCategories(catsResponse.data);
         }
 
-        // Fetch technicians for disposisi
+        // Fetch technicians and departments for disposisi
         import('@/lib/supabase').then(({ supabase }) => {
-          supabase.from('staff_profiles').select('id, name, dept_id').in('role', ['teknisi', 'agent']).then(({ data }) => {
+          supabase.from('staff_profiles').select('id, name, role, dept_id').in('role', ['teknisi', 'agent', 'operator']).order('name').then(({ data }) => {
             if (data) setTechnicians(data);
           });
           supabase.from('departments').select('id, name').order('name').then(({ data }) => {
@@ -128,7 +131,55 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
     loadTicket();
   }, [ticketId]);
 
+  const handleVerify = () => {
+    setConfirmModal({
+      isOpen: true,
+      title: t('ticket_detail.confirm_verify_title', 'Konfirmasi Verifikasi'),
+      message: t('ticket_detail.confirm_verify_msg', 'Apakah Anda yakin ingin memverifikasi tiket ini dan mengubah statusnya menjadi Terbuka (Open)?'),
+      onConfirm: async () => {
+        setIsUpdatingStatus(true);
+        try {
+          const isOperator = typeof window !== 'undefined' && window.location.pathname.includes('/operator');
+          await fetchClient(isOperator ? `/operator/tickets/${ticketId}` : `/admin/tickets/${ticketId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ status: 'Open' })
+          });
+          setTicket((prev) => prev ? { ...prev, status: 'Open' } : null);
+          showToast(t('ticket_detail.toast_verified', 'Tiket berhasil diverifikasi!'), 'success');
+        } catch (error) {
+          console.error('Gagal verifikasi tiket:', error);
+          showToast(t('ticket_detail.toast_update_fail', 'Gagal memverifikasi tiket.'), 'error');
+        } finally {
+          setIsUpdatingStatus(false);
+        }
+      }
+    });
+  };
 
+  const handleReject = () => {
+    setConfirmModal({
+      isOpen: true,
+      title: t('ticket_detail.confirm_reject_title', 'Konfirmasi Tolak Tiket'),
+      message: t('ticket_detail.confirm_reject_msg', 'Apakah Anda yakin ingin menolak tiket ini? Status tiket akan diubah menjadi Ditolak.'),
+      onConfirm: async () => {
+        setIsUpdatingStatus(true);
+        try {
+          const isOperator = typeof window !== 'undefined' && window.location.pathname.includes('/operator');
+          await fetchClient(isOperator ? `/operator/tickets/${ticketId}` : `/admin/tickets/${ticketId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ status: 'REJECTED' })
+          });
+          setTicket((prev) => prev ? { ...prev, status: 'REJECTED' } : null);
+          showToast(t('ticket_detail.toast_rejected', 'Tiket berhasil ditolak.'), 'success');
+        } catch (error) {
+          console.error('Gagal menolak tiket:', error);
+          showToast(t('ticket_detail.toast_update_fail', 'Gagal menolak tiket.'), 'error');
+        } finally {
+          setIsUpdatingStatus(false);
+        }
+      }
+    });
+  };
 
   const handleDisposisi = async () => {
     if (!selectedDeptId) return;
@@ -155,8 +206,6 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
     }
   };
 
-
-
   const handleUpdateStatus = (newStatus: string) => {
     const isResolving = newStatus === 'WAITING CONFIRMATION' || newStatus === 'RESOLVED';
 
@@ -175,8 +224,8 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
             body: JSON.stringify({ status: newStatus })
           });
 
+          setTicket((prev) => prev ? { ...prev, status: newStatus } : null);
           showToast(isResolving ? t('ticket_detail.toast_resolved', 'Tiket berhasil diselesaikan!') : t('ticket_detail.toast_reopened', 'Tiket berhasil dibuka kembali!'), 'success');
-          setTimeout(() => window.location.reload(), 1500);
         } catch (error) {
           console.error('Gagal update status:', error);
           showToast(t('ticket_detail.toast_update_fail', 'Gagal mengubah status tiket.'), 'error');
@@ -187,7 +236,7 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
     });
   };
 
-  const handleUpdateField = (field: string, value: string | number) => {
+  const handleUpdateField = (field: string, value: string | number | null) => {
     setConfirmModal({
       isOpen: true,
       title: t('ticket_detail.confirm_change', 'Konfirmasi Perubahan'),
@@ -199,11 +248,21 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
             method: 'PATCH',
             body: JSON.stringify({ [field]: value })
           });
-          setTicket((prev) => prev ? { ...prev, [field]: value } : null);
-          showToast(`Berhasil memperbarui ${field}!`, 'success');
+          setTicket((prev) => {
+            if (!prev) return null;
+            const updated = { ...prev, [field]: value };
+            if (field === 'dept_id') {
+              updated.dept = departments.find(d => String(d.id) === String(value));
+            }
+            if (field === 'tech_id') {
+              updated.tech = technicians.find(t => String(t.id) === String(value));
+            }
+            return updated;
+          });
+          showToast(`Berhasil memperbarui data!`, 'success');
         } catch (error) {
           console.error(`Gagal update ${field}:`, error);
-          showToast(`Gagal memperbarui ${field}.`, 'error');
+          showToast(`Gagal memperbarui data.`, 'error');
         }
       }
     });
@@ -212,8 +271,9 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
   const formatDate = (value?: string) =>
     value ? new Date(value).toLocaleString('id-ID') : '-';
 
-  const isWaitingVerification = !ticket?.dept;
-  const displayStatus = (ticket?.status === 'OPEN' || isWaitingVerification) ? 'WAITING VERIFICATION' : (ticket?.status || 'Open');
+  const statusUpper = (ticket?.status || '').toUpperCase();
+  const isWaitingVerification = statusUpper === 'WAITING VERIFICATION';
+  const displayStatus = ticket?.status ? ticket.status.toUpperCase() : 'WAITING VERIFICATION';
   const ticketNumber = ticket?.ticket_number || ticket?.ticket_num || '–';
   const requester = ticket?.reporter_name || '-';
 
@@ -269,9 +329,19 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
         </div>
         
         <div className="flex items-center gap-3 self-start mt-4 sm:mt-0">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-100">
-            <div className="w-2 h-2 rounded-full bg-[#1E3A8A]"></div>
-            <span className="text-[11px] font-bold text-[#1E3A8A] uppercase tracking-wider">{displayStatus}</span>
+          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border ${
+            isWaitingVerification
+              ? 'bg-amber-50 border-amber-200 text-amber-700'
+              : (statusUpper === 'RESOLVED' || statusUpper === 'CLOSED')
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+              : (statusUpper === 'REJECTED' || statusUpper === 'DITOLAK')
+              ? 'bg-red-50 border-red-200 text-red-700'
+              : 'bg-blue-50 border-blue-100 text-[#1E3A8A]'
+          }`}>
+            <div className={`w-2 h-2 rounded-full ${
+              isWaitingVerification ? 'bg-amber-500' : (statusUpper === 'RESOLVED' || statusUpper === 'CLOSED') ? 'bg-emerald-500' : (statusUpper === 'REJECTED' || statusUpper === 'DITOLAK') ? 'bg-red-500' : 'bg-[#1E3A8A]'
+            }`}></div>
+            <span className="text-[11px] font-bold uppercase tracking-wider">{displayStatus}</span>
           </div>
           <div className="px-3 py-1.5 rounded-full bg-gray-100 border border-gray-200">
             <span className="text-[11px] font-bold text-gray-600 uppercase tracking-wider">{ticket.priority}</span>
@@ -279,9 +349,28 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
           
           <div className="h-6 w-px bg-gray-300 mx-1"></div>
           
-          {ticket.status === 'RESOLVED' || ticket.status === 'CLOSED' || ticket.status === 'WAITING CONFIRMATION' ? (
+          {isWaitingVerification ? (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleReject}
+                disabled={isUpdatingStatus}
+                className="px-3.5 py-1.5 bg-white border border-red-300 text-red-600 hover:bg-red-50 disabled:opacity-50 text-[11.5px] font-bold rounded-full transition-colors shadow-sm flex items-center gap-1.5"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                {t('ticket_detail.reject', 'TOLAK TIKET')}
+              </button>
+              <button
+                onClick={handleVerify}
+                disabled={isUpdatingStatus}
+                className="px-4 py-1.5 bg-[#1E3A8A] hover:bg-blue-900 disabled:opacity-50 text-white text-[11.5px] font-bold rounded-full transition-colors shadow-sm flex items-center gap-1.5"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                {isUpdatingStatus ? t('ticket_detail.processing', 'MEMPROSES...') : t('ticket_detail.verify', 'TERIMA & VERIFIKASI')}
+              </button>
+            </div>
+          ) : (statusUpper === 'RESOLVED' || statusUpper === 'CLOSED' || statusUpper === 'WAITING CONFIRMATION' || statusUpper === 'REJECTED' || statusUpper === 'DITOLAK') ? (
             <button
-              onClick={() => handleUpdateStatus(ticket.tech_id || ticket.tech?.name ? 'IN PROGRESS' : 'OPEN')}
+              onClick={() => handleUpdateStatus(ticket.tech_id || ticket.tech?.name ? 'IN PROGRESS' : 'Open')}
               disabled={isUpdatingStatus}
               className="px-4 py-1.5 bg-white border-2 border-[#1E3A8A] text-[#1E3A8A] hover:bg-blue-50 disabled:opacity-50 text-[11.5px] font-bold rounded-full transition-colors shadow-sm flex items-center gap-1.5"
             >
@@ -290,7 +379,7 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
             </button>
           ) : (
             <button
-              onClick={() => handleUpdateStatus('WAITING CONFIRMATION')}
+              onClick={() => handleUpdateStatus('RESOLVED')}
               disabled={isUpdatingStatus}
               className="px-4 py-1.5 bg-[#1E3A8A] hover:bg-blue-900 disabled:opacity-50 text-white text-[11.5px] font-bold rounded-full transition-colors shadow-sm flex items-center gap-1.5"
             >
@@ -317,13 +406,35 @@ export default function SharedTicketDetail({ ticketId }: { ticketId: string }) {
                   <span className="w-28 text-[13.5px] font-medium text-gray-500 shrink-0">{t('ticket_detail.status_label', 'Status')}</span>
                   <span className="text-[13.5px] font-bold text-[#1E3A8A] uppercase">{displayStatus}</span>
                 </div>
-                <div className="flex items-center px-6 py-4 hover:bg-gray-50/50 transition-colors">
+                <div className="flex items-center px-6 py-3 hover:bg-gray-50/50 transition-colors">
                   <span className="w-28 text-[13.5px] font-medium text-gray-500 shrink-0">{t('ticket_detail.dept_label', 'Departemen')}</span>
-                  <span className="text-[13.5px] font-semibold text-gray-900">{ticket.dept?.name || '-'}</span>
+                  <select
+                    value={ticket.dept_id || ''}
+                    onChange={(e) => handleUpdateField('dept_id', e.target.value ? Number(e.target.value) : null)}
+                    disabled={isTeknisi}
+                    className={`flex-1 min-w-0 py-1.5 px-2 -ml-2 rounded-lg border border-transparent text-[13.5px] font-semibold text-gray-900 bg-transparent hover:bg-gray-50 hover:border-gray-200 outline-none transition-all focus:border-[#1E3A8A] focus:ring-1 focus:ring-[#1E3A8A] truncate ${isTeknisi ? 'opacity-90 cursor-not-allowed hover:bg-transparent hover:border-transparent appearance-none' : 'cursor-pointer'}`}
+                  >
+                    <option value="">{t('ticket_detail.select_dept', '-- Pilih Departemen --')}</option>
+                    {departments.map((d: any) => (
+                      <option key={d.id} value={d.id}>{d.name}</option>
+                    ))}
+                  </select>
                 </div>
-                <div className="flex items-center px-6 py-4 hover:bg-gray-50/50 transition-colors">
+                <div className="flex items-center px-6 py-3 hover:bg-gray-50/50 transition-colors">
                   <span className="w-28 text-[13.5px] font-medium text-gray-500 shrink-0">{t('ticket_detail.assigned_label', 'Ditugaskan ke')}</span>
-                  <span className="text-[13.5px] font-semibold text-gray-900">{ticket.tech?.name ? ticket.tech.name : t('ticket_detail.not_assigned', 'Belum Ditugaskan')}</span>
+                  <select
+                    value={ticket.tech_id || ''}
+                    onChange={(e) => handleUpdateField('tech_id', e.target.value || null)}
+                    disabled={isTeknisi}
+                    className={`flex-1 min-w-0 py-1.5 px-2 -ml-2 rounded-lg border border-transparent text-[13.5px] font-semibold text-gray-900 bg-transparent hover:bg-gray-50 hover:border-gray-200 outline-none transition-all focus:border-[#1E3A8A] focus:ring-1 focus:ring-[#1E3A8A] truncate ${isTeknisi ? 'opacity-90 cursor-not-allowed hover:bg-transparent hover:border-transparent appearance-none' : 'cursor-pointer'}`}
+                  >
+                    <option value="">{t('ticket_detail.not_assigned', '-- Belum Ditugaskan --')}</option>
+                    {technicians.map((tech: any) => (
+                      <option key={tech.id} value={tech.id}>
+                        {tech.name} {tech.dept?.name ? `(${tech.dept.name})` : (tech.role ? `(${tech.role})` : '')}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div className="flex items-center px-6 py-3 hover:bg-gray-50/50 transition-colors">
                   <span className="w-28 text-[13.5px] font-medium text-gray-500 shrink-0">{t('ticket_detail.priority_label', 'Prioritas')}</span>

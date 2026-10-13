@@ -14,12 +14,9 @@ interface PriorityTicketListProps {
 export default function PriorityTicketList({ tickets }: PriorityTicketListProps) {
     const { t, language } = useLanguage();
 
-    // Filter tiket yang butuh tindakan (Waiting Verification, atau Priority High/Critical) yang belum selesai
+    // Filter hanya tiket yang masih berstatus WAITING VERIFICATION (Menunggu Verifikasi)
     const priorityTickets = tickets.filter(t => {
-        const isCompleted = ['RESOLVED_BY_SYSTEM', 'RESOLVED', 'CLOSED', 'DELETED'].includes(t.status?.toUpperCase());
-        if (isCompleted) return false;
-        
-        return t.status === 'WAITING VERIFICATION' || ['CRITICAL', 'HIGH'].includes(t.priority?.toUpperCase());
+        return (t.status || '').toUpperCase() === 'WAITING VERIFICATION';
     }).slice(0, 8); // Ambil maksimal 8
 
     if (priorityTickets.length === 0) {
@@ -138,7 +135,7 @@ export default function PriorityTicketList({ tickets }: PriorityTicketListProps)
                                             href={`/dashboard/operator/tickets/${ticket.id}`}
                                             className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-[12.5px] font-semibold hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm"
                                         >
-                                            {t('tickets.verify')}
+                                            {ticket.status === 'WAITING VERIFICATION' ? t('tickets.verify', 'Verifikasi') : t('tickets.detail', 'Detail')}
                                         </Link>
                                     </td>
                                 </tr>
